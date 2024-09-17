@@ -1,421 +1,457 @@
-import datetime as datetime
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import seaborn as sns
 import pandas as pd
+import json
+from typing import Union
 
 class GlucoseData:
-    def __init__(self, file_path, date_col, glucose_col, date_format='%d/%m/%Y %H:%M', delimiter=',', header=0):
+    def __init__(self, file_path: str, date_col: str, glucose_col: str, date_format: str = '%d/%m/%Y %H:%M', delimiter: Union[str, None] = ',', header: int = 0):
         """
         Inicializa la clase con los datos de glucemia a partir de un archivo CSV.
         
         :param file_path: Ruta al archivo CSV.
         :param date_col: Nombre de la columna que contiene las fechas.
         :param glucose_col: Nombre de la columna que contiene los valores de glucosa.
-        :param date_format: Formato de fecha esperado en la columna de fechas (por defecto '%d/%m/%Y %H:%M').
-        :param delimiter: Delimitador usado en el archivo CSV (por defecto ',').
-        :param header: Índice de la fila que contiene los nombres de las columnas (por defecto 0).
+        :param date_format: Formato de fecha esperado en la columna de fechas.
+        :param delimiter: Delimitador usado en el archivo CSV.
+        :param header: Índice de la fila que contiene los nombres de las columnas.
+        :raises ValueError: Si no se puede cargar el archivo o las columnas especificadas no existen.
         """
+        self.data = self._load_csv(file_path, delimiter, header)
+        self._validate_columns(date_col, glucose_col)
+        self._process_data(date_col, glucose_col, date_format)
 
+    def _load_csv(self, file_path: str, delimiter: Union[str, None], header: int) -> pd.DataFrame:
+        """Carga el archivo CSV."""
         if delimiter is None:
-            try:
-                # Intentar cargar el archivo CSV con ',' como delimitador
-                self.data = pd.read_csv(file_path, delimiter=',', header=header)
-            except pd.errors.ParserError:
+            for delim in [',', ';']:
                 try:
-                    # Si falla, intentar con ';' como delimitador
-                    self.data = pd.read_csv(file_path, delimiter=';', header=header)
-                except pd.errors.ParserError as e:
-                    raise ValueError("No se pudo cargar el archivo CSV con los delimitadores ',' o ';'.") from e
-        else:
-            # Cargar el archivo CSV con el delimitador especificado
-            self.data = pd.read_csv(file_path, delimiter=delimiter, header=header)
+                    return pd.read_csv(file_path, delimiter=delim, header=header)
+                except pd.errors.ParserError:
+                    continue
+            raise ValueError("No se pudo cargar el archivo CSV con los delimitadores ',' o ';'.")
+        return pd.read_csv(file_path, delimiter=delimiter, header=header)
 
-        # Verificar que las columnas especificadas existen
+    def _validate_columns(self, date_col: str, glucose_col: str):
+        """Valida que las columnas especificadas existan en el DataFrame."""
         if date_col not in self.data.columns or glucose_col not in self.data.columns:
-            # Cargar el archivo para obtener las columnas
-            temp_data = pd.read_csv(file_path, header=header)
-            raise ValueError(f"Las columnas especificadas '{date_col}' o '{glucose_col}' no se encuentran en el archivo CSV. \n Columnas disponibles en el archivo: {temp_data.columns.tolist()}.")
+            raise ValueError(f"Las columnas '{date_col}' o '{glucose_col}' no se encuentran en el archivo CSV. Columnas disponibles: {self.data.columns.tolist()}.")
 
-        # Eliminar filas donde date_col sea nulo o vacío
+    def _process_data(self, date_col: str, glucose_col: str, date_format: str):
+        """Procesa los datos, convirtiendo fechas y valores de glucosa."""
         self.data = self.data.dropna(subset=[date_col])
-        # Convertir la columna de fechas a datetime con formato especificado
         self.data[date_col] = pd.to_datetime(self.data[date_col], format=date_format, errors='coerce')
-        # Filtrar las filas que contienen datos de glucosa válidos
         self.data = self.data.dropna(subset=[date_col, glucose_col])
-        # Asegurarnos de que la columna de glucosa es numérica
         self.data[glucose_col] = pd.to_numeric(self.data[glucose_col], errors='coerce')
         self.data = self.data.dropna(subset=[glucose_col])
-        # Renombrar las columnas de fecha y glucosa en el DataFrame
         self.data.rename(columns={date_col: 'time', glucose_col: 'glucose'}, inplace=True)
-        # Actualizar los atributos de la clase para reflejar los nuevos nombres de las columnas
-        self.date_col = 'time'
-        self.glucose_col = 'glucose'
-        # Seleccionar solo las columnas 'time' y 'glucose'
         self.data = self.data[['time', 'glucose']]
 
-        print("Hay en total", len(self.data), "datos.")
-        print("las fechas van entre",self.data['time'].min(),"y ", self.data['time'].max())
+    ## INFORMACIÓN BÁSICA
 
-
-    def mean(self):
+    def info(self) -> str:
         """
-        Calcula la glucemia media.
-        
-        :return: La glucemia media.
-
-        DOI: 
+        Muestra información básica del archivo CSV, incluyendo el número de datos y el rango de fechas.
+        :return: Un string con la información básica.
         """
-        
+        num_datos = len(self.data)
+        fecha_inicio = self.data['time'].min().strftime('%d/%m/%Y %H:%M')
+        fecha_fin = self.data['time'].max().strftime('%d/%m/%Y %H:%M')
+        return f"El archivo CSV contiene {num_datos} datos entre {fecha_inicio} y {fecha_fin}."
+
+    ## ESTADÍSTICAS BÁSICAS
+    def mean(self) -> float:
+        """Calcula la glucemia media."""
         return self.data['glucose'].mean()
     
-    def median(self):
-        """
-        Calcula la mediana de la glucemia.
-        
-        :return: La mediana de la glucemia.
-        """
+    def median(self) -> float:
+        """Calcula la mediana de la glucemia."""
         return self.data['glucose'].median()
 
-    def sd(self):
-        """
-        Calcula la desviación estándar de la glucemia.
-        
-        :return: La desviación estándar de la glucemia.
-        """
+    def sd(self) -> float:
+        """Calcula la desviación estándar de la glucemia."""
         return self.data['glucose'].std()
     
-    def gmi(self):
+    def gmi(self) -> float:
         """
-        Calcula el Glucose management index 
-        Returns: GMI (float): glucose management index (an estimate of HbA1c)
-        DOI: 10.2337/dc18-1581
+        Calcula el Glucose Management Index (GMI).
+        :return: GMI (estimación de HbA1c)
+        :reference: DOI: 10.2337/dc18-1581
         """
-        GMI = 3.31 + (0.02392*np.mean(self.data['glucose']))
-        return GMI.round(2)
+        return round(3.31 + (0.02392 * self.mean()), 2)
     
-    
-    def calculate_time_in_range(self, low_threshold, high_threshold):
+    def calculate_time_in_range(self, low_threshold: float, high_threshold: float) -> float:
         """
         Calcula el tiempo en rango (TIR) de glucemia.
-
-        :param data: DataFrame con lecturas de glucemia.
-        :param glucose_col: Nombre de la columna que contiene los valores de glucosa.
         :param low_threshold: Umbral inferior del rango.
         :param high_threshold: Umbral superior del rango.
         :return: Porcentaje de tiempo en rango.
         """
         in_range = self.data[(self.data['glucose'] >= low_threshold) & (self.data['glucose'] <= high_threshold)]
-
-        return (len(in_range) / len(self.data['glucose'])) * 100
+        return (len(in_range) / len(self.data)) * 100
     
-    def TAR(self, threshold):
+    def TAR(self, threshold: float) -> float:
         """
-        Calcula el riesgo de hiperglucemia.
+        Calcula el tiempo por encima del rango (TAR).
         :param threshold: Umbral de hiperglucemia.
         :return: Porcentaje de lecturas por encima del umbral.
         """
-        hyperglycemia = self.data[self.data['glucose'] > threshold]
-        return (len(hyperglycemia) / len(self.data)) * 100
+        return (len(self.data[self.data['glucose'] > threshold]) / len(self.data)) * 100
     
-    def TBR(self, threshold):
+    def TBR(self, threshold: float) -> float:
         """
-        Calcula el % de hipoglucemia.
-        :param threshold: Umbral de hiperglucemia.
-        :return: Porcentaje de lecturas por encima del umbral.
+        Calcula el tiempo por debajo del rango (TBR).
+        :param threshold: Umbral de hipoglucemia.
+        :return: Porcentaje de lecturas por debajo del umbral.
         """
-        hypoglycemia = self.data[self.data['glucose'] < threshold]
-        return (len(hypoglycemia) / len(self.data)) * 100
+        return (len(self.data[self.data['glucose'] < threshold]) / len(self.data)) * 100
 
-    def TAR250(self):
-        # Tiempo en rango por encima de 250 mg/dL
+    def TAR250(self) -> float:
+        """Calcula el tiempo por encima de 250 mg/dL."""
         return self.TAR(250)
     
-    def TAR180(self):
-        # Tiempo en rango por encima de 250 mg/dL
-        return self.calculate_time_in_range(180,250)
+    def TAR180(self) -> float:
+        """Calcula el tiempo en rango entre 180 y 250 mg/dL."""
+        return self.calculate_time_in_range(180, 250)
 
-    def TIR(self):
-        return self.calculate_time_in_range(70,180)
+    def TIR(self) -> float:
+        """Calcula el tiempo en rango entre 70 y 180 mg/dL."""
+        return self.calculate_time_in_range(70, 180)
     
-    def TBR70(self):
-        return self.calculate_time_in_range(55,70)
+    def TBR70(self) -> float:
+        """Calcula el tiempo por debajo de 70 mg/dL."""
+        return self.calculate_time_in_range(55, 70)
     
-    def TBR55(self):
+    def TBR55(self) -> float:
+        """Calcula el tiempo por debajo de 55 mg/dL."""
         return self.TBR(55)
     
-    # MEDIDAS DE VARIABILIDAD 
-    
-    def CONGA(self, min=5, hours=24):
+    ## VARIABILIDAD
+
+    def CONGA(self, min: int = 5, hours: int = 24) -> float:
         """
-        Calcula y devuelve el valor de CONGA para datos medidos cada 5 minutos.
-        :param min: Distancia en minutos entre las mediciones. Por defecto 5 minutos
-        :param hours: Número de horas para calcular la diferencia. Por defecto es 24.
+        Calcula el CONGA (Continuous Overall Net Glycemic Action).
+        :param min: Distancia en minutos entre las mediciones.
+        :param hours: Número de horas para calcular la diferencia.
+        :return: Valor de CONGA.
         """
-        # Calcular el número de intervalos de 5 minutos en 'hours' horas
-        segmentos = int(60/min)
-        intervals = hours * segmentos
-        
-        # Crear una columna de glucosa desplazada 'intervals' intervalos hacia atrás
+        intervals = hours * int(60/min)
         self.data['glucose_n_hours_ago'] = self.data['glucose'].shift(intervals)
-
-        # Eliminar filas donde la columna desplazada tenga NaN
         valid_data = self.data.dropna(subset=['glucose_n_hours_ago']).copy()
-        
-        # Calcular Dt como la diferencia entre GRt y GRt-m
         valid_data['Dt'] = valid_data['glucose'] - valid_data['glucose_n_hours_ago']
-        
-        # Calcular el promedio de Dt
         D_mean = valid_data['Dt'].mean()
-        
-        # Calcular la suma de las diferencias cuadradas
         sum_squared_diff = ((valid_data['Dt'] - D_mean) ** 2).sum()
-        
-        # Calcular k*, el número de observaciones válidas
         k_star = len(valid_data)
+        return np.sqrt(sum_squared_diff / (k_star - 1))
 
-        # Calcular CONGAn usando la fórmula
-        conga_n = np.sqrt(sum_squared_diff / (k_star - 1))
-        
-        print(f"Para el calculo de CONGA{hours}, hay {intervals} valores que no tienen previo y se han eliminado {len(self.data)-k_star}")
-        return conga_n
-
-    def MODD(self, min = 5):
+    def MODD(self, min: int = 5) -> float:
         """
-        Calcula y devuelve el valor de MODD para datos medidos cada 5 minutos (por defecto).
-        DOI: 10.1007/BF01218495
+        Calcula el MODD (Mean Of Daily Differences).
+        :param min: Intervalo en minutos entre mediciones.
+        :return: Valor de MODD.
+        :reference: DOI: 10.1007/BF01218495
         """
-        # Calcular el número de intervalos de 5 minutos en 24 horas (288 intervalos)
-
-        intervals = 24 * int(60/min) # Estos son los intervalos que hay entre un valor y el siguiente 24 horas después
-        
-        # Crear una columna de glucosa desplazada 288 intervalos hacia atrás
+        intervals = 24 * int(60/min)
         self.data['glucose_24h_ago'] = self.data['glucose'].shift(intervals)
-        
-        # Eliminar filas donde la columna desplazada tenga NaN
         valid_data = self.data.dropna(subset=['glucose_24h_ago']).copy()
-        
-        # Calcular la diferencia absoluta entre GRt y GRt-1440 (24 horas antes)
         valid_data['abs_diff'] = (valid_data['glucose'] - valid_data['glucose_24h_ago']).abs()
-        
-        # Calcular k*, el número de observaciones válidas
-        k_star = len(valid_data)
-       
-        # Calcular MODD como el promedio de las diferencias absolutas
-        modd = valid_data['abs_diff'].sum() / k_star
+        return valid_data['abs_diff'].mean()
 
-        print(f"Para el calculo de modd, hay {intervals} valores que no tienen previo y se han eliminado {len(self.data)-k_star}")
-        
-        return modd
+    def j_index(self) -> float:
+        """Calcula el J-index."""
+        return 0.001 * (self.mean() + self.sd())**2
 
-    def j_index(self):
-
-        j_index= 0.001*(self.mean()+self.sd())**2
-
-        return j_index
-
-    def LBGI(self):
+    def LBGI(self) -> float:
         """
-        Calcula la función f(BG) para BG en mg/dL y r(BG)
-        Calcula y devuelve el valor de LBGI.
-        DOI: 10.2337/db12-1396
+        Calcula el Low Blood Glucose Index (LBGI).
+        :return: Valor de LBGI.
+        :reference: DOI: 10.2337/db12-1396
         """
-        # Calcular f(BG)
         self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
-        
-        # Calcular r(BG)
         self.data["r_bg"] = 10 * (self.data["f_bg"])**2
-        
-        # Calcular rl(BG)
         self.data["rl_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] < 0 else 0, axis=1)
-        
-        # Calcular y devolver LBGI
         return self.data["rl_bg"].mean()
 
-    def HBGI(self):
+    def HBGI(self) -> float:
         """
-        Calcula la función f(BG) para BG en mg/dL y r(BG)
-        Calcula y devuelve el valor de HBGI.
-        DOI: 10.2337/db12-1396
+        Calcula el High Blood Glucose Index (HBGI).
+        :return: Valor de HBGI.
+        :reference: DOI: 10.2337/db12-1396
         """
-        # Calcular f(BG)
         self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
-        
-        # Calcular r(BG)
         self.data["r_bg"] = 10 * (self.data["f_bg"])**2
-        
-        # Calcular rh(BG)
         self.data["rh_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] > 0 else 0, axis=1)
-        
-        # Calcular y devolver HBGI
         return self.data["rh_bg"].mean()
 
-    def MAGE(self):
+    def MAGE(self) -> float:
         """
         Calcula el MAGE (Mean Amplitude of Glycemic Excursions).
-        
-        :return: El valor de MAGE.
+        :return: Valor de MAGE.
         """
-        # Paso 1: Calcular la desviación estándar (SD) de los valores de glucosa
         sd = self.sd()
-        
-        # Paso 2: Determinar todos los valores máximos (picos) y mínimos (valles) locales
-        # Utilizando el método shift para comparar cada valor con el anterior y el siguiente
         peaks_and_nadirs = self.data[
             (self.data['glucose'].shift(1) < self.data['glucose']) & (self.data['glucose'] > self.data['glucose'].shift(-1)) | 
             (self.data['glucose'].shift(1) > self.data['glucose']) & (self.data['glucose'] < self.data['glucose'].shift(-1))
-        ]
+        ].reset_index(drop=True)
         
-        # Restablecer el índice para trabajar con índices secuenciales
-        peaks_and_nadirs.reset_index(drop=True, inplace=True)
-        
-        # Lista para almacenar las excursiones glucémicas válidas
         excursions = []
-        
-       # Paso 3: Verificar si el primer valor es un pico o un valle
         starts_with_peak = peaks_and_nadirs['glucose'][0] > peaks_and_nadirs['glucose'][1]
 
-        # Evaluar los pares de pico y valle para determinar si cumplen con el criterio de 1 SD
-        if starts_with_peak:
-            for i in range(0, len(peaks_and_nadirs) - 1, 2):
-                peak = peaks_and_nadirs['glucose'][i]
-                nadir = peaks_and_nadirs['glucose'][i + 1]
-                # Verificar si la diferencia entre pico y valle excede 1 SD
-                if abs(peak - nadir) > sd:
-                    excursions.append(abs(peak - nadir))
-        else:
-            for i in range(0, len(peaks_and_nadirs) - 1, 2):
-                nadir = peaks_and_nadirs['glucose'][i]
-                peak = peaks_and_nadirs['glucose'][i + 1]
-                # Verificar si la diferencia entre valle y pico excede 1 SD
-                if abs(peak - nadir) > sd:
-                    excursions.append(abs(peak - nadir))
+        for i in range(0, len(peaks_and_nadirs) - 1, 2):
+            if starts_with_peak:
+                peak, nadir = peaks_and_nadirs['glucose'][i], peaks_and_nadirs['glucose'][i + 1]
+            else:
+                nadir, peak = peaks_and_nadirs['glucose'][i], peaks_and_nadirs['glucose'][i + 1]
+            if abs(peak - nadir) > sd:
+                excursions.append(abs(peak - nadir))
 
-        
-        # Si no se encontraron excursiones válidas, retornar 0
-        if len(excursions) == 0:
-            return 0
-        print(excursions)
-        # Paso 4: Calcular el MAGE promediando las excursiones glucémicas válidas
-        print("En mage 2 hay:", len(excursions),"y en total",len(peaks_and_nadirs))
-        return sum(excursions) / len(excursions)
-    
-    def M_Value(self, target_glucose=80):
+        return sum(excursions) / len(excursions) if excursions else 0
+
+    def M_Value(self, target_glucose: float = 80) -> float:
         """
         Calcula el M-Value para evaluar la variabilidad de la glucosa en sangre.
-
         :param target_glucose: Valor objetivo de glucosa (por defecto 80 mg/dL).
-        :return: El M-Value.
-
-        DOI: 10.2337/db12-1396 - Explica que si tienes mas de 25 datos puedes obviar la corrección. Además el target_glucose en el artículo original lo ponínan en 120, ellos ponen 90!!!
+        :return: M-Value.
+        :reference: DOI: 10.2337/db12-1396
         """
         def calculate_M(PG):
             return abs(10 * np.log10(PG / target_glucose)) ** 3
 
         self.data['M'] = self.data['glucose'].apply(calculate_M)
-        M_sum = self.data['M'].sum()
-        N = len(self.data)
+        return self.data['M'].mean()
 
-        
-        M_value = (M_sum / N) 
-        
-        return M_value
-
-    def Lability_index(self, interval=1, period='week'):
+    def Lability_index(self, interval: int = 1, period: str = 'week') -> float:
         """
-        Calcula el índice de labilidad (LI) basado en las lecturas de glucosa y sus tiempos correspondientes.
-
+        Calcula el índice de labilidad (LI).
         :param interval: El intervalo de tiempo en horas para el cálculo.
         :param period: El periodo para la media del LI ('day', 'week', 'month').
         :return: El índice de labilidad (LI) medio para el periodo especificado.
         """
-        # Trabajar con una copia del DataFrame original
-        data_copy = self.data.copy()
-        data_copy.set_index('time', inplace=True)
-        
-        # Imprimir el rango de fechas antes del resampleo
-        print("Rango de fechas antes del resampleo:", data_copy.index.min(), "a", data_copy.index.max())
-        
-        # Resamplear los datos a intervalos especificados
+        data_copy = self.data.copy().set_index('time')
         resampled_data = data_copy.resample(f'{interval}H').asfreq().dropna().reset_index()
         
-        # Imprimir el rango de fechas después del resampleo
-        print("Rango de fechas después del resampleo:", resampled_data['time'].min(), "a", resampled_data['time'].max())
-        
-        print("Número de filas en los datos resampleados:", len(resampled_data))
-        print(resampled_data.head())
-        print(resampled_data.tail())
-        
-        # Asignar periodos según el tipo especificado (día, semana, mes)
         if period == 'day':
             resampled_data['period'] = resampled_data['time'].dt.date
         elif period == 'week':
-            # Calcular manualmente la semana basada en el primer dato
             resampled_data['period'] = (resampled_data['time'] - resampled_data['time'].min()).dt.days // 7
         elif period == 'month':
             resampled_data['period'] = resampled_data['time'].dt.to_period('M').apply(lambda r: r.start_time)
         else:
             raise ValueError("Periodo no válido. Usa 'day', 'week' o 'month'.")
         
-        print(resampled_data.head())
-        
         li_values = []
-        
-        # Calcular el índice de labilidad para cada grupo de periodos
-        for period, group in resampled_data.groupby('period'):
-            print(f"Período: {period}, Número de datos: {len(group)}")
+        for _, group in resampled_data.groupby('period'):
             glucose_readings = group['glucose'].values
-            times = group['time'].values.astype('datetime64[h]').astype(int)  # Convertir tiempos a horas y luego a enteros
+            times = group['time'].values.astype('datetime64[h]').astype(int)
             
             if len(glucose_readings) < 2:
                 continue
             
-            n = len(glucose_readings)
-            li_sum = 0
+            li_sum = sum((glucose_readings[i] - glucose_readings[i + 1])**2 / (times[i + 1] - times[i])
+                         for i in range(len(glucose_readings) - 1)
+                         if 1 <= times[i + 1] - times[i] <= interval)
             
-            # Calcular el LI para el grupo actual
-            for i in range(n - 1):
-                gluc_diff = glucose_readings[i] - glucose_readings[i + 1]
-                time_diff = times[i + 1] - times[i]
-                
-                if 1 <= time_diff <= interval:
-                    li_sum += (gluc_diff ** 2) / time_diff
+            li_values.append(li_sum / (len(glucose_readings) - 1))
+        
+        return np.mean(li_values) if li_values else 0
+
+    def Variability(self) -> str:
+        """
+        Calcula todas las métricas de variabilidad.
+        :return: Un string JSON con todas las métricas de variabilidad.
+        """
+        variability_metrics = {
+            "CONGA1": self.CONGA(min=5, hours=1),
+            "CONGA2": self.CONGA(min=5, hours=2),
+            "CONGA4": self.CONGA(min=5, hours=4),
+            "CONGA6": self.CONGA(min=5, hours=6),
+            "CONGA24": self.CONGA(min=5, hours=24),
+            "MODD": self.MODD(min=5),
+            "J_index": self.j_index(),
+            "LBGI": self.LBGI(),
+            "HBGI": self.HBGI(),
+            "MAGE": self.MAGE(),
+            "M_value": self.M_Value(target_glucose=80),
+            "LI_day": self.Lability_index(interval=1, period='day'),
+            "LI_week": self.Lability_index(interval=1, period='week'),
+            "LI_month": self.Lability_index(interval=1, period='month')
+        }
+        return json.dumps(variability_metrics)
+
+    def Lability_index(self, interval: int = 1, period: str = 'week') -> float:
+        """
+        Calcula el índice de labilidad (LI).
+        :param interval: El intervalo de tiempo en horas para el cálculo.
+        :param period: El periodo para la media del LI ('day', 'week', 'month').
+        :return: El índice de labilidad (LI) medio para el periodo especificado.
+        """
+        data_copy = self.data.copy().set_index('time')
+        resampled_data = data_copy.resample(f'{interval}h').asfreq().dropna().reset_index()
+        
+        if period == 'day':
+            resampled_data['period'] = resampled_data['time'].dt.date
+        elif period == 'week':
+            resampled_data['period'] = (resampled_data['time'] - resampled_data['time'].min()).dt.days // 7
+        elif period == 'month':
+            resampled_data['period'] = resampled_data['time'].dt.to_period('M').apply(lambda r: r.start_time)
+        else:
+            raise ValueError("Periodo no válido. Usa 'day', 'week' o 'month'.")
+        
+        li_values = []
+        for _, group in resampled_data.groupby('period'):
+            glucose_readings = group['glucose'].values
+            times = group['time'].values.astype('datetime64[h]').astype(int)
             
-            li_value = li_sum / (n - 1)
-            print(f"LI para el grupo {period}: {li_value}")
-            li_values.append(li_value)
+            if len(glucose_readings) < 2:
+                continue
+            
+            li_sum = sum((glucose_readings[i] - glucose_readings[i + 1])**2 / (times[i + 1] - times[i])
+                         for i in range(len(glucose_readings) - 1)
+                         if 1 <= times[i + 1] - times[i] <= interval)
+            
+            li_values.append(li_sum / (len(glucose_readings) - 1))
         
-        if not li_values:
-            return 0
-        
-        return np.mean(li_values)
+        return np.mean(li_values) if li_values else 0
 
+    def Variability(self) -> str:
+        """
+        Calcula todas las métricas de variabilidad.
+        :return: Un string JSON con todas las métricas de variabilidad.
+        """
+        variability_metrics = {
+            "CONGA1": self.CONGA(min=5, hours=1),
+            "CONGA2": self.CONGA(min=5, hours=2),
+            "CONGA4": self.CONGA(min=5, hours=4),
+            "CONGA6": self.CONGA(min=5, hours=6),
+            "CONGA24": self.CONGA(min=5, hours=24),
+            "MODD": self.MODD(min=5),
+            "J_index": self.j_index(),
+            "LBGI": self.LBGI(),
+            "HBGI": self.HBGI(),
+            "MAGE": self.MAGE(),
+            "M_value": self.M_Value(target_glucose=80),
+            "LI_day": self.Lability_index(interval=1, period='day'),
+            "LI_week": self.Lability_index(interval=1, period='week'),
+            "LI_month": self.Lability_index(interval=1, period='month')
+        }
+        return json.dumps(variability_metrics)
 
-
-    # GRAFICOS
+    # GRÁFICOS
     def generate_agp(self):
-       # Asegurarse de que la columna de fechas es de tipo datetime
-        self.data["time"] = pd.to_datetime(self.data["time"])
+        """Genera y muestra el Perfil de Glucosa Ambulatoria (AGP) mejorado."""
+        self.data['time_decimal'] = self.data['time'].dt.hour + self.data['time'].dt.minute / 60.0
         
-        # Extraer la hora del día de la columna de fechas
-        self.data['time_of_day'] = self.data["time"].dt.time
+        percentiles = self.data.groupby('time_decimal')['glucose'].quantile([0.05, 0.25, 0.5, 0.75, 0.95]).unstack()
         
-        # Convertir la hora del día a una representación decimal
-        self.data['time_decimal'] = self.data['time_of_day'].apply(lambda x: x.hour + x.minute / 60.0)
+        fig, ax = plt.subplots(figsize=(14, 8))
         
-        # Agrupar los datos por la hora decimal y calcular los percentiles
-        percentiles = self.data.groupby('time_decimal')["glucose"].quantile([0.05, 0.25, 0.5, 0.75, 0.95]).unstack()
+        # Zonas de glucemia
+        ax.axhspan(0, 70, facecolor='#ffcccb', alpha=0.3, label='Hipoglucemia')
+        ax.axhspan(70, 180, facecolor='#90ee90', alpha=0.3, label='Rango objetivo')
+        ax.axhspan(180, 400, facecolor='#ffcccb', alpha=0.3, label='Hiperglucemia')
         
-       # Graficar los percentiles
-        plt.figure(figsize=(12, 6))
+        # Líneas de percentiles
+        ax.plot(percentiles.index, percentiles[0.5], label='Mediana', color='blue', linewidth=2)
+        ax.fill_between(percentiles.index, percentiles[0.25], percentiles[0.75], color='blue', alpha=0.3, label='Rango Intercuartil')
+        ax.fill_between(percentiles.index, percentiles[0.05], percentiles[0.95], color='lightblue', alpha=0.2, label='Percentiles 5-95%')
+        
+        # Líneas horizontales en 70 y 180 mg/dL
+        ax.axhline(y=70, color='red', linestyle='--', linewidth=1)
+        ax.axhline(y=180, color='red', linestyle='--', linewidth=1)
+        
+        # Configuración de ejes y etiquetas
+        ax.set_xlabel('Hora del Día', fontsize=12)
+        ax.set_ylabel('Nivel de Glucosa (mg/dL)', fontsize=12)
+        ax.set_title('Perfil de Glucosa Ambulatoria (AGP)', fontsize=16, fontweight='bold')
+        
+        # Configuración de la leyenda
+        ax.legend(title="Leyenda", loc="upper left", fontsize=10)
+        
+        # Configuración de la cuadrícula
+        ax.grid(True, linestyle=':', alpha=0.6)
+        
+        # Configuración de los ticks del eje x
+        ax.set_xticks(range(0, 25, 3))
+        ax.set_xticklabels([f'{h:02d}:00' for h in range(0, 25, 3)])
+        
+        # Ajuste de los límites del eje y
+        ax.set_ylim(0, 400)
+        
+        # Ajustes finales
+        plt.tight_layout()
+        plt.show()
 
-        plt.plot(percentiles.index, percentiles[0.5], label='Mediana (50%)', color='blue')
-        plt.fill_between(percentiles.index, percentiles[0.25], percentiles[0.75], color='blue', alpha=0.3, label='Rango Intercuartil (25%-75%)')
-        plt.fill_between(percentiles.index, percentiles[0.05], percentiles[0.95], color='lightblue', alpha=0.2, label='Percentiles Extremos (5%-95%)')
 
-        plt.xlabel('Hora del Día')
-        plt.ylabel('Nivel de Glucosa (mg/dL)')
-        plt.title('Perfil de Glucosa Ambulatoria (AGP)')
-        plt.legend(title="Leyenda", loc="upper left")
-        plt.grid(True)
-        plt.xticks(ticks=range(0, 25), labels=[f'{h:02d}:00' for h in range(25)])
+    def day_graph(self, fecha=None):
+        """
+        Genera y muestra el gráfico de glucosa para un día específico.
+        
+        :param fecha: Fecha opcional en formato 'YYYY-MM-DD'. Si no se proporciona, se usa el primer día del DataFrame.
+        """
+        # Si no se proporciona fecha, usar el primer día del DataFrame
+        if fecha is None:
+            fecha = self.data['time'].dt.date.min()
+        else:
+            fecha = pd.to_datetime(fecha).date()
+        
+        # Filtrar datos para el día específico
+        day_data = self.data[self.data['time'].dt.date == fecha].copy()
+        
+        if day_data.empty:
+            print(f"No hay datos para la fecha {fecha}")
+            return
+        
+        # Convertir la hora a un formato numérico para el gráfico
+        day_data['hours'] = day_data['time'].dt.hour + day_data['time'].dt.minute / 60.0
+        
+        # Configurar el estilo de seaborn para un aspecto más profesional
+        sns.set_style("whitegrid")
+        sns.set_context("notebook", font_scale=1.1)
+
+        fig, ax = plt.subplots(figsize=(16, 9))
+
+        # Zonas de glucemia con colores más suaves y transparencia
+        ax.axhspan(0, 70, facecolor='#FF9999', alpha=0.2, label='Hipoglucemia')
+        ax.axhspan(70, 180, facecolor='#90EE90', alpha=0.2, label='Rango objetivo')
+        ax.axhspan(180, 400, facecolor='#FFB266', alpha=0.2, label='Hiperglucemia')
+
+        # Gráfico de línea con marcadores para los puntos de datos
+        ax.plot(day_data['hours'], day_data['glucose'], label='Glucosa', 
+                color='#3366CC', linewidth=2, marker='o', markersize=4)
+
+        # Líneas horizontales en 70 y 180 mg/dL con etiquetas
+        ax.axhline(y=70, color='#FF6666', linestyle='--', linewidth=1)
+        ax.axhline(y=180, color='#FF6666', linestyle='--', linewidth=1)
+        ax.text(24, 72, '70 mg/dL', va='bottom', ha='right', color='#FF6666')
+        ax.text(24, 182, '180 mg/dL', va='bottom', ha='right', color='#FF6666')
+
+        # Configuración de ejes y etiquetas
+        ax.set_xlabel('Hora del Día', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Nivel de Glucosa (mg/dL)', fontsize=12, fontweight='bold')
+        ax.set_title(f'Niveles de Glucosa - {fecha}', fontsize=16, fontweight='bold')
+
+        # Configuración de la leyenda
+        ax.legend(loc='upper left', frameon=True, fancybox=True, shadow=True)
+
+        # Ajuste de los límites del eje y
+        ax.set_ylim(0, 400)
+
+        # Configuración del eje x
+        ax.set_xlim(0, 24)
+        ax.set_xticks(range(0, 25, 3))
+        ax.set_xticklabels([f'{h:02d}:00' for h in range(0, 25, 3)])
+
+        # Rotar las etiquetas del eje x para mejor legibilidad
+        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+
+        # Añadir una cuadrícula suave
+        ax.grid(True, linestyle=':', alpha=0.6)
+
+        # Ajustar los márgenes
+        plt.tight_layout()
+
+        # Mostrar el gráfico
         plt.show()

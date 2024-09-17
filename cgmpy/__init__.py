@@ -1,2 +1,5 @@
 # cgmpy/__init__.py
-from .cgmpy import GlucoseData, Dexcom
+from .glucose_data import GlucoseData
+from .dexcom import Dexcom
+
+__all__ = ['GlucoseData', 'Dexcom']

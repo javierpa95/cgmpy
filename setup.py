@@ -12,5 +12,8 @@ setup(
         'numpy',
         'pandas',
         'matplotlib',
+        'seaborn',
     ],
+    url="https://github.com/javierpa95/cgmpy",
+
 )
