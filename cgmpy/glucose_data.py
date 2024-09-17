@@ -7,43 +7,58 @@ import pandas as pd
 import json
 from typing import Union
 
+def parse_date(date_string):
+    formats = [
+        '%d/%m/%Y %H:%M',  # Formato 1: 07/10/2022 00:00
+        '%Y-%m-%dT%H:%M:%S'  # Formato 2: 2023-02-01T01:08:04
+    ]
+    
+    for fmt in formats:
+        try:
+            return pd.to_datetime(date_string, format=fmt)
+        except ValueError:
+            pass
+    
+    raise ValueError(f"No se pudo parsear la fecha: {date_string}")
+
 class GlucoseData:
-    def __init__(self, file_path: str, date_col: str, glucose_col: str, date_format: str = '%d/%m/%Y %H:%M', delimiter: Union[str, None] = ',', header: int = 0):
+    def __init__(self, file_path: str, date_col: str, glucose_col: str, delimiter: Union[str, None] = ',', header: int = 0):
         """
         Inicializa la clase con los datos de glucemia a partir de un archivo CSV.
         
         :param file_path: Ruta al archivo CSV.
         :param date_col: Nombre de la columna que contiene las fechas.
         :param glucose_col: Nombre de la columna que contiene los valores de glucosa.
-        :param date_format: Formato de fecha esperado en la columna de fechas.
         :param delimiter: Delimitador usado en el archivo CSV.
         :param header: Índice de la fila que contiene los nombres de las columnas.
         :raises ValueError: Si no se puede cargar el archivo o las columnas especificadas no existen.
         """
         self.data = self._load_csv(file_path, delimiter, header)
         self._validate_columns(date_col, glucose_col)
-        self._process_data(date_col, glucose_col, date_format)
+        self._process_data(date_col, glucose_col)
 
     def _load_csv(self, file_path: str, delimiter: Union[str, None], header: int) -> pd.DataFrame:
         """Carga el archivo CSV."""
         if delimiter is None:
             for delim in [',', ';']:
                 try:
-                    return pd.read_csv(file_path, delimiter=delim, header=header)
+                    return pd.read_csv(file_path, delimiter=delim, header=header, quotechar='"')
                 except pd.errors.ParserError:
                     continue
             raise ValueError("No se pudo cargar el archivo CSV con los delimitadores ',' o ';'.")
-        return pd.read_csv(file_path, delimiter=delimiter, header=header)
+        return pd.read_csv(file_path, delimiter=delimiter, header=header, quotechar='"')
+
+    
 
     def _validate_columns(self, date_col: str, glucose_col: str):
         """Valida que las columnas especificadas existan en el DataFrame."""
         if date_col not in self.data.columns or glucose_col not in self.data.columns:
             raise ValueError(f"Las columnas '{date_col}' o '{glucose_col}' no se encuentran en el archivo CSV. Columnas disponibles: {self.data.columns.tolist()}.")
 
-    def _process_data(self, date_col: str, glucose_col: str, date_format: str):
+    def _process_data(self, date_col: str, glucose_col: str):
         """Procesa los datos, convirtiendo fechas y valores de glucosa."""
         self.data = self.data.dropna(subset=[date_col])
-        self.data[date_col] = pd.to_datetime(self.data[date_col], format=date_format, errors='coerce')
+        self.data[date_col] = self.data[date_col].apply(parse_date)
         self.data = self.data.dropna(subset=[date_col, glucose_col])
         self.data[glucose_col] = pd.to_numeric(self.data[glucose_col], errors='coerce')
         self.data = self.data.dropna(subset=[glucose_col])
@@ -72,7 +87,7 @@ class GlucoseData:
         return self.data['glucose'].median()
 
     def sd(self) -> float:
-        """Calcula la desviación estándar de la glucemia."""
+        """Calcula la desviación estándar de la glucosa."""
         return self.data['glucose'].std()
     
     def gmi(self) -> float:
@@ -232,64 +247,6 @@ class GlucoseData:
         """
         data_copy = self.data.copy().set_index('time')
         resampled_data = data_copy.resample(f'{interval}H').asfreq().dropna().reset_index()
-        
-        if period == 'day':
-            resampled_data['period'] = resampled_data['time'].dt.date
-        elif period == 'week':
-            resampled_data['period'] = (resampled_data['time'] - resampled_data['time'].min()).dt.days // 7
-        elif period == 'month':
-            resampled_data['period'] = resampled_data['time'].dt.to_period('M').apply(lambda r: r.start_time)
-        else:
-            raise ValueError("Periodo no válido. Usa 'day', 'week' o 'month'.")
-        
-        li_values = []
-        for _, group in resampled_data.groupby('period'):
-            glucose_readings = group['glucose'].values
-            times = group['time'].values.astype('datetime64[h]').astype(int)
-            
-            if len(glucose_readings) < 2:
-                continue
-            
-            li_sum = sum((glucose_readings[i] - glucose_readings[i + 1])**2 / (times[i + 1] - times[i])
-                         for i in range(len(glucose_readings) - 1)
-                         if 1 <= times[i + 1] - times[i] <= interval)
-            
-            li_values.append(li_sum / (len(glucose_readings) - 1))
-        
-        return np.mean(li_values) if li_values else 0
-
-    def Variability(self) -> str:
-        """
-        Calcula todas las métricas de variabilidad.
-        :return: Un string JSON con todas las métricas de variabilidad.
-        """
-        variability_metrics = {
-            "CONGA1": self.CONGA(min=5, hours=1),
-            "CONGA2": self.CONGA(min=5, hours=2),
-            "CONGA4": self.CONGA(min=5, hours=4),
-            "CONGA6": self.CONGA(min=5, hours=6),
-            "CONGA24": self.CONGA(min=5, hours=24),
-            "MODD": self.MODD(min=5),
-            "J_index": self.j_index(),
-            "LBGI": self.LBGI(),
-            "HBGI": self.HBGI(),
-            "MAGE": self.MAGE(),
-            "M_value": self.M_Value(target_glucose=80),
-            "LI_day": self.Lability_index(interval=1, period='day'),
-            "LI_week": self.Lability_index(interval=1, period='week'),
-            "LI_month": self.Lability_index(interval=1, period='month')
-        }
-        return json.dumps(variability_metrics)
-
-    def Lability_index(self, interval: int = 1, period: str = 'week') -> float:
-        """
-        Calcula el índice de labilidad (LI).
-        :param interval: El intervalo de tiempo en horas para el cálculo.
-        :param period: El periodo para la media del LI ('day', 'week', 'month').
-        :return: El índice de labilidad (LI) medio para el periodo especificado.
-        """
-        data_copy = self.data.copy().set_index('time')
-        resampled_data = data_copy.resample(f'{interval}h').asfreq().dropna().reset_index()
         
         if period == 'day':
             resampled_data['period'] = resampled_data['time'].dt.date
