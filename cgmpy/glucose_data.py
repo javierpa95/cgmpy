@@ -22,7 +22,7 @@ def parse_date(date_string):
     raise ValueError(f"No se pudo parsear la fecha: {date_string}")
 
 class GlucoseData:
-    def __init__(self, file_path: str, date_col: str, glucose_col: str, delimiter: Union[str, None] = ',', header: int = 0):
+    def __init__(self, file_path: str, date_col: str, glucose_col: str, delimiter: Union[str, None] = None, header: int = 0):
         """
         Inicializa la clase con los datos de glucemia a partir de un archivo CSV.
         
@@ -33,6 +33,7 @@ class GlucoseData:
         :param header: Índice de la fila que contiene los nombres de las columnas.
         :raises ValueError: Si no se puede cargar el archivo o las columnas especificadas no existen.
         """
+
         self.data = self._load_csv(file_path, delimiter, header)
         self._validate_columns(date_col, glucose_col)
         self._process_data(date_col, glucose_col)
@@ -42,11 +43,14 @@ class GlucoseData:
         if delimiter is None:
             for delim in [',', ';']:
                 try:
-                    return pd.read_csv(file_path, delimiter=delim, header=header, quotechar='"')
+                    df = pd.read_csv(file_path, delimiter=delim, header=header, quotechar='"', nrows=5)
+                    if len(df.columns) > 1:
+                        return pd.read_csv(file_path, delimiter=delim, header=header, quotechar='"')
                 except pd.errors.ParserError:
                     continue
-            raise ValueError("No se pudo cargar el archivo CSV con los delimitadores ',' o ';'.")
-        return pd.read_csv(file_path, delimiter=delimiter, header=header, quotechar='"')
+            raise ValueError("No se pudo detectar automáticamente el delimitador del archivo CSV.")
+        else:
+            return pd.read_csv(file_path, delimiter=delimiter, header=header, quotechar='"')
 
     
 
@@ -68,7 +72,7 @@ class GlucoseData:
     ## INFORMACIÓN BÁSICA
 
     def info(self) -> str:
-        """
+        """ 
         Muestra información básica del archivo CSV, incluyendo el número de datos y el rango de fechas.
         :return: Un string con la información básica.
         """
@@ -87,7 +91,7 @@ class GlucoseData:
         return self.data['glucose'].median()
 
     def sd(self) -> float:
-        """Calcula la desviación estándar de la glucosa."""
+        """Calcula la desviación estándar de la glucemia."""
         return self.data['glucose'].std()
     
     def gmi(self) -> float:
@@ -246,7 +250,7 @@ class GlucoseData:
         :return: El índice de labilidad (LI) medio para el periodo especificado.
         """
         data_copy = self.data.copy().set_index('time')
-        resampled_data = data_copy.resample(f'{interval}H').asfreq().dropna().reset_index()
+        resampled_data = data_copy.resample(f'{interval}h').asfreq().dropna().reset_index()
         
         if period == 'day':
             resampled_data['period'] = resampled_data['time'].dt.date
@@ -273,7 +277,7 @@ class GlucoseData:
         
         return np.mean(li_values) if li_values else 0
 
-    def Variability(self) -> str:
+    def Variability(self) -> json:
         """
         Calcula todas las métricas de variabilidad.
         :return: Un string JSON con todas las métricas de variabilidad.
