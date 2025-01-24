@@ -1,17 +1,43 @@
 from .glucose_data import GlucoseData
 import matplotlib.pyplot as plt
 from typing import Union
+import seaborn as sns
+import pandas as pd
+import numpy as np
 
 class GlucosePlot(GlucoseData):
-    def __init__(self, file_path: str, date_col: str, glucose_col: str, delimiter: Union[str, None] = None, header: int = 0):
-        super().__init__(file_path, date_col, glucose_col, delimiter, header)
+    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0):
+        super().__init__(data_source, date_col, glucose_col, delimiter, header)
 
      # GRÁFICOS
-    def generate_agp(self):
-        """Genera y muestra el Perfil de Glucosa Ambulatoria (AGP) mejorado."""
-        self.data['time_decimal'] = self.data['time'].dt.hour + self.data['time'].dt.minute / 60.0
+    def generate_agp(self, smoothing_window: int = 15):
+        """
+        Genera y muestra el Perfil de Glucosa Ambulatoria (AGP) mejorado.
         
-        percentiles = self.data.groupby('time_decimal')['glucose'].quantile([0.05, 0.25, 0.5, 0.75, 0.95]).unstack()
+        :param smoothing_window: Ventana de suavizado en minutos (por defecto 15)
+        """
+        self.data['time_decimal'] = (self.data['time'].dt.hour + 
+                                    self.data['time'].dt.minute / 60.0).round(2)
+        
+        # Primero agrupamos y calculamos los percentiles
+        percentiles = (self.data.groupby('time_decimal')['glucose']
+                      .agg([
+                          lambda x: np.percentile(x, 5),
+                          lambda x: np.percentile(x, 25),
+                          lambda x: np.percentile(x, 50),
+                          lambda x: np.percentile(x, 75),
+                          lambda x: np.percentile(x, 95)
+                      ]))
+        
+        # Renombramos las columnas
+        percentiles.columns = [0.05, 0.25, 0.5, 0.75, 0.95]
+        
+        # Aplicamos el suavizado después de calcular los percentiles
+        for col in percentiles.columns:
+            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+        
+        # Asegurar que los datos están ordenados
+        percentiles = percentiles.sort_index()
         
         fig, ax = plt.subplots(figsize=(14, 8))
         
@@ -121,4 +147,26 @@ class GlucosePlot(GlucoseData):
         plt.tight_layout()
 
         # Mostrar el gráfico
+        plt.show()
+
+
+    def histogram(self, bin_width=10):
+        """
+        Genera y muestra el histograma de glucosa con intervalos fijos.
+        
+        :param bin_width: Ancho de cada intervalo en mg/dL (por defecto 10)
+        """
+        # Calcular los bordes de los bins
+        min_glucose = 0  # O podrías usar self.data['glucose'].min()
+        max_glucose = 500  # O podrías usar self.data['glucose'].max()
+        bins = range(int(min_glucose), int(max_glucose) + bin_width, bin_width)
+        
+        plt.hist(self.data['glucose'], bins=bins, edgecolor='black')
+        plt.xlabel('Nivel de Glucosa (mg/dL)')
+        plt.ylabel('Frecuencia')
+        plt.title(f'Histograma de Glucosa (Intervalos de {bin_width} mg/dL)')
+        plt.axvspan(0, 70, color='#ffcccb', alpha=0.3, label='Hipoglucemia')
+        plt.axvspan(70, 180, color='#90ee90', alpha=0.3, label='Rango objetivo')
+        plt.axvspan(180, 400, color='#ffcccb', alpha=0.3, label='Hiperglucemia')
+        plt.legend()
         plt.show()

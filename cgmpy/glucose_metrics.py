@@ -2,13 +2,49 @@ from .glucose_data import GlucoseData
 from typing import Union
 import numpy as np
 import json
+import pandas as pd
 
 class GlucoseMetrics(GlucoseData):
-    def __init__(self, file_path: str, date_col: str, glucose_col: str, delimiter: Union[str, None] = None, header: int = 0):
+    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0):
 
-        super().__init__(file_path, date_col, glucose_col, delimiter, header)
+        super().__init__(data_source, date_col, glucose_col, delimiter, header)
 
+    def _calculate_data_completeness(self, interval_minutes: Union[float, None] = None) -> dict:
+        """
+        Calcula el porcentaje de datos disponibles para el DataFrame actual.
+        
+        :param interval_minutes: Intervalo esperado entre mediciones en minutos. 
+                               Si es None, se calcula automáticamente.
+        :return: Diccionario con información sobre la completitud de datos
+        """
+        # Si no se especifica el intervalo, calcularlo como la mediana de las diferencias
+        if interval_minutes is None:
+            diferencias = self.data.sort_values('time')['time'].diff()
+            interval_minutes = diferencias.median().total_seconds() / 60
+
+        # Crear una copia de los datos y ordenarlos
+        data = self.data.sort_values('time').copy()
+        
+        # Análisis para todo el período
+        tiempo_total = (data['time'].max() - data['time'].min()).total_seconds() / 60
+        datos_esperados = int(tiempo_total / interval_minutes)
+        datos_reales = len(data)
+        
+        return {
+            'inicio': data['time'].min(),
+            'fin': data['time'].max(),
+            'intervalo': interval_minutes,
+            'datos_esperados': datos_esperados,
+            'datos_reales': datos_reales,
+            'porcentaje': (datos_reales / datos_esperados) * 100 if datos_esperados > 0 else 0
+        }
+    
     ## ESTADÍSTICAS BÁSICAS
+
+    def data_completeness(self, interval_minutes: Union[float, None] = None) -> dict:
+        """Calcula el porcentaje de datos disponibles para el DataFrame actual."""
+        return self._calculate_data_completeness(interval_minutes)
+    
     def mean(self) -> float:
         """Calcula la glucemia media."""
         return self.data['glucose'].mean()
@@ -17,9 +53,17 @@ class GlucoseMetrics(GlucoseData):
         """Calcula la mediana de la glucemia."""
         return self.data['glucose'].median()
 
+    def percentile(self, percentile: float) -> float:
+        """Calcula el percentil de la glucemia."""
+        return self.data['glucose'].quantile(percentile / 100)
+    
     def sd(self) -> float:
         """Calcula la desviación estándar de la glucemia."""
         return self.data['glucose'].std()
+    
+    def cv(self) -> float:
+        """Calcula el coeficiente de variación."""
+        return (self.sd() / self.mean()) * 100
     
     def gmi(self) -> float:
         """
@@ -62,19 +106,89 @@ class GlucoseMetrics(GlucoseData):
     def TAR180(self) -> float:
         """Calcula el tiempo en rango entre 180 y 250 mg/dL."""
         return self.calculate_time_in_range(180, 250)
-
+    
+    def TAR140(self) -> float:
+        """Calcula el tiempo por encima de 140 mg/dL."""
+        return self.calculate_time_in_range(140, 250)
+    
     def TIR(self) -> float:
         """Calcula el tiempo en rango entre 70 y 180 mg/dL."""
         return self.calculate_time_in_range(70, 180)
+    def TIR_pregnancy(self) -> float:
+        """Calcula el tiempo en rango entre 70 y 180 mg/dL."""
+        return self.calculate_time_in_range(63, 140)
     
     def TBR70(self) -> float:
         """Calcula el tiempo por debajo de 70 mg/dL."""
         return self.calculate_time_in_range(55, 70)
     
+    def TBR63(self) -> float:
+        """Calcula el tiempo por debajo de 70 mg/dL."""
+        return self.TBR(63)
+    
     def TBR55(self) -> float:
         """Calcula el tiempo por debajo de 55 mg/dL."""
         return self.TBR(55)
-    
+
+    def time_statistics(self):
+        """Calcula las estadísticas de tiempo de glucosa"""
+        return {
+            'TIR': self.TIR(),
+            'TBR70': self.TBR70(),
+            'TBR55': self.TBR55(),
+            'TAR250': self.TAR250(),
+            'TAR180': self.TAR180(),
+            'GMI': self.gmi(),
+            'CV': self.cv(),
+            'Media': self.mean(),
+            'Mediana': self.median(),
+            'P5': self.percentile(5), 
+            'P25': self.percentile(25),
+            'P75': self.percentile(75),
+            'P95': self.percentile(95),
+            'Desviacion_estandar': self.sd(),
+            'Asimetria': self.data['glucose'].skew(),
+            'Curtosis': self.data['glucose'].kurtosis()
+        }
+    def time_statistics_pregnancy(self):
+        """
+        Calcula las estadísticas de tiempo de glucosa específicas para embarazo
+        siguiendo las guías internacionales para diabetes gestacional
+        """
+        return {
+            'TIR_pregnancy': self.TIR_pregnancy(),  # 63-140 mg/dL
+            'TBR63': self.TBR63(),    # < 63 mg/dL
+            'TAR140': self.TAR140(),  # > 140 mg/dL
+            'GMI': self.gmi(),
+            'CV': self.cv(),
+            'Media': self.mean(),
+            'Mediana': self.median(),
+            'P5': self.percentile(5), 
+            'P25': self.percentile(25),
+            'P75': self.percentile(75),
+            'P95': self.percentile(95),
+            'Desviacion_estandar': self.sd(),
+            'Asimetria': self.data['glucose'].skew(),
+            'Curtosis': self.data['glucose'].kurtosis()
+        }
+
+    def distribution_analysis(self):
+        """Analiza la distribución de los valores de glucosa"""
+        stats = {
+            'media': self.data['glucose'].mean(),
+            'mediana': self.data['glucose'].median(),
+            'desviacion_estandar': self.data['glucose'].std(),
+            'coef_variacion': (self.data['glucose'].std() / self.data['glucose'].mean()) * 100,
+            'asimetria': self.data['glucose'].skew(),
+            'curtosis': self.data['glucose'].kurtosis(),
+            'percentiles': {
+                'p25': self.data['glucose'].quantile(0.25),
+                'p75': self.data['glucose'].quantile(0.75),
+                'IQR': self.data['glucose'].quantile(0.75) - self.data['glucose'].quantile(0.25)
+            }
+        }
+        return stats
+        
     ## VARIABILIDAD
 
     def CONGA(self, min: int = 5, hours: int = 24) -> float:
