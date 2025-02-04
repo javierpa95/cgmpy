@@ -1,3 +1,4 @@
+import datetime
 from .glucose_metrics import GlucoseMetrics
 from .glucose_plot import GlucosePlot
 from typing import Union
@@ -15,8 +16,11 @@ class GlucoseAnalysis(GlucoseMetrics, GlucosePlot):
                  date_col: str="time", 
                  glucose_col: str="glucose", 
                  delimiter: Union[str, None] = None, 
-                 header: int = 0):
-        GlucoseMetrics.__init__(self, data_source, date_col, glucose_col, delimiter, header) 
+                 header: int = 0, 
+                 start_date: Union[str, datetime.datetime, None] = None,
+                 end_date: Union[str, datetime.datetime, None] = None):
+        
+        GlucoseMetrics.__init__(self, data_source, date_col, glucose_col, delimiter, header, start_date, end_date) 
 
 
 

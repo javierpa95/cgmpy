@@ -1,3 +1,4 @@
+import datetime
 from .glucose_data import GlucoseData
 from typing import Union
 import numpy as np
@@ -5,9 +6,10 @@ import json
 import pandas as pd
 
 class GlucoseMetrics(GlucoseData):
-    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0):
+    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0, start_date: Union[str, datetime.datetime, None] = None,
+                 end_date: Union[str, datetime.datetime, None] = None):
 
-        super().__init__(data_source, date_col, glucose_col, delimiter, header)
+        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date)
 
     def _calculate_data_completeness(self, interval_minutes: Union[float, None] = None) -> dict:
         """
@@ -41,9 +43,12 @@ class GlucoseMetrics(GlucoseData):
     
     ## ESTADÍSTICAS BÁSICAS
 
-    def data_completeness(self, interval_minutes: Union[float, None] = None) -> dict:
-        """Calcula el porcentaje de datos disponibles para el DataFrame actual."""
-        return self._calculate_data_completeness(interval_minutes)
+    def data_completeness(self, interval_minutes: Union[float, None] = None) -> int:
+        """
+        Calcula el porcentaje de datos disponibles para el DataFrame actual.
+        :return: Porcentaje de completitud como número entero
+        """
+        return int(self._calculate_data_completeness(interval_minutes)['porcentaje'])
     
     def mean(self) -> float:
         """Calcula la glucemia media."""
@@ -133,6 +138,7 @@ class GlucoseMetrics(GlucoseData):
     def time_statistics(self):
         """Calcula las estadísticas de tiempo de glucosa"""
         return {
+            '%Data': int(self._calculate_data_completeness()['porcentaje']),
             'TIR': self.TIR(),
             'TBR70': self.TBR70(),
             'TBR55': self.TBR55(),
@@ -156,6 +162,7 @@ class GlucoseMetrics(GlucoseData):
         siguiendo las guías internacionales para diabetes gestacional
         """
         return {
+            '%Data': int(self._calculate_data_completeness()['porcentaje']),
             'TIR_pregnancy': self.TIR_pregnancy(),  # 63-140 mg/dL
             'TBR63': self.TBR63(),    # < 63 mg/dL
             'TAR140': self.TAR140(),  # > 140 mg/dL
@@ -175,6 +182,7 @@ class GlucoseMetrics(GlucoseData):
     def distribution_analysis(self):
         """Analiza la distribución de los valores de glucosa"""
         stats = {
+            '%Data': int(self._calculate_data_completeness()['porcentaje']),
             'media': self.data['glucose'].mean(),
             'mediana': self.data['glucose'].median(),
             'desviacion_estandar': self.data['glucose'].std(),
@@ -269,6 +277,77 @@ class GlucoseMetrics(GlucoseData):
                 excursions.append(abs(peak - nadir))
 
         return sum(excursions) / len(excursions) if excursions else 0
+    
+    def MAGE_cgm(self, std: int = 1) -> float:
+        """
+            Computes and returns the mean amplitude of glucose excursions
+            Args:
+                (pd.DataFrame): dataframe of data with DateTime, Time and Glucose columns
+                sd (integer): standard deviation for computing range (default=1)
+            Returns:
+                MAGE (float): the mean amplitude of glucose excursions 
+            Refs:
+                Sneh Gajiwala: https://github.com/snehG0205/NCSA_genomics/tree/2bfbb87c9c872b1458ef3597d9fb2e56ac13ad64
+                
+        """
+        # Extraer valores de glucosa e índices
+        glucose = self.data['glucose'].tolist()
+        ix = list(range(len(glucose)))
+        
+        # Encontrar mínimos y máximos locales
+        a = np.diff(np.sign(np.diff(glucose))).nonzero()[0] + 1
+        valleys = (np.diff(np.sign(np.diff(glucose))) > 0).nonzero()[0] + 1  # mínimos locales
+        peaks = (np.diff(np.sign(np.diff(glucose))) < 0).nonzero()[0] + 1    # máximos locales
+
+        # Almacenar mínimos y máximos locales
+        excursion_points = pd.DataFrame(columns=['Index', 'Time', 'Glucose', 'Type'])
+        k = 0
+        for i in range(len(peaks)):
+            excursion_points.loc[k] = [peaks[i], self.data['time'].iloc[peaks[i]], 
+                                     self.data['glucose'].iloc[peaks[i]], "P"]
+            k += 1
+
+        for i in range(len(valleys)):
+            excursion_points.loc[k] = [valleys[i], self.data['time'].iloc[valleys[i]], 
+                                     self.data['glucose'].iloc[valleys[i]], "V"]
+            k += 1
+
+        excursion_points = excursion_points.sort_values(by=['Index'])
+        excursion_points = excursion_points.reset_index(drop=True)
+
+        # Seleccionar puntos de inflexión
+        turning_points = pd.DataFrame(columns=['Index', 'Time', 'Glucose', 'Type'])
+        k = 0
+        for i in range(std, len(excursion_points.Index)-std):
+            positions = [i-std, i, i+std]
+            for j in range(0, len(positions)-1):
+                if excursion_points.Type[positions[j]] == excursion_points.Type[positions[j+1]]:
+                    if excursion_points.Type[positions[j]] == 'P':
+                        if excursion_points.Glucose[positions[j]] >= excursion_points.Glucose[positions[j+1]]:
+                            turning_points.loc[k] = excursion_points.loc[positions[j+1]]
+                        else:
+                            turning_points.loc[k] = excursion_points.loc[positions[j+1]]
+                        k += 1
+                    else:
+                        if excursion_points.Glucose[positions[j]] <= excursion_points.Glucose[positions[j+1]]:
+                            turning_points.loc[k] = excursion_points.loc[positions[j]]
+                        else:
+                            turning_points.loc[k] = excursion_points.loc[positions[j+1]]
+                        k += 1
+
+        if len(turning_points.index) < 10:
+            turning_points = excursion_points.copy()
+            excursion_count = len(excursion_points.index)
+        else:
+            excursion_count = len(excursion_points.index)/2
+
+        turning_points = turning_points.drop_duplicates(subset="Index", keep="first")
+        turning_points = turning_points.reset_index(drop=True)
+        
+        # Calcular MAGE
+        mage = turning_points.Glucose.sum()/excursion_count if excursion_count > 0 else 0
+        
+        return round(mage, 3)
 
     def M_Value(self, target_glucose: float = 80) -> float:
         """

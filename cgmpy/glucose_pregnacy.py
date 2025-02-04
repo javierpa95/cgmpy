@@ -1,3 +1,4 @@
+import datetime
 from .glucose_analysis import GlucoseAnalysis
 from typing import Union
 import pandas as pd
@@ -12,7 +13,9 @@ class GestationalDiabetes(GlucoseAnalysis):
                  date_col: str="time", 
                  glucose_col: str="glucose", 
                  delimiter: Union[str, None] = None, 
-                 header: int = 0):
+                 header: int = 0,
+                 start_date: Union[str, datetime.datetime, None] = None,
+                 end_date: Union[str, datetime.datetime, None] = None):
         """
         Inicializa el objeto GestationalDiabetes.
         
@@ -25,7 +28,7 @@ class GestationalDiabetes(GlucoseAnalysis):
             delimiter: Delimitador del archivo
             header: Número de fila que contiene los encabezados
         """
-        super().__init__(file_path, date_col, glucose_col, delimiter, header)
+        super().__init__(file_path, date_col, glucose_col, delimiter, header, start_date, end_date)
 
         # Convertir y validar la fecha de parto
         self.fecha_parto = pd.to_datetime(fecha_parto)

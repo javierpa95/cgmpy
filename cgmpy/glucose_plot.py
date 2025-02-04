@@ -4,10 +4,11 @@ from typing import Union
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import datetime
 
 class GlucosePlot(GlucoseData):
-    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0):
-        super().__init__(data_source, date_col, glucose_col, delimiter, header)
+    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0, start_date: Union[str, datetime.datetime, None] = None,end_date: Union[str, datetime.datetime, None] = None):
+        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date)
 
      # GRÁFICOS
     def generate_agp(self, smoothing_window: int = 15):
