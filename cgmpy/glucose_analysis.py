@@ -4,7 +4,7 @@ from .glucose_plot import GlucosePlot
 from typing import Union
 import pandas as pd
 
-class GlucoseAnalysis(GlucoseMetrics, GlucosePlot):
+class GlucoseAnalysis(GlucosePlot):
     """
     Clase que combina todas las funcionalidades de análisis de glucosa:
     - Manejo de datos (GlucoseData)
@@ -20,7 +20,7 @@ class GlucoseAnalysis(GlucoseMetrics, GlucosePlot):
                  start_date: Union[str, datetime.datetime, None] = None,
                  end_date: Union[str, datetime.datetime, None] = None):
         
-        GlucoseMetrics.__init__(self, data_source, date_col, glucose_col, delimiter, header, start_date, end_date) 
+        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date)
 
 
 

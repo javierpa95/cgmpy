@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
 import pandas as pd
+import csv  # Importamos csv para detectar el delimitador automáticamente
 from typing import Union
 from .utils import parse_date
 
@@ -24,6 +25,7 @@ class GlucoseData:
         """
         self.date_col = date_col
         self.glucose_col = glucose_col
+        self.typical_interval = None  # Inicializamos el atributo
         
         if isinstance(data_source, pd.DataFrame):
             self.data = data_source[[date_col, glucose_col]].copy()
@@ -36,27 +38,20 @@ class GlucoseData:
         # Filtrar por fechas si se especifican
         if start_date is not None or end_date is not None:
             self._filter_by_dates(start_date, end_date)
+        
+        # Calculamos el intervalo típico después de todo el procesamiento
+        self.typical_interval = self._calculate_typical_interval()
 
     def _load_csv(self, file_path: str, delimiter: Union[str, None], header: int) -> pd.DataFrame:
         """Carga el archivo CSV solo con las columnas necesarias."""
-        if delimiter is None:
-            for delim in [',', ';']:
-                try:
-                    # Primero leemos solo unas pocas filas para detectar el delimitador
-                    df = pd.read_csv(file_path, delimiter=delim, header=header, quotechar='"', nrows=5)
-                    if len(df.columns) > 1:
-                        # Si encontramos el delimitador correcto, leemos solo las columnas necesarias
-                        return pd.read_csv(
-                            file_path, 
-                            delimiter=delim, 
-                            header=header, 
-                            quotechar='"',
-                            usecols=[self.date_col, self.glucose_col]
-                        )
-                except pd.errors.ParserError as e:
-                    raise ValueError(f"Error al parsear CSV: {str(e)}") from e
-            raise ValueError("No se pudo detectar automáticamente el delimitador del archivo CSV.")
-        else:
+        try:
+            if delimiter is None:
+                # Usar csv.Sniffer para detectar el delimitador automáticamente
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    sample = f.read(1024)
+                    sniffer = csv.Sniffer()
+                    dialect = sniffer.sniff(sample)
+                    delimiter = dialect.delimiter
             return pd.read_csv(
                 file_path, 
                 delimiter=delimiter, 
@@ -64,6 +59,23 @@ class GlucoseData:
                 quotechar='"',
                 usecols=[self.date_col, self.glucose_col]
             )
+        except Exception as e:
+            # Fallback a detección manual si csv.Sniffer falla
+            if delimiter is None:
+                for delim in [',', ';']:
+                    try:
+                        df = pd.read_csv(file_path, delimiter=delim, header=header, quotechar='"', nrows=5)
+                        if len(df.columns) > 1:
+                            return pd.read_csv(
+                                file_path, 
+                                delimiter=delim, 
+                                header=header, 
+                                quotechar='"',
+                                usecols=[self.date_col, self.glucose_col]
+                            )
+                    except pd.errors.ParserError:
+                        continue
+            raise ValueError(f"Error al parsear CSV: {str(e)}") from e
 
     def _validate_columns(self, date_col: str, glucose_col: str):
         """Valida que las columnas especificadas existan en el DataFrame."""
@@ -90,11 +102,30 @@ class GlucoseData:
         # Después de todas las transformaciones, ordenar por tiempo
         self.data = self.data.sort_values('time', ascending=True).reset_index(drop=True)
         
+        
         # Optimizar el DataFrame completo
         self.data = self.data.copy()
         # Eliminar redundancia en conversión de tiempo
         if not pd.api.types.is_datetime64_any_dtype(self.data['time']):
             self.data['time'] = pd.to_datetime(self.data['time'])
+
+    def _calculate_typical_interval(self) -> float:
+        """
+        Calcula el intervalo típico entre mediciones en minutos.
+        
+        :return: Intervalo típico en minutos
+        """
+        diferencias = self.data['time'].diff()
+        intervalo = diferencias.median().total_seconds() / 60
+        return abs(intervalo)
+
+    def get_typical_interval(self) -> float:
+        """
+        Devuelve el intervalo típico entre mediciones en minutos.
+        
+        :return: Intervalo típico en minutos
+        """
+        return self.typical_interval
 
     def _filter_by_dates(self, start_date: Union[str, datetime.datetime, None], 
                         end_date: Union[str, datetime.datetime, None]):
@@ -142,17 +173,13 @@ class GlucoseData:
         fecha_inicio = self.data['time'].min()
         fecha_fin = self.data['time'].max()
         
-        # Ordenar los datos por fecha antes de calcular las diferencias
-        datos_ordenados = self.data.sort_values('time')
-        diferencias = datos_ordenados['time'].diff() #Obtiene una serie con las diferencias entre las fechas manteniendo el índice
-        intervalo_tipico = diferencias.median().total_seconds() / 60
-        # Asegurarse de que el intervalo sea positivo
-        intervalo_tipico = abs(intervalo_tipico)
+        # Reutilizamos el intervalo típico ya calculado
+        intervalo_tipico = self.typical_interval
 
         # Umbral de desconexión: intervalo típico + 10 minutos
         umbral_desconexion = pd.Timedelta(minutes=intervalo_tipico + 10)
-        desconexiones = diferencias[diferencias > umbral_desconexion] #Obtiene las diferencias que superan el umbral de desconexión por lo que tengo el índice de las desconexiones
-        
+        diferencias = self.data['time'].diff()
+        desconexiones = diferencias[diferencias > umbral_desconexion]
         num_desconexiones = len(desconexiones)
         
         # Calcular tiempo total de desconexión
@@ -182,27 +209,27 @@ class GlucoseData:
         }
 
         if include_disconnections:
-             # Crear lista detallada de desconexiones
+            # Crear lista detallada de desconexiones
             lista_desconexiones = []
             if num_desconexiones > 0:
-                # Usar directamente la variable desconexiones que ya tenemos
                 for idx, indice in enumerate(desconexiones.index, 1):
                     posicion_actual = self.data.index.get_loc(indice)
                     if posicion_actual > 0:
-                        fecha_fin = self.data.iloc[posicion_actual]['time']
-                        fecha_inicio = self.data.iloc[posicion_actual - 1]['time']
-                        duracion_minutos = (fecha_fin - fecha_inicio).total_seconds() / 60
+                        fecha_fin_desconexion = self.data.iloc[posicion_actual]['time']
+                        fecha_inicio_desconexion = self.data.iloc[posicion_actual - 1]['time']
+                        duracion_minutos = (fecha_fin_desconexion - fecha_inicio_desconexion).total_seconds() / 60
                         horas = int(duracion_minutos // 60)
                         minutos = int(duracion_minutos % 60)
                         lista_desconexiones.append({
-                            "inicio": fecha_inicio.strftime('%d/%m/%Y %H:%M'),
-                            "fin": fecha_fin.strftime('%d/%m/%Y %H:%M'),
+                            "inicio": fecha_inicio_desconexion.strftime('%d/%m/%Y %H:%M'),
+                            "fin": fecha_fin_desconexion.strftime('%d/%m/%Y %H:%M'),
                             "duracion": f"{horas:02d} horas y {minutos:02d} minutos"
                         })
 
             resumen["lista_desconexiones"] = lista_desconexiones
 
         return resumen
+
 class Dexcom(GlucoseData):
     def __init__(self, file_path: str, 
                  start_date: Union[str, datetime.datetime, None] = None,
