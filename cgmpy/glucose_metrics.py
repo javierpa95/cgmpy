@@ -4,8 +4,6 @@ from typing import Union
 import numpy as np
 import json
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
 class GlucoseMetrics(GlucoseData):
@@ -258,7 +256,7 @@ class GlucoseMetrics(GlucoseData):
         
         :param start_time: Hora de inicio en formato "HH:MM"
         :param duration_hours: Duración del segmento en horas
-        :return: Promedio de las SD del segmento de cada día
+        :return: Promedio de las SD del segmento de cada día y promedio de las medias diarias
         
         Ejemplo:
             sd_within_day_segment("00:00", 8)  # SD promedio del segmento nocturno (00:00-08:00)
@@ -270,20 +268,20 @@ class GlucoseMetrics(GlucoseData):
         if segment_data.empty:
             return {'sd': 0.0, 'mean': 0.0}
         
-        # Calcular SD para el segmento de cada día
-        daily_segment_sds = segment_data.groupby(segment_data['time'].dt.date)['glucose'].std()
+        # Calcular SD y media para el segmento de cada día
+        daily_segment_stats = segment_data.groupby(segment_data['time'].dt.date)['glucose'].agg(['std', 'mean'])
         
         return {
-            'sd': daily_segment_sds.mean() if not daily_segment_sds.empty else 0.0,
-            'mean': segment_data['glucose'].mean() if not segment_data.empty else 0.0
+            'sd': daily_segment_stats['std'].mean() if not daily_segment_stats.empty else 0.0,
+            'mean': daily_segment_stats['mean'].mean() if not daily_segment_stats.empty else 0.0
         }
 
-    def sd_timepoint_pattern(self) -> dict:
+    def sd_between_timepoints(self) -> dict:
         """
         Calcula la desviación estándar del patrón promedio por tiempo del día (SDhh:mm).
-        Agrupa los datos por la marca de tiempo exacta en formato "HH:MM" y calcula la 
-        desviación estándar de los promedios de glucosa correspondientes a esos momentos a 
-        lo largo de los días.
+        Agrupa los datos por la marca de tiempo exacta en formato "HH:MM" y calcula la desviación estándar de los promedios de glucosa correspondientes a esos momentos a lo largo de los días.
+
+        Como esta calculando la SD de los promedios es lógico que el valor sea más bajo. 
         
         Calcula SDhh:mm y media de los promedios temporales.
         Devuelve: {'sd': float, 'mean': float}
@@ -295,7 +293,7 @@ class GlucoseMetrics(GlucoseData):
             'mean': time_avg.mean() if not time_avg.empty else 0.0
         }
     
-    def sd_timepoint_pattern_segment(self, start_time: str, duration_hours: int) -> dict:
+    def sd_between_timepoints_segment(self, start_time: str, duration_hours: int) -> dict:
         """
         Calcula SDhh:mm para un segmento específico del día.
         
@@ -315,7 +313,7 @@ class GlucoseMetrics(GlucoseData):
 
     def sd_within_series(self, hours: int = 1) -> dict:
         """
-        Calcula SDws y media de las series temporales.
+        Calcula SDws y media de las series temporales. A menor número de horas, más pequeño es el valor de SDws porque da menos tiempo para que la glucosa varíe.
         Devuelve: {'sd': float, 'mean': float}
         """
         # Convertir horas a intervalos según la frecuencia de los datos
@@ -337,6 +335,8 @@ class GlucoseMetrics(GlucoseData):
     def sd_daily_mean(self) -> dict:
         """
         Calcula la desviación estándar de los promedios diarios (SDdm).
+
+        Se parece a SDhh:mm pero es la SD de las medias diarias. 
         """
         daily_means = self.data.groupby(self.data['time'].dt.date)['glucose'].mean()
         return {
@@ -347,8 +347,7 @@ class GlucoseMetrics(GlucoseData):
     def sd_same_timepoint(self) -> dict:
         """
         Calcula la SD entre días para cada punto temporal ($SD_{b,hh:mm}$).
-        Para cada tiempo específico del día (HH:MM), calcula la SD entre días,
-        luego promedia todas estas SD.
+        Para cada tiempo específico del día (HH:MM), calcula la SD entre días, luego promedia todas estas SD. Se diferencia de  SDhh:mm en que aqui para una marca temporal hace la sd no la media. Y luego calcula la media de las sd. El otro calcula la sd de las medias de una marca temporal.
         
         Returns:
             dict: Promedio de las desviaciones estándar calculadas para cada tiempo específico del día.
@@ -480,7 +479,7 @@ class GlucoseMetrics(GlucoseData):
         return {
             'SDT': self.sd_total()['sd'],
             'SDw': self.sd_within_day()['sd'],
-            'SDhh:mm': self.sd_timepoint_pattern()['sd'],
+            'SDhh:mm': self.sd_between_timepoints()['sd'],
             'Noche': self.sd_segment("00:00", 8)['sd'],
             'Día': self.sd_segment("08:00", 8)['sd'],
             'Tarde': self.sd_segment("16:00", 8)['sd'],
@@ -500,7 +499,7 @@ class GlucoseMetrics(GlucoseData):
         return {
             'CVT': self.sd_total()['sd']/self.sd_total()['mean']*100,
             'CVw': self.sd_within_day()['sd']/self.sd_within_day()['mean']*100,
-            'CVhh:mm': self.sd_timepoint_pattern()['sd']/self.sd_timepoint_pattern()['mean']*100,
+            'CVhh:mm': self.sd_between_timepoints()['sd']/self.sd_between_timepoints()['mean']*100,
             'CVNoche': self.sd_segment("00:00", 8)['sd']/self.sd_segment("00:00", 8)['mean']*100,
             'CVDía': self.sd_segment("08:00", 8)['sd']/self.sd_segment("08:00", 8)['mean']*100,
             'CVTarde': self.sd_segment("16:00", 8)['sd']/self.sd_segment("16:00", 8)['mean']*100,
@@ -513,79 +512,6 @@ class GlucoseMetrics(GlucoseData):
             'CVSDI': self.sd_interaction()['sd']/self.sd_interaction()['mean']*100
         }
 
-    def anova_two_way(self) -> dict:
-        """
-        Realiza un ANOVA de dos vías para analizar la variabilidad de la glucosa.
-        
-        Returns:
-            dict: Componentes del ANOVA y estadísticas relacionadas
-        """
-        data = self.data.copy()
-        
-        # 1. Preparar los datos
-        data['date'] = data['time'].dt.date
-        data['timepoint'] = data['time'].dt.strftime('%H:%M')
-        
-        # 2. Calcular medias
-        grand_mean = data['glucose'].mean()  # Media general
-        
-        # Calcular medias y conteos por grupos
-        daily_stats = data.groupby('date').agg({
-            'glucose': ['mean', 'count']
-        })
-        time_stats = data.groupby('timepoint').agg({
-            'glucose': ['mean', 'count']
-        })
-        cell_stats = data.groupby(['date', 'timepoint']).agg({
-            'glucose': ['mean', 'count']
-        })
-        
-        # 3. Calcular sumas de cuadrados
-        # SST - Suma de cuadrados total
-        SST = ((data['glucose'] - grand_mean)**2).sum()
-        
-        # SSdm - Suma de cuadrados de días
-        SSdm = sum(row[('glucose', 'count')] * (row[('glucose', 'mean')] - grand_mean)**2 
-                   for _, row in daily_stats.iterrows())
-        
-        # SShh - Suma de cuadrados de momentos
-        SShh = sum(row[('glucose', 'count')] * (row[('glucose', 'mean')] - grand_mean)**2 
-                   for _, row in time_stats.iterrows())
-        
-        # SSI - Suma de cuadrados de interacción
-        SSI = 0
-        for (date, timepoint), row in cell_stats.iterrows():
-            daily_mean = daily_stats.loc[date, ('glucose', 'mean')]
-            time_mean = time_stats.loc[timepoint, ('glucose', 'mean')]
-            SSI += row[('glucose', 'count')] * (row[('glucose', 'mean')] - daily_mean - time_mean + grand_mean)**2
-        
-        # 4. Calcular grados de libertad
-        df_days = len(daily_stats) - 1
-        df_time = len(time_stats) - 1
-        df_interaction = df_days * df_time
-        df_total = len(data) - 1
-        
-        # 5. Calcular medias cuadráticas
-        MS_days = SSdm / df_days if df_days > 0 else 0
-        MS_time = SShh / df_time if df_time > 0 else 0
-        MS_interaction = SSI / df_interaction if df_interaction > 0 else 0
-        
-        # 6. Calcular SDI
-        SDI = np.sqrt(MS_interaction)
-        
-        return {
-            'SST': SST,
-            'SSdm': SSdm,
-            'SShh': SShh,
-            'SSI': SSI,
-            'MS_days': MS_days,
-            'MS_time': MS_time,
-            'MS_interaction': MS_interaction,
-            'SDI': SDI,
-            'df_days': df_days,
-            'df_time': df_time,
-            'df_interaction': df_interaction
-        }
 
     def pattern_stability_metrics(self) -> dict:
         """
@@ -597,12 +523,12 @@ class GlucoseMetrics(GlucoseData):
             dict: Diccionario con las diferentes métricas de estabilidad
         """
         # 1. Ratio SDhh:mm/SDw
-        ratio_sd = (self.sd_timepoint_pattern()['sd'] / self.sd_within_day()['sd'])**2
+        ratio_sd = (self.sd_between_timepoints()['sd'] / self.sd_within_day()['sd'])**2
         # 1. Ratio SDhh:mm/SDw por parte del día (corregido)
         ratio_sd_by_part_of_day = {
-            "Noche": (self.sd_timepoint_pattern_segment("00:00", 8)['sd'] / self.sd_within_day_segment("00:00", 8)['sd'])**2,
-            "Día": (self.sd_timepoint_pattern_segment("08:00", 8)['sd'] / self.sd_within_day_segment("08:00", 8)['sd'])**2,
-            "Tarde": (self.sd_timepoint_pattern_segment("16:00", 8)['sd'] / self.sd_within_day_segment("16:00", 8)['sd'])**2
+            "Noche": (self.sd_between_timepoints_segment("00:00", 8)['sd'] / self.sd_within_day_segment("00:00", 8)['sd'])**2,
+            "Día": (self.sd_between_timepoints_segment("08:00", 8)['sd'] / self.sd_within_day_segment("08:00", 8)['sd'])**2,
+            "Tarde": (self.sd_between_timepoints_segment("16:00", 8)['sd'] / self.sd_within_day_segment("16:00", 8)['sd'])**2
         }
         
         # 2. Correlación entre días
@@ -721,7 +647,8 @@ class GlucoseMetrics(GlucoseData):
             'avg_bootstrap_slope': avg_bootstrap_slope
         }
 
-    
+    ## MEDIDAS AVANZADAS DE VARIABILIDAD
+
     def MAGE_Baghurst(self, threshold_sd: int = 1, approach: int = 1) -> dict:
         """
         Calcula el MAGE según el algoritmo de Baghurst.
@@ -1032,7 +959,6 @@ class GlucoseMetrics(GlucoseData):
         k_star = len(valid_data)
         return np.sqrt(sum_squared_diff / (k_star - 1))
 
-    
 
     def j_index(self) -> float:
         """Calcula el J-index."""
@@ -1059,8 +985,6 @@ class GlucoseMetrics(GlucoseData):
         self.data["r_bg"] = 10 * (self.data["f_bg"])**2
         self.data["rh_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] > 0 else 0, axis=1)
         return self.data["rh_bg"].mean()
-
-    
 
     def M_Value(self, target_glucose: float = 80) -> float:
         """

@@ -511,4 +511,42 @@ class GlucosePlot(GlucoseMetrics):
         
         plt.show()
 
+    def plot_daily_variations(self):
+        """
+        Genera dos histogramas: uno para las desviaciones estándar diarias y otro para las medias diarias,
+        con líneas verticales que marcan los promedios.
+        """
+        # Calcular estadísticas diarias
+        daily_stats = self.data.groupby(self.data['time'].dt.date)['glucose'].agg(['std', 'mean'])
+        
+        # Crear la figura con dos subplots
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+        
+        # Histograma de desviaciones estándar
+        ax1.hist(daily_stats['std'], bins=20, edgecolor='black', alpha=0.7)
+        ax1.axvline(daily_stats['std'].mean(), color='red', linestyle='--', 
+                    label=f'Media: {daily_stats["std"].mean():.1f} mg/dL')
+        ax1.set_title('Distribución de Desviaciones Estándar Diarias', fontsize=12)
+        ax1.set_xlabel('Desviación Estándar (mg/dL)')
+        ax1.set_ylabel('Frecuencia')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # Histograma de medias
+        ax2.hist(daily_stats['mean'], bins=20, edgecolor='black', alpha=0.7)
+        ax2.axvline(daily_stats['mean'].mean(), color='red', linestyle='--',
+                    label=f'Media: {daily_stats["mean"].mean():.1f} mg/dL')
+        ax2.set_title('Distribución de Medias Diarias', fontsize=12)
+        ax2.set_xlabel('Glucosa Media (mg/dL)')
+        ax2.set_ylabel('Frecuencia')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        # Añadir rangos objetivo en el gráfico de medias
+        ax2.axvspan(70, 180, color='#90ee90', alpha=0.2, label='Rango objetivo')
+        
+        # Ajustar el diseño
+        plt.tight_layout()
+        plt.show()
+
     

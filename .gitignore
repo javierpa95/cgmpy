@@ -10,4 +10,4 @@ test vero.py
 sed2025*
 percentil.py
 *.cursorignore
-**/*.cursorignore
+
