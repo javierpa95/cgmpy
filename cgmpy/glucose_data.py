@@ -101,6 +101,7 @@ class GlucoseData:
         
         # Optimizar el DataFrame completo
         self.data = self.data.copy()
+        
         # Eliminar redundancia en conversión de tiempo
         if not pd.api.types.is_datetime64_any_dtype(self.data['time']):
             self.data['time'] = pd.to_datetime(self.data['time'])

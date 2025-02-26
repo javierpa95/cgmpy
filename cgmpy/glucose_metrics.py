@@ -236,17 +236,64 @@ class GlucoseMetrics(GlucoseData):
         """
         return {'sd': self.sd(), 'mean': self.mean()}
     
-    def sd_within_day(self) -> dict:
+    def sd_within_day(self, min_count_threshold: float = 0.5) -> dict:
         """
         Calcula la desviación estándar dentro del día (SDw) como el promedio de las 
-        desviaciones estándar de cada día individual  y media de medias diarias.
-        Devuelve: {'sd': float, 'mean': float}
+        desviaciones estándar de cada día individual y media de medias diarias.
+        
+        :param min_count_threshold: Umbral para considerar un día como válido 
+                               (proporción de la mediana de conteos). Por defecto 0.5 (50%).
+        :return: Diccionario con la SD promedio, media y datos adicionales
         """
-        daily_stats = self.data.groupby(self.data['time'].dt.date)['glucose'].agg(['std', 'mean'])
+        # Calcular estadísticas para cada día
+        daily_stats = self.data.groupby(self.data['time'].dt.date)['glucose'].agg(['std', 'mean', 'count'])
+        
+        # Si no hay datos, devolver valores por defecto
+        if daily_stats.empty:
+            return {'sd': 0.0, 'mean': 0.0, 'dias_analizados': 0, 'dias_filtrados': 0, 'umbral_conteo': 0}
+        
+        # Identificar días con pocos datos
+        count_threshold = daily_stats['count'].median() * min_count_threshold
+        
+        # Filtrar días con suficientes datos para el cálculo principal
+        filtered_stats = daily_stats[daily_stats['count'] >= count_threshold]
+        low_count_days = daily_stats[daily_stats['count'] < count_threshold]
+        
+        # Si después de filtrar no quedan días, usar todos los datos
+        if filtered_stats.empty:
+            return {
+                'sd': daily_stats['std'].mean(),
+                'mean': daily_stats['mean'].mean(),
+                'dias_analizados': len(daily_stats),
+                'dias_filtrados': 0,
+                'umbral_conteo': count_threshold,
+                'advertencia': 'No hay días con suficientes datos, se usaron todos los días disponibles'
+            }
+        
+        # Calcular SDw y media con los días filtrados
         return {
-            'sd': daily_stats['std'].mean() if not daily_stats.empty else 0.0,
-            'mean': daily_stats['mean'].mean() if not daily_stats.empty else 0.0
+            'sd': filtered_stats['std'].mean(),
+            'mean': filtered_stats['mean'].mean(),
+            'dias_analizados': len(filtered_stats),
+            'dias_filtrados': len(low_count_days),
+            'umbral_conteo': count_threshold,
+            'rango_sd': {
+                'min': filtered_stats['std'].min() if not filtered_stats.empty else 0,
+                'max': filtered_stats['std'].max() if not filtered_stats.empty else 0
+            },
+            'estadisticas_diarias': filtered_stats.to_dict(),
+            'dias_con_pocos_datos': low_count_days.to_dict() if not low_count_days.empty else {}
         }
+    def sdw(self, min_count_threshold: float = 0.5) -> float:
+        """
+        Calcula la desviación estándar dentro del día (SDw).
+        Este es un método simplificado que devuelve solo el valor de SD.
+        
+        :param min_count_threshold: Umbral para considerar un día como válido 
+                                   (proporción de la mediana de conteos). Por defecto 0.5 (50%).
+        :return: Valor de SDw (float)
+        """
+        return self.sd_within_day(min_count_threshold)['sd']
     
     def sd_within_day_segment(self, start_time: str, duration_hours: int) -> dict:
         """
@@ -276,22 +323,89 @@ class GlucoseMetrics(GlucoseData):
             'mean': daily_segment_stats['mean'].mean() if not daily_segment_stats.empty else 0.0
         }
 
-    def sd_between_timepoints(self) -> dict:
+    def sd_between_timepoints(self, min_count_threshold: float = 0.5, filter_outliers: bool = True, 
+                         agrupar_por_intervalos: bool = False, intervalo_minutos: int = 5) -> dict:
         """
-        Calcula la desviación estándar del patrón promedio por tiempo del día (SDhh:mm).
-        Agrupa los datos por la marca de tiempo exacta en formato "HH:MM" y calcula la desviación estándar de los promedios de glucosa correspondientes a esos momentos a lo largo de los días.
-
-        Como esta calculando la SD de los promedios es lógico que el valor sea más bajo. 
+        Calcula la desviación estándar entre puntos temporales (SDhh:mm)
         
-        Calcula SDhh:mm y media de los promedios temporales.
-        Devuelve: {'sd': float, 'mean': float}
+        Esta métrica mide la variabilidad del patrón de glucosa a lo largo del día.
+        
+        Versión optimizada para grandes conjuntos de datos.
+        
+        :param min_count_threshold: Umbral para considerar una marca temporal como válida
+                               (proporción de la mediana de conteos). Por defecto 0.5 (50%).
+        :param filter_outliers: Si es True, filtra las marcas temporales con pocos datos.
+        :param agrupar_por_intervalos: Si es True, agrupa los datos en intervalos regulares de tiempo.
+        :param intervalo_minutos: Tamaño del intervalo en minutos para la agrupación (por defecto 5 min).
+        :return: Diccionario con el valor de SDhh:mm y estadísticas relacionadas.
         """
-        # Agrupar por la marca de tiempo "HH:MM"
-        time_avg = self.data.groupby(self.data['time'].dt.strftime("%H:%M"))['glucose'].mean()
-        return {
-            'sd': time_avg.std() if not time_avg.empty else 0.0,
-            'mean': time_avg.mean() if not time_avg.empty else 0.0
+        # Crear una copia de los datos con solo las columnas necesarias
+        df = self.data[['time', 'glucose']].copy()
+        
+        # Extraer solo hora y minuto para reducir la carga computacional
+        df['hour_min'] = df['time'].apply(lambda x: x.hour * 60 + x.minute)
+        
+        if agrupar_por_intervalos:
+            # Agrupar por intervalos de tiempo para reducir la cantidad de puntos temporales
+            df['interval'] = (df['hour_min'] // intervalo_minutos) * intervalo_minutos
+            # Usar groupby con transform más eficiente que apply para grandes datasets
+            grouped = df.groupby(['day', 'interval'])
+            df_agg = grouped.agg({'glucose': 'mean'}).reset_index()
+            
+            # Calcular la hora y minuto a partir del intervalo para el resultado final
+            df_agg['hour'] = df_agg['interval'] // 60
+            df_agg['minute'] = df_agg['interval'] % 60
+            
+            # Usar estadísticas descriptivas vectorizadas
+            timepoint_means = df_agg.groupby(['hour', 'minute'])['glucose'].mean()
+            df_final = pd.DataFrame({'mean': timepoint_means})
+            
+            # Contar número de días con datos para cada punto temporal
+            timepoint_counts = df_agg.groupby(['hour', 'minute']).size()
+            df_final['count'] = timepoint_counts
+        else:
+            # Extraer características temporales vectorizadamente
+            df['hour'] = df['time'].dt.hour
+            df['minute'] = df['time'].dt.minute
+            df['day'] = df['time'].dt.date
+            
+            # Calcular estadísticas por hora:minuto de forma vectorizada
+            grouped = df.groupby(['hour', 'minute', 'day'])
+            daily_means = grouped['glucose'].mean().reset_index()
+            
+            # Agrupar nuevamente para obtener las medias por punto temporal
+            timepoint_stats = daily_means.groupby(['hour', 'minute'])
+            
+            # Calcular estadísticas de forma vectorizada
+            df_final = pd.DataFrame({
+                'mean': timepoint_stats['glucose'].mean(),
+                'count': timepoint_stats.size()
+            })
+        
+        # Filtrar puntos con pocos datos si se solicita
+        if filter_outliers:
+            median_count = df_final['count'].median()
+            threshold = median_count * min_count_threshold
+            valid_timepoints = df_final[df_final['count'] >= threshold]
+        else:
+            valid_timepoints = df_final
+        
+        # Calcular SDhh:mm (la desviación estándar del patrón promedio)
+        sd_value = valid_timepoints['mean'].std()
+        mean_value = valid_timepoints['mean'].mean()
+        
+        # Crear el resultado como diccionario
+        result = {
+            'sd': sd_value,
+            'mean': mean_value,
+            'valid_timepoints': len(valid_timepoints),
+            'total_timepoints': len(df_final),
+            'median_count': df_final['count'].median(),
+            'min_count': df_final['count'].min(),
+            'max_count': df_final['count'].max()
         }
+        
+        return result
     
     def sd_between_timepoints_segment(self, start_time: str, duration_hours: int) -> dict:
         """
@@ -324,44 +438,139 @@ class GlucoseMetrics(GlucoseData):
         for start_time in data['time']:
             end_time = start_time + pd.Timedelta(hours=hours)
             series = data[(data['time'] >= start_time) & (data['time'] < end_time)]['glucose']
-            if len(series) > 1:
-                series_stats.append({'sd': series.std(), 'mean': series.mean()})
+            
+            # Solo calcular estadísticas si hay suficientes datos en la serie
+            if len(series) > 1:  # Necesitamos al menos 2 puntos para calcular SD
+                series_stats.append({
+                    'sd': series.std(),
+                    'mean': series.mean()
+                })
         
         return {
             'sd': np.mean([s['sd'] for s in series_stats]) if series_stats else 0.0,
             'mean': np.mean([s['mean'] for s in series_stats]) if series_stats else 0.0
         }
     
-    def sd_daily_mean(self) -> dict:
+    def sd_daily_mean(self, min_count_threshold: float = 0.5) -> dict:
         """
         Calcula la desviación estándar de los promedios diarios (SDdm).
-
-        Se parece a SDhh:mm pero es la SD de las medias diarias. 
+        
+        :param min_count_threshold: Umbral para considerar un día como válido 
+                               (proporción de la mediana de conteos). Por defecto 0.5 (50%).
+        :return: Diccionario con la SD, media y datos adicionales
         """
-        daily_means = self.data.groupby(self.data['time'].dt.date)['glucose'].mean()
+        # Calcular estadísticas para cada día
+        daily_stats = self.data.groupby(self.data['time'].dt.date)['glucose'].agg(['mean', 'count'])
+        
+        # Si no hay datos, devolver valores por defecto
+        if daily_stats.empty:
+            return {'sd': 0.0, 'mean': 0.0, 'dias_analizados': 0, 'dias_filtrados': 0, 'umbral_conteo': 0}
+        
+        # Identificar días con pocos datos
+        count_threshold = daily_stats['count'].median() * min_count_threshold
+        
+        # Filtrar días con suficientes datos para el cálculo principal
+        filtered_stats = daily_stats[daily_stats['count'] >= count_threshold]
+        low_count_days = daily_stats[daily_stats['count'] < count_threshold]
+        
+        # Si después de filtrar no quedan días, usar todos los datos
+        if filtered_stats.empty:
+            return {
+                'sd': daily_stats['mean'].std(),
+                'mean': daily_stats['mean'].mean(),
+                'dias_analizados': len(daily_stats),
+                'dias_filtrados': 0,
+                'umbral_conteo': count_threshold,
+                'advertencia': 'No hay días con suficientes datos, se usaron todos los días disponibles'
+            }
+        
+        # Calcular SDdm y media con los días filtrados
         return {
-            'sd': daily_means.std() if not daily_means.empty else 0.0,
-            'mean': daily_means.mean() if not daily_means.empty else 0.0
+            'sd': filtered_stats['mean'].std(),
+            'mean': filtered_stats['mean'].mean(),
+            'dias_analizados': len(filtered_stats),
+            'dias_filtrados': len(low_count_days),
+            'umbral_conteo': count_threshold,
+            'rango_medias': {
+                'min': filtered_stats['mean'].min(),
+                'max': filtered_stats['mean'].max()
+            },
+            'estadisticas_diarias': filtered_stats.to_dict(),
+            'dias_con_pocos_datos': low_count_days.to_dict() if not low_count_days.empty else {}
         }
 
-    def sd_same_timepoint(self) -> dict:
+    def sd_same_timepoint(self, min_count_threshold: float = 0.5, filter_outliers: bool = True, 
+                         agrupar_por_intervalos: bool = False, intervalo_minutos: int = 5) -> dict:
         """
-        Calcula la SD entre días para cada punto temporal ($SD_{b,hh:mm}$).
-        Para cada tiempo específico del día (HH:MM), calcula la SD entre días, luego promedia todas estas SD. Se diferencia de  SDhh:mm en que aqui para una marca temporal hace la sd no la media. Y luego calcula la media de las sd. El otro calcula la sd de las medias de una marca temporal.
+        Calcula la SD entre días para cada punto temporal ($SD_{b,hh:mm}$) con opciones avanzadas.
+        Para cada tiempo específico del día (HH:MM), calcula la SD entre días, luego promedia todas estas SD.
         
-        Returns:
-            dict: Promedio de las desviaciones estándar calculadas para cada tiempo específico del día.
+        :param min_count_threshold: Umbral para considerar una marca temporal como válida 
+                               (proporción de la mediana de conteos). Por defecto 0.5 (50%).
+        :param filter_outliers: Si es True, filtra las marcas temporales con pocos datos 
+                           antes de calcular la SD.
+        :param agrupar_por_intervalos: Si es True, agrupa los datos en intervalos regulares de tiempo.
+        :param intervalo_minutos: Tamaño del intervalo en minutos para la agrupación (por defecto 5 min).
+        :return: Diccionario con la SD promedio, media y datos por marca temporal
         """
-        # Agrupar por tiempo específico del día (HH:MM)
-        time_groups = self.data.groupby(self.data['time'].dt.strftime("%H:%M"))
+        if agrupar_por_intervalos:
+            # Crear una columna con el tiempo redondeado al intervalo más cercano
+            data_copy = self.data.copy()
+            
+            # Convertir la hora a minutos desde medianoche
+            minutos_del_dia = data_copy['time'].dt.hour * 60 + data_copy['time'].dt.minute
+            
+            # Redondear al intervalo más cercano
+            intervalo_redondeado = (minutos_del_dia // intervalo_minutos) * intervalo_minutos
+            
+            # Convertir de nuevo a formato HH:MM
+            horas = intervalo_redondeado // 60
+            minutos = intervalo_redondeado % 60
+            data_copy['time_interval'] = horas.astype(str).str.zfill(2) + ':' + minutos.astype(str).str.zfill(2)
+            
+            # Agrupar por el intervalo de tiempo y calcular estadísticas
+            time_stats = data_copy.groupby(['time_interval', data_copy['time'].dt.date])['glucose'].agg(['mean', 'count'])
+            time_sds = time_stats.groupby(level=0)['mean'].agg(['std', 'mean', 'count'])
+        else:
+            # Comportamiento original: agrupar por la marca de tiempo exacta "HH:MM"
+            time_stats = self.data.groupby([self.data['time'].dt.strftime("%H:%M"), self.data['time'].dt.date])['glucose'].agg(['mean', 'count'])
+            time_sds = time_stats.groupby(level=0)['mean'].agg(['std', 'mean', 'count'])
         
-        # Calcular SD para cada tiempo específico
-        time_sds = time_groups['glucose'].std()
+        # Identificar marcas temporales con pocos datos (potencialmente problemáticas)
+        count_threshold = time_sds['count'].median() * min_count_threshold
+        low_count_times = time_sds[time_sds['count'] < count_threshold]
         
-        # Promediar todas las SD
+        # Convertir el índice a formato de hora decimal para facilitar la visualización
+        low_count_dict = {}
+        for time_str in low_count_times.index:
+            h, m = map(int, time_str.split(':'))
+            decimal_time = h + m/60.0
+            low_count_dict[time_str] = {
+                'hora_decimal': decimal_time,
+                'conteo': int(low_count_times.loc[time_str, 'count']),
+                'valor': low_count_times.loc[time_str, 'mean']
+            }
+        
+        # Filtrar marcas temporales con pocos datos si se solicita
+        if filter_outliers and low_count_dict:
+            filtered_stats = time_sds[~time_sds.index.isin(low_count_dict.keys())]
+            sd_value = filtered_stats['std'].mean()
+            mean_value = filtered_stats['mean'].mean()
+        else:
+            sd_value = time_sds['std'].mean()
+            mean_value = time_sds['mean'].mean()
+        
         return {
-            'sd': time_sds.mean() if not time_sds.empty else 0.0,
-            'mean': self.data['glucose'].mean() if not time_sds.empty else 0.0
+            'sd': sd_value,
+            'mean': mean_value,
+            'conteo_por_marca': time_sds['count'].to_dict(),
+            'valores_por_marca': time_sds['mean'].to_dict(),
+            'sd_por_marca': time_sds['std'].to_dict(),
+            'marcas_con_pocos_datos': low_count_dict,
+            'umbral_conteo': count_threshold,
+            'filtrado_aplicado': filter_outliers,
+            'agrupacion_por_intervalos': agrupar_por_intervalos,
+            'intervalo_minutos': intervalo_minutos if agrupar_por_intervalos else None
         }
        
     def sd_same_timepoint_adjusted(self) -> dict:
@@ -649,7 +858,7 @@ class GlucoseMetrics(GlucoseData):
 
     ## MEDIDAS AVANZADAS DE VARIABILIDAD
 
-    def MAGE_Baghurst(self, threshold_sd: int = 1, approach: int = 1) -> dict:
+    def MAGE_Baghurst(self, threshold_sd: int = 1, approach: int = 1, plot: bool = False) -> dict:
         """
         Calcula el MAGE según el algoritmo de Baghurst.
         
@@ -660,19 +869,217 @@ class GlucoseMetrics(GlucoseData):
         4. Manejo de excursiones al inicio/final del dataset
         
         :param threshold_sd: Número de desviaciones estándar para el umbral
-        :param approach: 1 para usar suavizado, 2 para eliminación directa
+        :param approach: 1 para usar suavizado según Baghurst original, 2 para eliminación directa, 3 para suavizado mejorado
+        :param plot: Si es True, genera una visualización de los picos y valles identificados
         :return: Diccionario con MAGE+, MAGE- y métricas relacionadas
-
-        Approach 1: Usa suavizado para identificar turning points
+        
+        Approach 1: Algoritmo original de Baghurst con suavizado y proceso iterativo de eliminación
         Approach 2: Eliminación directa de puntos intermedios en secuencias monótonas
+        Approach 3: Suavizado mejorado con filtrado adicional de turning points
         """
         glucose = self.data['glucose'].values
         times = self.data['time'].values
         sd = self.sd()
         threshold = threshold_sd * sd
         
-        if approach == 1:
-            # 1. Aplicar filtro de suavizado con manejo de bordes
+        # Guardar los turning points para cada enfoque si plot=True
+        turning_points_approaches = {}
+        
+        # Enfoque 1: Suavizado según algoritmo original de Baghurst
+        if approach == 1 or plot:
+            # PASO 1: Aplicar filtro de suavizado e identificar turning points en datos suavizados
+            weights = np.array([1,2,4,8,16,8,4,2,1])/46
+            smoothed = np.zeros_like(glucose)
+            
+            # Suavizado central
+            for i in range(4, len(glucose)-4):
+                smoothed[i] = np.dot(weights, glucose[i-4:i+5])
+                
+            # Manejo de bordes con media simple
+            for i in range(4):
+                smoothed[i] = glucose[:i+5].mean()
+                smoothed[-(i+1)] = glucose[-(i+5):].mean()
+                
+            # Identificar turning points en datos suavizados mediante primeras diferencias
+            delta = np.diff(smoothed)
+            turning_smoothed = np.where(np.diff(np.sign(delta)))[0] + 1
+            
+            # PASO 2: Identificar máximos/mínimos locales en datos originales
+            turning_points_1 = []
+            for i in range(len(turning_smoothed)-1):
+                start = turning_smoothed[i]
+                end = turning_smoothed[i+1]
+                
+                # Buscar máximo real en intervalo ascendente
+                if smoothed[start] < smoothed[end]:
+                    true_peak = np.argmax(glucose[start:end]) + start
+                    turning_points_1.append(true_peak)
+                # Buscar mínimo real en intervalo descendente
+                else:
+                    true_valley = np.argmin(glucose[start:end]) + start
+                    turning_points_1.append(true_valley)
+            
+            # Añadir el primer y último punto si son extremos
+            if len(turning_points_1) > 0 and turning_points_1[0] > 0:
+                if glucose[0] > glucose[turning_points_1[0]] or glucose[0] < glucose[turning_points_1[0]]:
+                    turning_points_1.insert(0, 0)
+            
+            if len(turning_points_1) > 0 and turning_points_1[-1] < len(glucose) - 1:
+                if glucose[-1] > glucose[turning_points_1[-1]] or glucose[-1] < glucose[turning_points_1[-1]]:
+                    turning_points_1.append(len(glucose) - 1)
+            
+            # PASO 3: Eliminar turning points asociados con excursiones no contables en ambos lados
+            # Mantener aquellos cuyos máximos/mínimos adyacentes son más bajos/altos en ambos lados
+            keep_iterating = True
+            while keep_iterating:
+                to_delete = []
+                
+                for i in range(1, len(turning_points_1) - 1):
+                    current_idx = turning_points_1[i]
+                    prev_idx = turning_points_1[i-1]
+                    next_idx = turning_points_1[i+1]
+                    
+                    current_val = glucose[current_idx]
+                    prev_val = glucose[prev_idx]
+                    next_val = glucose[next_idx]
+                    
+                    # Verificar si ambas diferencias son menores que el umbral
+                    if (abs(current_val - prev_val) < threshold and 
+                        abs(current_val - next_val) < threshold):
+                        
+                        # Retener si es un máximo local (ambos adyacentes más bajos)
+                        is_local_max = current_val > prev_val and current_val > next_val
+                        # Retener si es un mínimo local (ambos adyacentes más altos)
+                        is_local_min = current_val < prev_val and current_val < next_val
+                        
+                        # Si no es un máximo/mínimo local, marcar para eliminación
+                        if not (is_local_max or is_local_min):
+                            to_delete.append(i)
+                
+                # Si no hay más puntos para eliminar, terminar
+                if not to_delete:
+                    keep_iterating = False
+                else:
+                    # Eliminar puntos marcados
+                    for idx in sorted(to_delete, reverse=True):
+                        turning_points_1.pop(idx)
+                
+                # PASO 4: Eliminar observaciones que ya no son turning points
+                delta_turning = np.diff([glucose[tp] for tp in turning_points_1])
+                false_turning = []
+                
+                for i in range(1, len(delta_turning)):
+                    # Si las diferencias tienen el mismo signo, no es un turning point
+                    if delta_turning[i-1] * delta_turning[i] > 0:
+                        false_turning.append(i)
+                
+                # Eliminar puntos falsos
+                for idx in sorted(false_turning, reverse=True):
+                    turning_points_1.pop(idx)
+            
+            # PASO 5: Eliminar turning points con excursión contable en un solo lado
+            if len(turning_points_1) >= 3:
+                to_delete = []
+                
+                for i in range(1, len(turning_points_1) - 1):
+                    current_idx = turning_points_1[i]
+                    prev_idx = turning_points_1[i-1]
+                    next_idx = turning_points_1[i+1]
+                    
+                    current_val = glucose[current_idx]
+                    prev_val = glucose[prev_idx]
+                    next_val = glucose[next_idx]
+                    
+                    # Verificar si sólo hay excursión significativa en un lado
+                    has_sig_prev = abs(current_val - prev_val) >= threshold
+                    has_sig_next = abs(current_val - next_val) >= threshold
+                    
+                    if has_sig_prev != has_sig_next:  # XOR lógico - solo uno es verdadero
+                        to_delete.append(i)
+                
+                # Eliminar puntos marcados
+                for idx in sorted(to_delete, reverse=True):
+                    turning_points_1.pop(idx)
+                
+                # Verificar de nuevo si hay puntos que ya no son turning points
+                delta_turning = np.diff([glucose[tp] for tp in turning_points_1])
+                false_turning = []
+                
+                for i in range(1, len(delta_turning)):
+                    if delta_turning[i-1] * delta_turning[i] > 0:
+                        false_turning.append(i)
+                
+                for idx in sorted(false_turning, reverse=True):
+                    turning_points_1.pop(idx)
+            
+            # PASO 6: Eliminar excursiones no contables al inicio o final
+            if len(turning_points_1) >= 2:
+                # Verificar excursión inicial
+                if abs(glucose[turning_points_1[0]] - glucose[turning_points_1[1]]) < threshold:
+                    turning_points_1.pop(0)
+                
+                # Verificar excursión final
+                if len(turning_points_1) >= 2 and abs(glucose[turning_points_1[-1]] - glucose[turning_points_1[-2]]) < threshold:
+                    turning_points_1.pop(-1)
+            
+            # Asegurar que los puntos están ordenados y son únicos
+            turning_points_1 = sorted(list(set(turning_points_1)))
+            turning_points_approaches[1] = turning_points_1
+            
+            if approach == 1:
+                turning_points = turning_points_1
+        
+        # Enfoque 2: Eliminación directa
+        if approach == 2 or plot:
+            turning_points_2 = []
+            i = 0
+            
+            # 1. Primera pasada: eliminar puntos intermedios en secuencias monótonas
+            while i < len(glucose) - 2:
+                if (glucose[i] <= glucose[i+1] <= glucose[i+2]) or \
+                   (glucose[i] >= glucose[i+1] >= glucose[i+2]):
+                    # El punto intermedio es parte de una secuencia monótona
+                    i += 1
+                else:
+                    # Punto i+1 es un turning point potencial
+                    turning_points_2.append(i+1)
+                    i += 2
+            
+            # Asegurar que incluimos el primer y último punto si son relevantes
+            if len(turning_points_2) == 0 or turning_points_2[0] > 0:
+                turning_points_2.insert(0, 0)
+            if turning_points_2[-1] < len(glucose) - 1:
+                turning_points_2.append(len(glucose) - 1)
+            
+            # 2. Segunda pasada: eliminar excursiones que no superan el umbral
+            valid_points = []
+            for i in range(1, len(turning_points_2)-1):
+                prev_val = glucose[turning_points_2[i-1]]
+                curr_val = glucose[turning_points_2[i]]
+                next_val = glucose[turning_points_2[i+1]]
+                
+                # Verificar si es un máximo o mínimo válido
+                if ((curr_val > prev_val and curr_val > next_val) or 
+                    (curr_val < prev_val and curr_val < next_val)) and (
+                    abs(curr_val - prev_val) >= threshold or 
+                    abs(curr_val - next_val) >= threshold):
+                    valid_points.append(turning_points_2[i])
+            
+            # Asegurar que mantenemos puntos inicial y final si son necesarios
+            if valid_points and valid_points[0] > 0:
+                valid_points.insert(0, 0)
+            if valid_points and valid_points[-1] < len(glucose) - 1:
+                valid_points.append(len(glucose) - 1)
+            
+            turning_points_2 = valid_points
+            turning_points_approaches[2] = turning_points_2
+            
+            if approach == 2:
+                turning_points = turning_points_2
+    
+        # Enfoque 3: Suavizado mejorado
+        if approach == 3 or plot:
+            # 1. Aplicar filtro de suavizado con manejo de bordes (igual que enfoque 1)
             weights = np.array([1,2,4,8,16,8,4,2,1])/46
             smoothed = np.zeros_like(glucose)
             
@@ -690,7 +1097,10 @@ class GlucoseMetrics(GlucoseData):
             turning_smoothed = np.where(np.diff(np.sign(delta)))[0] + 1
             
             # 3. Buscar turning points reales en datos originales entre los intervalos suavizados
-            turning_points = []
+            # y aplicar filtrado adicional
+            
+            # Primero identificamos todos los turning points potenciales
+            potential_turning_points = []
             for i in range(len(turning_smoothed)-1):
                 start = turning_smoothed[i]
                 end = turning_smoothed[i+1]
@@ -698,60 +1108,66 @@ class GlucoseMetrics(GlucoseData):
                 # Buscar máximo real en intervalo ascendente
                 if smoothed[start] < smoothed[end]:
                     true_peak = np.argmax(glucose[start:end]) + start
-                    turning_points.append(true_peak)
+                    potential_turning_points.append((true_peak, 'peak', glucose[true_peak]))
                 # Buscar mínimo real en intervalo descendente
                 else:
                     true_valley = np.argmin(glucose[start:end]) + start
-                    turning_points.append(true_valley)
-                    
-            turning_points = np.unique(turning_points)
-        else:
-            # Approach 2: Eliminación directa
-            turning_points = []
-            i = 0
+                    potential_turning_points.append((true_valley, 'valley', glucose[true_valley]))
             
-            # 1. Primera pasada: eliminar puntos intermedios en secuencias monótonas
-            while i < len(glucose) - 2:
-                if (glucose[i] <= glucose[i+1] <= glucose[i+2]) or \
-                   (glucose[i] >= glucose[i+1] >= glucose[i+2]):
-                    # El punto intermedio es parte de una secuencia monótona
-                    i += 1
-                else:
-                    # Punto i+1 es un turning point potencial
-                    turning_points.append(i+1)
-                    i += 2
-            
-            # Asegurar que incluimos el primer y último punto si son relevantes
-            if len(turning_points) == 0 or turning_points[0] > 0:
-                turning_points.insert(0, 0)
-            if turning_points[-1] < len(glucose) - 1:
-                turning_points.append(len(glucose) - 1)
-            
-            # 2. Segunda pasada: eliminar excursiones que no superan el umbral
-            valid_points = []
-            for i in range(1, len(turning_points)-1):
-                prev_val = glucose[turning_points[i-1]]
-                curr_val = glucose[turning_points[i]]
-                next_val = glucose[turning_points[i+1]]
+            # Ahora procesamos los turning points para eliminar picos/valles intermedios menores
+            turning_points_3 = []
+            if potential_turning_points:
+                # Añadir el primer punto
+                turning_points_3.append(potential_turning_points[0][0])
                 
-                # Verificar si es un máximo o mínimo válido
-                if ((curr_val > prev_val and curr_val > next_val) or 
-                    (curr_val < prev_val and curr_val < next_val)) and (
-                    abs(curr_val - prev_val) >= threshold or 
-                    abs(curr_val - next_val) >= threshold):
-                    valid_points.append(turning_points[i])
+                # Procesar el resto de puntos
+                for i in range(1, len(potential_turning_points)-1):
+                    prev_point, prev_type, prev_value = potential_turning_points[i-1]
+                    curr_point, curr_type, curr_value = potential_turning_points[i]
+                    next_point, next_type, next_value = potential_turning_points[i+1]
+                    
+                    # Si tenemos un patrón valle-pico-valle o pico-valle-pico
+                    if curr_type == prev_type:
+                        # Saltamos este punto, es redundante
+                        continue
+                        
+                    # Si tenemos un pico entre dos valles, verificar si es significativo
+                    if curr_type == 'peak' and prev_type == 'valley' and next_type == 'valley':
+                        # Si el pico no es significativamente más alto que ambos valles, lo saltamos
+                        if (curr_value - prev_value < threshold/2) or (curr_value - next_value < threshold/2):
+                            continue
+                            
+                    # Si tenemos un valle entre dos picos, verificar si es significativo
+                    if curr_type == 'valley' and prev_type == 'peak' and next_type == 'peak':
+                        # Si el valle no es significativamente más bajo que ambos picos, lo saltamos
+                        if (prev_value - curr_value < threshold/2) or (next_value - curr_value < threshold/2):
+                            continue
+                    
+                    # Si llegamos aquí, el punto es significativo
+                    turning_points_3.append(curr_point)
+                
+                # Añadir el último punto
+                turning_points_3.append(potential_turning_points[-1][0])
             
-            # Asegurar que mantenemos puntos inicial y final si son necesarios
-            if valid_points and valid_points[0] > 0:
-                valid_points.insert(0, 0)
-            if valid_points and valid_points[-1] < len(glucose) - 1:
-                valid_points.append(len(glucose) - 1)
+            # Asegurarnos de que tenemos al menos el primer y último punto
+            if len(turning_points_3) == 0 and len(glucose) > 0:
+                turning_points_3 = [0, len(glucose)-1]
+            elif len(turning_points_3) == 1 and len(glucose) > 1:
+                if turning_points_3[0] == 0:
+                    turning_points_3.append(len(glucose)-1)
+                else:
+                    turning_points_3.insert(0, 0)
             
-            turning_points = valid_points
+            turning_points_3 = np.unique(turning_points_3)
+            turning_points_approaches[3] = turning_points_3
+            
+            if approach == 3:
+                turning_points = turning_points_3
         
         # 3. Calcular excursiones válidas
         excursions = []
         last_val = glucose[turning_points[0]]
+        last_point = turning_points[0]
         
         for point in turning_points[1:]:
             curr_val = glucose[point]
@@ -759,12 +1175,19 @@ class GlucoseMetrics(GlucoseData):
             
             if diff >= threshold:
                 excursions.append({
+                    'start_point': last_point,
+                    'end_point': point,
                     'start': last_val,
                     'end': curr_val,
                     'type': 'up' if curr_val > last_val else 'down',
                     'magnitude': diff
                 })
                 last_val = curr_val
+                last_point = point
+            else:
+                # Si no supera el umbral, actualizamos el último valor sin crear excursión
+                last_val = curr_val
+                last_point = point
         
         # Separar excursiones y calcular métricas
         excursions_up = [e['magnitude'] for e in excursions if e['type'] == 'up']
@@ -773,6 +1196,201 @@ class GlucoseMetrics(GlucoseData):
         mage_plus = np.mean(excursions_up) if excursions_up else 0
         mage_minus = np.mean(excursions_down) if excursions_down else 0
         mage_avg = np.mean(excursions_up + excursions_down) if (excursions_up or excursions_down) else 0
+        
+        # Generar visualización si plot=True
+        if plot:
+            import matplotlib.pyplot as plt
+            import matplotlib.dates as mdates
+            from datetime import timedelta
+            
+            # Obtener todos los días únicos en los datos
+            unique_days = pd.Series(times).dt.normalize().unique()
+            
+            # Configurar la figura y ejes - ahora con 3 subplots
+            fig, axs = plt.subplots(3, 1, figsize=(12, 15), sharex=True)
+            plt.ion()  # Modo interactivo
+            
+            # Calcular excursiones para cada enfoque
+            excursions_by_approach = {}
+            
+            for approach_num in [1, 2, 3]:
+                # Usar los turning points específicos de este enfoque
+                if approach_num in turning_points_approaches:
+                    tp = turning_points_approaches[approach_num]
+                    
+                    # Calcular excursiones para este enfoque
+                    excursions_approach = []
+                    if len(tp) > 1:
+                        last_val = glucose[tp[0]]
+                        last_point = tp[0]
+                        
+                        for point in tp[1:]:
+                            curr_val = glucose[point]
+                            diff = abs(curr_val - last_val)
+                            
+                            if diff >= threshold:
+                                excursions_approach.append({
+                                    'start_point': last_point,
+                                    'end_point': point,
+                                    'start': last_val,
+                                    'end': curr_val,
+                                    'type': 'up' if curr_val > last_val else 'down',
+                                    'magnitude': diff
+                                })
+                            
+                            # Siempre actualizamos el último valor y punto
+                            last_val = curr_val
+                            last_point = point
+                    
+                    excursions_by_approach[approach_num] = excursions_approach
+            
+            # Función para actualizar el gráfico con un día específico
+            def update_plot(day_index):
+                # Limpiar los ejes
+                for ax in axs:
+                    ax.clear()
+                
+                # Obtener el día actual
+                current_day = unique_days[day_index]
+                next_day = current_day + timedelta(days=1)
+                
+                # Filtrar datos para mostrar solo el día actual
+                day_mask = (times >= current_day) & (times < next_day)
+                day_times = times[day_mask]
+                day_glucose = glucose[day_mask]
+                
+                if len(day_times) > 0:
+                    # Para cada enfoque
+                    for i, approach in enumerate([1, 2, 3]):
+                        ax = axs[i]
+                        # Dibujar la línea de glucosa
+                        ax.plot(day_times, day_glucose, 'b-', label='Glucosa')
+                        
+                        # Obtener turning points para este enfoque
+                        approach_turning_points = turning_points_approaches.get(approach, [])
+                        
+                        # Obtener excursiones para este enfoque
+                        approach_excursions = excursions_by_approach.get(approach, [])
+                        
+                        # Filtrar turning points para este día
+                        day_turning_points = [tp for tp in approach_turning_points if day_mask[tp]]
+                        
+                        # Identificar puntos involucrados en excursiones
+                        excursion_points = set()
+                        day_excursions = []
+                        
+                        for exc in approach_excursions:
+                            start_point = exc['start_point']
+                            end_point = exc['end_point']
+                            
+                            # Verificar si la excursión está en el día actual
+                            if day_mask[start_point] or day_mask[end_point]:
+                                if day_mask[start_point]:
+                                    excursion_points.add(start_point)
+                                if day_mask[end_point]:
+                                    excursion_points.add(end_point)
+                                day_excursions.append(exc)
+                        
+                        # Clasificar turning points
+                        significant_points = [tp for tp in day_turning_points if tp in excursion_points]
+                        non_significant_points = [tp for tp in day_turning_points if tp not in excursion_points]
+                        
+                        # Dibujar puntos no significativos en azul
+                        for tp in non_significant_points:
+                            ax.plot(times[tp], glucose[tp], 'bo', markersize=6)
+                        
+                        # Dibujar puntos significativos en rojo
+                        for tp in significant_points:
+                            ax.plot(times[tp], glucose[tp], 'ro', markersize=8)
+                        
+                        # Dibujar líneas para las excursiones
+                        for exc in day_excursions:
+                            start_point = exc['start_point']
+                            end_point = exc['end_point']
+                            
+                            # Asegurarse de que ambos puntos están en el día actual
+                            if day_mask[start_point] and day_mask[end_point]:
+                                # Dibujar línea gruesa de color según tipo de excursión
+                                color = 'green' if exc['type'] == 'up' else 'red'
+                                ax.plot([times[start_point], times[end_point]], 
+                                        [glucose[start_point], glucose[end_point]], 
+                                        color=color, linewidth=2.5, alpha=0.7)
+                        
+                        # Calcular MAGE para este enfoque y día
+                        excursions_up = [e['magnitude'] for e in day_excursions if e['type'] == 'up']
+                        excursions_down = [e['magnitude'] for e in day_excursions if e['type'] == 'down']
+                        
+                        mage_plus = np.mean(excursions_up) if excursions_up else 0
+                        mage_minus = np.mean(excursions_down) if excursions_down else 0
+                        mage_avg = np.mean(excursions_up + excursions_down) if (excursions_up or excursions_down) else 0
+                        
+                        # Configurar título y etiquetas
+                        approach_name = "Suavizado" if approach == 1 else "Eliminación directa" if approach == 2 else "Suavizado mejorado"
+                        ax.set_title(f'MAGE Baghurst - Enfoque {approach} ({approach_name}) - {current_day.strftime("%d/%m/%Y")}\n'
+                                    f'MAGE+: {mage_plus:.1f}, MAGE-: {mage_minus:.1f}, MAGE: {mage_avg:.1f}, Excursiones: {len(day_excursions)}')
+                        ax.set_ylabel('Glucosa (mg/dL)')
+                        ax.grid(True)
+                        ax.axhline(y=self.mean() + threshold, color='g', linestyle='--', label=f'Umbral (+{threshold_sd} SD)')
+                        ax.axhline(y=self.mean() - threshold, color='g', linestyle='--', label=f'Umbral (-{threshold_sd} SD)')
+                        
+                        # Leyenda personalizada
+                        from matplotlib.lines import Line2D
+                        custom_lines = [
+                            Line2D([0], [0], color='b', marker='o', linestyle='None', markersize=6),
+                            Line2D([0], [0], color='r', marker='o', linestyle='None', markersize=8),
+                            Line2D([0], [0], color='green', linewidth=2.5),
+                            Line2D([0], [0], color='red', linewidth=2.5),
+                            Line2D([0], [0], color='g', linestyle='--')
+                        ]
+                        ax.legend(custom_lines, ['Puntos de inflexión', 'Puntos de excursiones', 
+                                                'Excursión positiva', 'Excursión negativa', 'Umbral (±1 SD)'])
+                    
+                    # Configurar eje x para el último gráfico
+                    axs[2].set_xlabel('Tiempo')
+                    
+                    # Formatear eje x para mostrar horas
+                    for ax in axs:
+                        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+                        ax.xaxis.set_major_locator(mdates.HourLocator(interval=2))
+                        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
+                    
+                    # Añadir información de navegación
+                    fig.suptitle(f'Día {day_index+1} de {len(unique_days)} - Presiona ← o → para navegar, q para salir', fontsize=12)
+                    
+                    plt.tight_layout()
+                    plt.subplots_adjust(top=0.95)  # Hacer espacio para el título superior
+                    fig.canvas.draw_idle()
+            
+            # Índice del día actual
+            current_day_index = 0
+            
+            # Función para manejar eventos de teclado
+            def on_key(event):
+                nonlocal current_day_index
+                
+                if event.key == 'right' and current_day_index < len(unique_days) - 1:
+                    current_day_index += 1
+                    update_plot(current_day_index)
+                elif event.key == 'left' and current_day_index > 0:
+                    current_day_index -= 1
+                    update_plot(current_day_index)
+                elif event.key == 'q':
+                    plt.close(fig)
+            
+            # Conectar el evento de teclado
+            fig.canvas.mpl_connect('key_press_event', on_key)
+            
+            # Mostrar el primer día
+            update_plot(current_day_index)
+            
+            # Mostrar instrucciones
+            print("Navegación:")
+            print("  ← Flecha izquierda: Día anterior")
+            print("  → Flecha derecha: Día siguiente")
+            print("  q: Salir")
+            
+            # Bloquear hasta que se cierre la figura
+            plt.show(block=True)
         
         return {
             'MAGE+': round(mage_plus, 2),
@@ -824,7 +1442,7 @@ class GlucoseMetrics(GlucoseData):
         # Extraer valores de glucosa e índices
         glucose = self.data['glucose'].tolist()
         ix = list(range(len(glucose)))
-        
+
         # Encontrar mínimos y máximos locales
         a = np.diff(np.sign(np.diff(glucose))).nonzero()[0] + 1
         valleys = (np.diff(np.sign(np.diff(glucose))) > 0).nonzero()[0] + 1  # mínimos locales
@@ -886,7 +1504,7 @@ class GlucoseMetrics(GlucoseData):
         
         :param days: Número de días para calcular diferencias (1-6)
         :return: Diccionario con valores MODD y estadísticas relacionadas
-        :reference: DOI: 10.1089/dia.2009.0015 (Rodbard)
+        :reference: DOI: 10.1089/dia.2009/0015 (Rodbard)
         """
         if not 1 <= days <= 6:
             raise ValueError("El número de días debe estar entre 1 y 6")
@@ -959,46 +1577,6 @@ class GlucoseMetrics(GlucoseData):
         k_star = len(valid_data)
         return np.sqrt(sum_squared_diff / (k_star - 1))
 
-
-    def j_index(self) -> float:
-        """Calcula el J-index."""
-        return 0.001 * (self.mean() + self.sd())**2
-
-    def LBGI(self) -> float:
-        """
-        Calcula el Low Blood Glucose Index (LBGI).
-        :return: Valor de LBGI.
-        :reference: DOI: 10.2337/db12-1396
-        """
-        self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
-        self.data["r_bg"] = 10 * (self.data["f_bg"])**2
-        self.data["rl_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] < 0 else 0, axis=1)
-        return self.data["rl_bg"].mean()
-
-    def HBGI(self) -> float:
-        """
-        Calcula el High Blood Glucose Index (HBGI).
-        :return: Valor de HBGI.
-        :reference: DOI: 10.2337/db12-1396
-        """
-        self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
-        self.data["r_bg"] = 10 * (self.data["f_bg"])**2
-        self.data["rh_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] > 0 else 0, axis=1)
-        return self.data["rh_bg"].mean()
-
-    def M_Value(self, target_glucose: float = 80) -> float:
-        """
-        Calcula el M-Value para evaluar la variabilidad de la glucosa en sangre.
-        :param target_glucose: Valor objetivo de glucosa (por defecto 80 mg/dL).
-        :return: M-Value.
-        :reference: DOI: 10.2337/db12-1396
-        """
-        def calculate_M(PG):
-            return abs(10 * np.log10(PG / target_glucose)) ** 3
-
-        self.data['M'] = self.data['glucose'].apply(calculate_M)
-        return self.data['M'].mean()
-
     def Lability_index(self, interval: int = 1, period: str = 'week') -> float:
         """
         Calcula el índice de labilidad (LI).
@@ -1057,7 +1635,48 @@ class GlucoseMetrics(GlucoseData):
         }
         return json.dumps(variability_metrics)
     
+    ## MEDIDAS DE LA CALIDAD DE GLUCEMIA
     
+    def M_Value(self, target_glucose: float = 80) -> float:
+        """
+        Calcula el M-Value para evaluar la variabilidad de la glucosa en sangre.
+        :param target_glucose: Valor objetivo de glucosa (por defecto 80 mg/dL).
+        :return: M-Value.
+        :reference: DOI: 10.2337/db12-1396
+        """
+        def calculate_M(PG):
+            return abs(10 * np.log10(PG / target_glucose)) ** 3
 
+        self.data['M'] = self.data['glucose'].apply(calculate_M)
+        return self.data['M'].mean()
+
+
+    def j_index(self) -> float:
+        """Calcula el J-index."""
+        return 0.001 * (self.mean() + self.sd())**2
+
+    def LBGI(self) -> float:
+        """
+        Calcula el Low Blood Glucose Index (LBGI).
+        :return: Valor de LBGI.
+        :reference: DOI: 10.2337/db12-1396
+        """
+        self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
+        self.data["r_bg"] = 10 * (self.data["f_bg"])**2
+        self.data["rl_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] < 0 else 0, axis=1)
+        return self.data["rl_bg"].mean()
+
+    def HBGI(self) -> float:
+        """
+        Calcula el High Blood Glucose Index (HBGI).
+        :return: Valor de HBGI.
+        :reference: DOI: 10.2337/db12-1396
+        """
+        self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
+        self.data["r_bg"] = 10 * (self.data["f_bg"])**2
+        self.data["rh_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] > 0 else 0, axis=1)
+        return self.data["rh_bg"].mean()
+
+    
     
     
