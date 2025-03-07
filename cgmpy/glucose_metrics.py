@@ -2151,29 +2151,42 @@ class GlucoseMetrics(GlucoseData):
         self.data["rh_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] > 0 else 0, axis=1)
         return self.data["rh_bg"].mean()
 
-    def GRI(self) -> dict:
+    def GRI(self, pregnancy: bool = False) -> dict:
         """
         Calcula el Glucose Risk Index (GRI).
         
         GRI combina los tiempos en diferentes rangos de glucosa, dando diferentes pesos
-        a la hipoglucemia y la hiperglucemia:
+        a la hipoglucemia y la hiperglucemia.
         
         GRI = (3.0 × VLow) + (2.4 × Low) + (1.6 × VHigh) + (0.8 × High)
         
-        Donde:
-        - VLow: % tiempo en hipoglucemia muy baja (<54 mg/dL)
-        - Low: % tiempo en hipoglucemia leve (54-70 mg/dL)
-        - VHigh: % tiempo en hiperglucemia muy alta (>250 mg/dL)
-        - High: % tiempo en hiperglucemia alta (180-250 mg/dL)
+        Rangos estándar:
+        - VLow: <54 mg/dL
+        - Low: 54-70 mg/dL
+        - VHigh: >250 mg/dL
+        - High: 180-250 mg/dL
         
+        Rangos embarazo:
+        - VLow: <54 mg/dL
+        - Low: 54-63 mg/dL
+        - VHigh: >250 mg/dL
+        - High: 140-250 mg/dL
+        
+        :param pregnancy: Si True, usa rangos específicos para embarazo
         :return: Diccionario con el GRI y sus componentes
         :reference: DOI: 10.1016/j.diabres.2013.03.006
         """
+        # Definir rangos según si es embarazo o no
+        vlow_threshold = 54  # Igual en ambos casos
+        low_range = (54, 63) if pregnancy else (54, 70)
+        high_range = (140, 250) if pregnancy else (180, 250)
+        vhigh_threshold = 250  # Igual en ambos casos
+        
         # Calcular los porcentajes de tiempo en cada rango
-        vlow = self.TBR(54)  # <54 mg/dL
-        low = self.calculate_time_in_range(54, 70)  # 54-70 mg/dL
-        vhigh = self.TAR(250)  # >250 mg/dL
-        high = self.calculate_time_in_range(180, 250)  # 180-250 mg/dL
+        vlow = self.TBR(vlow_threshold)  # <54 mg/dL
+        low = self.calculate_time_in_range(*low_range)
+        vhigh = self.TAR(vhigh_threshold)  # >250 mg/dL
+        high = self.calculate_time_in_range(*high_range)
         
         # Calcular los componentes del GRI
         hypo_component = vlow + (0.8 * low)
