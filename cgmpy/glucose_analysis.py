@@ -18,9 +18,10 @@ class GlucoseAnalysis(GlucosePlot):
                  delimiter: Union[str, None] = None, 
                  header: int = 0, 
                  start_date: Union[str, datetime.datetime, None] = None,
-                 end_date: Union[str, datetime.datetime, None] = None):
+                 end_date: Union[str, datetime.datetime, None] = None,
+                 log: bool = False):
         
-        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date)
+        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date, log)
 
 
 

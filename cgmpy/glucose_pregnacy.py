@@ -15,7 +15,7 @@ class GestationalDiabetes(GlucoseAnalysis):
                  delimiter: Union[str, None] = None, 
                  header: int = 0,
                  start_date: Union[str, datetime.datetime, None] = None,
-                 end_date: Union[str, datetime.datetime, None] = None):
+                 end_date: Union[str, datetime.datetime, None] = None, log: bool = False):
         """
         Inicializa el objeto GestationalDiabetes.
         
@@ -28,7 +28,7 @@ class GestationalDiabetes(GlucoseAnalysis):
             delimiter: Delimitador del archivo
             header: Número de fila que contiene los encabezados
         """
-        super().__init__(file_path, date_col, glucose_col, delimiter, header, start_date, end_date)
+        super().__init__(file_path, date_col, glucose_col, delimiter, header, start_date, end_date, log)
 
         # Convertir y validar la fecha de parto
         self.fecha_parto = pd.to_datetime(fecha_parto)
