@@ -1853,90 +1853,63 @@ class GlucoseMetrics(GlucoseData):
                 excursions.append(abs(peak - nadir))
 
         return sum(excursions) / len(excursions) if excursions else 0
-    
-    
+      
     def MODD(self, days: int = 1) -> dict:
         """
-        Calcula el MODD (Mean Of Daily Differences) para múltiples días.
-        
-        El MODD es una medida de la variabilidad entre días, calculada como la media 
-        de la diferencia absoluta de los valores de glucosa obtenidos exactamente a la 
-        misma hora del día, entre días consecutivos o separados por un número específico de días.
+        Calcula el MODD (Mean Of Daily Differences) para un intervalo específico de días.
         
         :param days: Número de días para calcular diferencias (1-6)
-        :return: Diccionario con valores MODD y estadísticas relacionadas
-        :reference: DOI: 10.1007/BF01218495
+        :return: Diccionario con el valor MODD y estadísticas relacionadas
         """
         if not 1 <= days <= 6:
             raise ValueError("El número de días debe estar entre 1 y 6")
         
         # Crear copia de datos con información de tiempo
         data_copy = self.data.copy()
-        
-        # Extraer componentes de tiempo para comparación exacta por hora del día
         data_copy['date'] = data_copy['time'].dt.date
         data_copy['time_of_day'] = data_copy['time'].dt.strftime('%H:%M:%S')
         
-        results = {}
-        correlations = []
+        # Agrupar por hora del día
+        grouped = data_copy.groupby('time_of_day')
         
-        for d in range(1, days + 1):
-            # Agrupar por hora del día para comparar valores separados por d días
-            grouped = data_copy.groupby('time_of_day')
-            
-            abs_diffs = []
-            day_pairs = []
-            
-            for _, group in grouped:
-                # Ordenar por fecha para cada hora del día
-                sorted_group = group.sort_values('date')
-                
-                # Crear pares de días separados por d días
-                for i in range(len(sorted_group) - d):
-                    if (sorted_group.iloc[i+d]['date'] - sorted_group.iloc[i]['date']).days == d:
-                        # Calcular diferencia absoluta
-                        abs_diff = abs(sorted_group.iloc[i+d]['glucose'] - sorted_group.iloc[i]['glucose'])
-                        abs_diffs.append(abs_diff)
-                        
-                        # Guardar par de valores para calcular correlación
-                        day_pairs.append((sorted_group.iloc[i]['glucose'], sorted_group.iloc[i+d]['glucose']))
-            
-            if abs_diffs:
-                # Calcular MODD para d días
-                modd_value = np.mean(abs_diffs)
-                
-                # Calcular correlación entre días
-                if len(day_pairs) > 1:
-                    day1_values, day2_values = zip(*day_pairs)
-                    corr = np.corrcoef(day1_values, day2_values)[0, 1]
-                else:
-                    corr = None
-                
-                results[f'MODD{d}'] = {
-                    'value': modd_value,
-                    'n_observations': len(abs_diffs),
-                    'std': np.std(abs_diffs) if len(abs_diffs) > 1 else 0,
-                    'correlation': corr
-                }
-                
-                if corr is not None:
-                    correlations.append(corr)
-            else:
-                results[f'MODD{d}'] = {
-                    'value': None,
-                    'n_observations': 0,
-                    'std': None,
-                    'correlation': None
-                }
+        abs_diffs = []
+        day_pairs = []
         
-        # Añadir estadísticas generales
-        results['summary'] = {
-            'mean_correlation': np.mean(correlations) if correlations else None,
-            'stability_index': np.std(correlations) if len(correlations) > 1 else None,
-            'days_analyzed': days
+        for _, group in grouped:
+            # Ordenar por fecha para cada hora del día
+            sorted_group = group.sort_values('date')
+            
+            # Crear pares de días separados por el número específico de días
+            for i in range(len(sorted_group) - days):
+                if (sorted_group.iloc[i+days]['date'] - sorted_group.iloc[i]['date']).days == days:
+                    abs_diff = abs(sorted_group.iloc[i+days]['glucose'] - sorted_group.iloc[i]['glucose'])
+                    abs_diffs.append(abs_diff)
+                    day_pairs.append((sorted_group.iloc[i]['glucose'], sorted_group.iloc[i+days]['glucose']))
+        
+        if not abs_diffs:
+            return {
+                'value': None,
+                'n_observations': 0,
+                'std': None,
+                'correlation': None
+            }
+        
+        # Calcular estadísticas
+        modd_value = np.mean(abs_diffs)
+        std_value = np.std(abs_diffs) if len(abs_diffs) > 1 else 0
+        
+        # Calcular correlación entre días
+        correlation = None
+        if len(day_pairs) > 1:
+            day1_values, day2_values = zip(*day_pairs)
+            correlation = np.corrcoef(day1_values, day2_values)[0, 1]
+        
+        return {
+            'value': modd_value,
+            'n_observations': len(abs_diffs),
+            'std': std_value,
+            'correlation': correlation
         }
-    
-        return results
     
     def CONGA(self, hours: int = 4, max_gap_minutes: float = None) -> dict:
         """
@@ -2033,6 +2006,16 @@ class GlucoseMetrics(GlucoseData):
         }
 
     def Lability_index(self, interval: int = 1, period: str = 'week') -> dict:
+
+        """
+        Calcula el índice de variabilidad (LI) para un intervalo de tiempo específico.
+        
+        :param interval: Número de horas entre mediciones consecutivas
+        :param period: Período de tiempo para calcular el LI ('week' o 'month')
+        :return: Diccionario con valores LI y estadísticas
+
+        DOI: 10.2337/diabetes.53.4.955
+        """
         # Añadimos timing para ver dónde se gasta el tiempo
         
         data_copy = self.data.copy()
@@ -2085,10 +2068,8 @@ class GlucoseMetrics(GlucoseData):
             "LBGI": self.LBGI(),
             "HBGI": self.HBGI(),
             "MAGE": self.MAGE(),
-            "M_value": self.M_Value(target_glucose=80),
-            "LI_day": self.Lability_index(interval=1, period='day'),
-            "LI_week": self.Lability_index(interval=1, period='week'),
-            "LI_month": self.Lability_index(interval=1, period='month')
+            "M_value": self.M_Value(),
+            "LI_week": self.Lability_index(interval=1, period='week')
         }
         return variability_metrics
     
@@ -2129,16 +2110,100 @@ class GlucoseMetrics(GlucoseData):
         """
         return 0.001 * (self.mean() + self.sd())**2
 
+
+    def GRADE(self, unit:str='mg/dL') -> dict:
+
+        """
+        Calcula el GRADE.
+        :return: Valor de GRADE.
+        :reference: DOI: 10.1111/j.1464-5491.2007.02119.x
+        """
+        # Crear copia de los datos para no modificar los originales
+        df = self.data.copy()
+        
+        # Convertir a mmol/L si es necesario para los cálculos internos
+        if unit.lower() == 'mg/dl':
+            # Para cálculos, usamos la conversión a mmol/L
+            df['glucose_value'] = df['glucose']
+        elif unit.lower() == 'mmol/l':
+            # Si los datos están en mmol/L, los mantenemos igual
+            df['glucose_value'] = df['glucose'] * 18  # Convertir a mg/dL para clasificación
+        else:
+            raise ValueError("La unidad debe ser 'mg/dL' o 'mmol/L'")
+        
+        # Definir rangos para clasificación (siempre en mg/dL)
+        hypo_threshold = 70  # mg/dL
+        hyper_threshold = 140  # mg/dL
+        
+        # Clasificar valores según rangos (usando valores en mg/dL)
+        df['hypo'] = df['glucose_value'] < hypo_threshold
+        df['eu'] = (df['glucose_value'] >= hypo_threshold) & (df['glucose_value'] <= hyper_threshold)
+        df['hyper'] = df['glucose_value'] > hyper_threshold
+        
+        # Vectorización para calcular GRADE
+        glucose_values = df['glucose_value'].values
+        
+        # Inicializar array de resultados
+        grade_values = np.zeros_like(glucose_values, dtype=float)
+        
+        # Crear máscara para valores dentro del rango válido
+        valid_mask = (glucose_values >= 37) & (glucose_values <= 630)
+        
+        # Convertir mg/dL a mmol/L y calcular GRADE para valores válidos
+        with np.errstate(invalid='ignore', divide='ignore'):
+            # Convertir a mmol/L dividiendo por 18
+            glucose_mmol = glucose_values[valid_mask] / 18
+            log_log_values = np.log10(np.log10(glucose_mmol))
+            grade_values[valid_mask] = 425 * (log_log_values + 0.16)**2
+        
+        # Asignar 50 a valores inválidos (fuera de rango o con error logarítmico)
+        invalid_mask = ~valid_mask | ~np.isfinite(grade_values)
+        grade_values[invalid_mask] = 50
+        
+        # Asignar resultados al dataframe
+        df['grade'] = grade_values
+        
+        # Calcular componentes de GRADE
+        grade_total = df['grade'].sum()
+        grade_hypo = df.loc[df['hypo'], 'grade'].sum()
+        grade_eu = df.loc[df['eu'], 'grade'].sum()
+        grade_hyper = df.loc[df['hyper'], 'grade'].sum()
+        
+        # Calcular porcentajes
+        hypo_percent = (grade_hypo / grade_total) * 100 if grade_total > 0 else 0
+        eu_percent = (grade_eu / grade_total) * 100 if grade_total > 0 else 0
+        hyper_percent = (grade_hyper / grade_total) * 100 if grade_total > 0 else 0
+        
+        # Calcular GRADE score (media de todos los valores GRADE)
+        grade_score = df['grade'].mean()
+        
+        # Crear diccionario de resultados
+        results = {
+            "grade_score": float(grade_score),
+            "hypo_percent": float(hypo_percent),
+            "eu_percent": float(eu_percent),
+            "hyper_percent": float(hyper_percent)
+        }
+        
+        return results
+            
+    
+
     def LBGI(self) -> float:
         """
         Calcula el Low Blood Glucose Index (LBGI).
         :return: Valor de LBGI.
         :reference: DOI: 10.2337/db12-1396
         """
-        self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
-        self.data["r_bg"] = 10 * (self.data["f_bg"])**2
-        self.data["rl_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] < 0 else 0, axis=1)
-        return self.data["rl_bg"].mean()
+        # Usar copia para no modificar los datos originales
+        glucose_values = self.data["glucose"].values
+        
+        # Cálculos vectorizados
+        f_bg = 1.509 * ((np.log(glucose_values))**1.084 - 5.381)
+        r_bg = 10 * f_bg**2
+        rl_bg = np.where(f_bg < 0, r_bg, 0)
+        
+        return float(np.mean(rl_bg))
 
     def HBGI(self) -> float:
         """
@@ -2146,10 +2211,15 @@ class GlucoseMetrics(GlucoseData):
         :return: Valor de HBGI.
         :reference: DOI: 10.2337/db12-1396
         """
-        self.data["f_bg"] = 1.509 * ((np.log(self.data["glucose"]))**1.084 - 5.381)
-        self.data["r_bg"] = 10 * (self.data["f_bg"])**2
-        self.data["rh_bg"] = self.data.apply(lambda row: row["r_bg"] if row["f_bg"] > 0 else 0, axis=1)
-        return self.data["rh_bg"].mean()
+        # Usar copia para no modificar los datos originales
+        glucose_values = self.data["glucose"].values
+        
+        # Cálculos vectorizados
+        f_bg = 1.509 * ((np.log(glucose_values))**1.084 - 5.381)
+        r_bg = 10 * f_bg**2
+        rh_bg = np.where(f_bg > 0, r_bg, 0)
+        
+        return float(np.mean(rh_bg))
 
     def GRI(self, pregnancy: bool = False) -> dict:
         """
@@ -2213,3 +2283,169 @@ class GlucoseMetrics(GlucoseData):
             }
         }
 
+
+    def ADRR(self) -> dict:
+        """
+        Calcula el Average Daily Risk Range (ADRR).
+        
+        El ADRR es una medida de variabilidad que:
+        1. Es igualmente sensible a hipo e hiperglucemia
+        2. Usa transformación logarítmica para normalizar la escala
+        
+        :return: Diccionario con ADRR y estadísticas relacionadas
+        
+        :reference: DOI: 10.1177/193229681300700529
+        """
+        # Agrupar datos por día
+        daily_readings = self.data.groupby(self.data['time'].dt.date)
+        
+        # Función de transformación de glucosa
+        def transform_bg(bg_values):
+            # f(BG) = 1.509 * (ln(BG)**1.084 - 5.381)
+            return 1.509 * ((np.log(bg_values))**1.084 - 5.381)
+        
+        # Calcular riesgos diarios
+        daily_risks = []
+        daily_hypo_risks = []  # Lista separada para riesgos de hipoglucemia
+        daily_hyper_risks = [] # Lista separada para riesgos de hiperglucemia
+        
+        for date, day_data in daily_readings:
+            # Transformar valores de glucosa
+            bg_values = day_data['glucose'].values
+            transformed = transform_bg(bg_values)
+            
+            # Separar riesgos de hipo e hiperglucemia
+            rl = np.where(transformed < 0, 10 * transformed**2, 0)  # Riesgo hipoglucemia
+            rh = np.where(transformed > 0, 10 * transformed**2, 0)  # Riesgo hiperglucemia
+            # Obtener máximos riesgos diarios
+            lr = np.max(rl) if len(rl) > 0 else 0  # Máximo riesgo hipo
+            hr = np.max(rh) if len(rh) > 0 else 0  # Máximo riesgo hiper
+            
+            daily_risks.append(lr + hr)  # Suma total de riesgos
+            daily_hypo_risks.append(lr)  # Guardar riesgo de hipoglucemia
+            daily_hyper_risks.append(hr) # Guardar riesgo de hiperglucemia
+        
+        # Calcular ADRR como promedio de riesgos diarios
+        adrr = np.mean(daily_risks)
+        
+        # Determinar categoría de riesgo
+        if adrr < 20:
+            risk_category = 'Bajo'
+        elif adrr < 40:
+            risk_category = 'Moderado'
+        else:
+            risk_category = 'Alto'
+        
+        # Calcular estadísticas adicionales
+        hypo_risk = np.mean(daily_hypo_risks)
+        hyper_risk = np.mean(daily_hyper_risks)
+        
+        return {
+            'adrr': round(adrr, 2),
+            'risk_category': risk_category,
+            'components': {
+                'hypo_risk': round(hypo_risk, 2),
+                'hyper_risk': round(hyper_risk, 2)
+            }
+        }
+    
+    def calculate_all_metrics(self) -> dict:
+        try:
+            # Métricas básicas
+            metrics = {
+                "completitud": self.data_completeness(),
+                "media": self.mean(), 
+                "mediana": self.median(), 
+                "desviacion_estandar": self.sd(), 
+                "cv": self.cv(), 
+                "gmi": self.gmi(),
+                
+                # Tiempo en rango
+                "tir": self.TIR(), 
+                "tir_tight": self.TIR_tight(), 
+                "tir_pregnancy": self.TIR_pregnancy(),
+                "tar180": self.TAR180(), 
+                "tar250": self.TAR250(), 
+                "tar140": self.TAR140(),
+                "tbr70": self.TBR70(), 
+                "tbr63": self.TBR63(), 
+                "tbr55": self.TBR55(),
+                
+                # Estadísticas de distribución
+                "asimetria": float(self.data['glucose'].skew()), 
+                "curtosis": float(self.data['glucose'].kurtosis()),
+            }
+
+            # Métricas de variabilidad SD - estas retornan diccionarios
+            sd_metrics = {
+                "sdt": self.sd_total().get('sd'),
+                "sdw": self.sd_within_day().get('sd'),
+                "sd_timepoints": self.sd_between_timepoints().get('sd'),
+                "sd_noche": self.sd_segment("00:00", 8).get('sd'),
+                "sd_dia": self.sd_segment("08:00", 8).get('sd'),
+                "sd_tarde": self.sd_segment("16:00", 8).get('sd'),
+                "sd_1h": self.sd_within_series(hours=1).get('sd'),
+                "sd_6h": self.sd_within_series(hours=6).get('sd'),
+                "sd_24h": self.sd_within_series(hours=24).get('sd'),
+                "sd_daily_mean": self.sd_daily_mean().get('sd'),
+                "sd_same_timepoint": self.sd_same_timepoint().get('sd'),
+                "sd_same_timepoint_adj": self.sd_same_timepoint_adjusted().get('sd'),
+                "sd_interaction": self.sd_interaction().get('sd')
+            }
+            metrics.update(sd_metrics)
+
+            # CONGA - retorna diccionario
+            conga_metrics = {
+                "CONGA1": self.CONGA(hours=1).get('value'),
+                "CONGA2": self.CONGA(hours=2).get('value'),
+                "CONGA4": self.CONGA(hours=4).get('value'),
+                "CONGA6": self.CONGA(hours=6).get('value'),
+                "CONGA24": self.CONGA(hours=24).get('value')
+            }
+            metrics.update(conga_metrics)
+
+            # MAGE - retorna diccionario
+            try:
+                mage_results = self.MAGE_Baghurst()
+                metrics.update({
+                    "mage_plus": mage_results.get('MAGE+'),
+                    "mage_minus": mage_results.get('MAGE-'),
+                    "mage_avg": mage_results.get('MAGE_avg'),
+                    "mage_sd": mage_results.get('SD_used'),
+                    "mage_threshold": mage_results.get('threshold'),
+                    "mage_excursions": mage_results.get('num_excursions')
+                })
+            except Exception as e:
+                if self.log:
+                    print(f"Error calculando MAGE: {str(e)}")
+
+            # MODD - retorna diccionario
+            try:
+                modd_result = self.MODD()
+                metrics.update({
+                    "modd": modd_result.get('value'),
+                    "modd_sd": modd_result.get('std')
+                })
+            except Exception as e:
+                if self.log:
+                    print(f"Error calculando MODD: {str(e)}")
+
+            # Índices de riesgo y otros
+            try:
+                metrics.update({
+                    "lbgi": self.LBGI(),  # retorna float
+                    "hbgi": self.HBGI(),  # retorna float
+                    "adrr": self.ADRR().get('adrr'),
+                    "gri": self.GRI().get('GRI'),
+                    "grade": self.GRADE().get('grade_score'),
+                    "m_value": self.M_Value().get('m_value'),
+                    "j_index": self.j_index()  # retorna float
+                })
+            except Exception as e:
+                if self.log:
+                    print(f"Error calculando índices de riesgo: {str(e)}")
+
+            return metrics
+        except Exception as e:
+            return {"error": str(e), "mensaje": "Error al calcular métricas"}
+            

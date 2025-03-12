@@ -240,7 +240,9 @@ class GestationalDiabetes(GlucoseAnalysis):
         
         return resultados
 
-
+    def time_statistics(self):
+        return self.time_statistics_pregnancy()
+    
     def time_statistics_trimestres(self):
         resultados = {}
         
@@ -260,7 +262,37 @@ class GestationalDiabetes(GlucoseAnalysis):
             resultados['tercer_trimestre'] = "No hay datos disponibles"
         
         return resultados
-    
+ 
+
+    def calculate_all_metrics(self) -> dict:
+        """
+        Calcula todas las métricas disponibles para el embarazo completo y por trimestres.
+        """
+        # Primero obtenemos las métricas del embarazo completo
+        metricas_totales = super().calculate_all_metrics()
+        
+        # Calculamos las métricas por trimestre
+        metricas_trimestres = {
+            "primer_trimestre": "No hay datos disponibles",
+            "segundo_trimestre": "No hay datos disponibles",
+            "tercer_trimestre": "No hay datos disponibles"
+        }
+        
+        # Solo calculamos si hay datos en cada trimestre
+        if self.primer_trimestre is not None:
+            metricas_trimestres["primer_trimestre"] = self.primer_trimestre.calculate_all_metrics()
+        
+        if self.segundo_trimestre is not None:
+            metricas_trimestres["segundo_trimestre"] = self.segundo_trimestre.calculate_all_metrics()
+        
+        if self.tercer_trimestre is not None:
+            metricas_trimestres["tercer_trimestre"] = self.tercer_trimestre.calculate_all_metrics()
+        
+        return {
+            "embarazo_completo": metricas_totales,
+            "por_trimestre": metricas_trimestres
+        }
+
     def distribution_analysis_trimestres(self):
         """
         Analiza la distribución de los valores de glucosa por trimestre utilizando
