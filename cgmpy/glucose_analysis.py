@@ -21,7 +21,10 @@ class GlucoseAnalysis(GlucosePlot):
                  end_date: Union[str, datetime.datetime, None] = None,
                  log: bool = False):
         
-        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date, log)
+        # Verificar si GlucoseData ya ha sido inicializado
+        if not hasattr(self, 'data'):
+            super().__init__(data_source, date_col, glucose_col, delimiter, header, 
+                           start_date, end_date, log)
 
 
 

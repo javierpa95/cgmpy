@@ -9,75 +9,19 @@ import scipy.stats as stats
 import os
 
 class GlucosePlot(GlucoseMetrics):
-    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0, start_date: Union[str, datetime.datetime, None] = None, end_date: Union[str, datetime.datetime, None] = None, log: bool = False):
-        """
-        Inicializa la clase GlucosePlot con optimizaciones para archivos grandes.
+    def __init__(self, data_source: Union[str, pd.DataFrame], 
+                 date_col: str="time", 
+                 glucose_col: str="glucose", 
+                 delimiter: Union[str, None] = None, 
+                 header: int = 0, 
+                 start_date: Union[str, datetime.datetime, None] = None,
+                 end_date: Union[str, datetime.datetime, None] = None,
+                 log: bool = False):
         
-        :param data_source: Archivo CSV o DataFrame con los datos de glucosa
-        :param date_col: Nombre de la columna de fecha/hora
-        :param glucose_col: Nombre de la columna de valores de glucosa
-        :param delimiter: Delimitador para archivos CSV
-        :param header: Fila de encabezado para archivos CSV
-        :param start_date: Fecha de inicio para filtrar datos
-        :param end_date: Fecha de fin para filtrar datos
-        :param log: Si True, guarda información detallada de las operaciones realizadas
-        """
-        # Optimización: Si es un archivo grande, procesamos de manera más eficiente
-        if isinstance(data_source, str) and os.path.isfile(data_source) and os.path.getsize(data_source) > 10*1024*1024:  # > 10MB
-            print(f"Cargando archivo grande ({os.path.getsize(data_source)/1024/1024:.1f} MB)...")
-            
-            # Primero identificamos solo las columnas necesarias
-            if delimiter is None:
-                # Intentar detectar automáticamente el delimitador
-                with open(data_source, 'r') as f:
-                    first_line = f.readline().strip()
-                    if ',' in first_line:
-                        delimiter = ','
-                    elif ';' in first_line:
-                        delimiter = ';'
-                    elif '\t' in first_line:
-                        delimiter = '\t'
-                    else:
-                        delimiter = ','  # Default a coma si no se puede detectar
-            
-            # Leer solo las primeras filas para detectar tipos de datos
-            sample = pd.read_csv(data_source, delimiter=delimiter, header=header, nrows=1000)
-            
-            # Crear un diccionario de tipos para optimizar la lectura
-            dtypes = {}
-            for col in sample.columns:
-                if col == date_col:
-                    continue  # parse_dates se encargará de esta columna
-                elif pd.api.types.is_numeric_dtype(sample[col]):
-                    if pd.api.types.is_integer_dtype(sample[col]):
-                        dtypes[col] = 'int32'
-                    else:
-                        dtypes[col] = 'float32'
-            
-            # Ahora leer solo las columnas necesarias con tipos optimizados
-            usecols = [date_col, glucose_col]
-            
-            # Detectar si hay otras columnas necesarias para cálculos
-            if 'day' not in usecols and date_col in sample.columns:
-                usecols.append('day')
-            
-            # Leer el archivo completo con optimizaciones
-            data = pd.read_csv(
-                data_source, 
-                delimiter=delimiter, 
-                header=header, 
-                usecols=usecols,
-                dtype=dtypes,
-                parse_dates=[date_col],
-                infer_datetime_format=True,
-                engine='c'  # Motor C más rápido que Python
-            )
-            
-            # Llamar al constructor de la clase padre con los datos optimizados
-            super().__init__(data, date_col, glucose_col, delimiter, header, start_date, end_date, log)
-        else:
-            # Para DataFrames o archivos pequeños, usar el constructor normal
-            super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date, log)
+        # Verificar si GlucoseData ya ha sido inicializado
+        if not hasattr(self, 'data'):
+            super().__init__(data_source, date_col, glucose_col, delimiter, header, 
+                           start_date, end_date, log)
 
      # GRÁFICOS
     def plot_agp(self, smoothing_window: int = 15):

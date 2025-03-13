@@ -6,43 +6,19 @@ import pandas as pd
 import math
 
 class GlucoseMetrics(GlucoseData):
-    def __init__(self, data_source: Union[str, pd.DataFrame], date_col: str="time", glucose_col: str="glucose", delimiter: Union[str, None] = None, header: int = 0, start_date: Union[str, datetime.datetime, None] = None, end_date: Union[str, datetime.datetime, None] = None, log: bool = False):
-        """
-        Inicializa la clase GlucoseMetrics con optimizaciones para conjuntos de datos grandes.
+    def __init__(self, data_source: Union[str, pd.DataFrame], 
+                 date_col: str="time", 
+                 glucose_col: str="glucose", 
+                 delimiter: Union[str, None] = None, 
+                 header: int = 0, 
+                 start_date: Union[str, datetime.datetime, None] = None,
+                 end_date: Union[str, datetime.datetime, None] = None,
+                 log: bool = False):
         
-        :param data_source: Archivo CSV o DataFrame con los datos de glucosa
-        :param date_col: Nombre de la columna de fecha/hora
-        :param glucose_col: Nombre de la columna de valores de glucosa
-        :param delimiter: Delimitador para archivos CSV
-        :param header: Fila de encabezado para archivos CSV
-        :param start_date: Fecha de inicio para filtrar datos
-        :param end_date: Fecha de fin para filtrar datos
-        :param log: Si True, guarda información detallada de las operaciones realizadas
-        """
-        # Si ya recibimos un DataFrame optimizado desde GlucosePlot, lo pasamos directamente
-        if isinstance(data_source, pd.DataFrame):
-            # Verificar si el DataFrame ya tiene fecha y glucosa con los nombres correctos
-            if date_col in data_source.columns and glucose_col in data_source.columns:
-                # Verificar si la columna de fecha ya es datetime
-                if not pd.api.types.is_datetime64_dtype(data_source[date_col]):
-                    # Convertir a datetime de manera optimizada
-                    data_source[date_col] = pd.to_datetime(data_source[date_col], infer_datetime_format=True)
-                
-                # Crear copia optimizada solo con las columnas necesarias
-                df_optimized = data_source[[date_col, glucose_col]].copy()
-                
-                # Renombrar columnas si es necesario para mantener consistencia interna
-                if date_col != "time":
-                    df_optimized.rename(columns={date_col: "time"}, inplace=True)
-                if glucose_col != "glucose":
-                    df_optimized.rename(columns={glucose_col: "glucose"}, inplace=True)
-                
-                # Inicializar con el DataFrame optimizado
-                super().__init__(df_optimized, "time", "glucose", delimiter, header, start_date, end_date, log)
-                return
-        
-        # Si no es un DataFrame optimizado, usar el constructor normal
-        super().__init__(data_source, date_col, glucose_col, delimiter, header, start_date, end_date, log)
+        # Verificar si GlucoseData ya ha sido inicializado
+        if not hasattr(self, 'data'):
+            super().__init__(data_source, date_col, glucose_col, delimiter, header, 
+                           start_date, end_date, log)
 
     def _calculate_data_completeness(self, interval_minutes: Union[float, None] = None) -> dict:
         """
@@ -2432,18 +2408,38 @@ class GlucoseMetrics(GlucoseData):
 
             # Índices de riesgo y otros
             try:
-                metrics.update({
-                    "lbgi": self.LBGI(),  # retorna float
-                    "hbgi": self.HBGI(),  # retorna float
-                    "adrr": self.ADRR().get('adrr'),
-                    "gri": self.GRI().get('GRI'),
-                    "grade": self.GRADE().get('grade_score'),
-                    "m_value": self.M_Value().get('m_value'),
-                    "j_index": self.j_index()  # retorna float
-                })
+                lgbi = self.LBGI()
+                hbgi = self.HBGI()
+                adrr = self.ADRR()
+                gri = self.GRI()
+                gri_pregnancy = self.GRI(pregnancy=True)
+                grade = self.GRADE()
+                m_value = self.M_Value()
+                j_index = self.j_index()
+                
+                # Crear diccionario con los resultados, verificando el tipo de cada valor
+                risk_metrics = {
+                    'lbgi': lgbi,
+                    'hbgi': hbgi,
+                    'adrr': adrr.get('adrr') if isinstance(adrr, dict) else adrr,
+                    'gri': gri.get('GRI') if isinstance(gri, dict) else gri,
+                    'gri_high': gri.get('derived_metrics', {}).get('hyper_component', 0),
+                    'gri_low': gri.get('derived_metrics', {}).get('hypo_component', 0),
+                    'gri_pregnancy': gri_pregnancy.get('GRI') if isinstance(gri_pregnancy, dict) else gri_pregnancy,
+                    'gri_pregnancy_high': gri_pregnancy.get('derived_metrics', {}).get('hyper_component', 0),
+                    'gri_pregnancy_low': gri_pregnancy.get('derived_metrics', {}).get('hypo_component', 0),
+                    'grade': grade.get('total') if isinstance(grade, dict) else grade,
+                    'm_value': m_value if not isinstance(m_value, dict) else m_value.get('M_Value'),
+                    'j_index': j_index
+                }
+
+                # Actualizar el diccionario metrics
+                metrics.update(risk_metrics)
+
             except Exception as e:
-                if self.log:
-                    print(f"Error calculando índices de riesgo: {str(e)}")
+                print(f"Error general calculando métricas de riesgo: {str(e)}")
+                import traceback
+                traceback.print_exc()
 
             return metrics
         except Exception as e:

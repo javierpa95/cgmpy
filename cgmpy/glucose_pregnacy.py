@@ -102,13 +102,39 @@ class GestationalDiabetes(GlucoseAnalysis):
         gmi = self.gmi()
         info_gestacional = self.info()
 
-        output.append(f"GMI del embarazo: {gmi}%")
-        output.append(f"Información básica del CGM: {info_gestacional}")
+        # Formatear la información básica de forma más legible
+        output.append(f"GMI del embarazo: {gmi:.1f}%")
+        output.append("Información básica del CGM:")
+        output.append(f"  - Número de datos: {info_gestacional['num_datos']:,}")
+        output.append(f"  - Período: {info_gestacional['fecha_inicio'].strftime('%d/%m/%Y')} - {info_gestacional['fecha_fin'].strftime('%d/%m/%Y')}")
+        output.append(f"  - Intervalo típico: {info_gestacional['intervalo_tipico']:.1f} minutos")
+        output.append(f"  - Datos esperados: {info_gestacional['datos_teoricos']:,}")
+        output.append(f"  - Disponibilidad: {info_gestacional['porcentaje_disponibilidad']:.1f}%")
+        output.append(f"  - Desconexiones: {info_gestacional['num_desconexiones'].split(' ')[0]}")
+        output.append(f"  - Tiempo total sin datos: {info_gestacional['tiempo_total_desconexion']:.1f} horas\n")
 
         for trimestre, datos in info_gest.items():
             output.append(f"\n=== {trimestre.upper().replace('_', ' ')} ===")
-            output.append(f"Número de datos: {datos['datos']}")
-            output.append(f"{datos['info']}")
+            if isinstance(datos, dict):
+                output.append(f"Número de datos: {datos.get('num_datos', 'No disponible'):,}")
+                output.append(f"Datos esperados: {datos.get('datos_esperados', 'No disponible'):,}")
+                output.append(f"Porcentaje de datos: {datos.get('porcentaje_datos', 'No disponible'):.1f}%")
+                output.append(f"Intervalo típico: {datos.get('intervalo_tipico', 'No disponible')} minutos")
+                
+                # Añadir los períodos correctos según el trimestre
+                if trimestre == "primer_trimestre":
+                    periodo_inicio = self.fecha_concepcion
+                    periodo_fin = self.primer_trimestre_fin
+                elif trimestre == "segundo_trimestre":
+                    periodo_inicio = self.primer_trimestre_fin
+                    periodo_fin = self.segundo_trimestre_fin
+                else:  # tercer_trimestre
+                    periodo_inicio = self.segundo_trimestre_fin
+                    periodo_fin = self.fecha_parto
+                    
+                output.append(f"Período: {periodo_inicio.strftime('%d/%m/%Y')} - {periodo_fin.strftime('%d/%m/%Y')}")
+            else:
+                output.append(str(datos))
             output.append("-" * 50)
         
         return "\n".join(output)
