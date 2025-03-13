@@ -28,7 +28,7 @@ class GestationalDiabetes(GlucoseAnalysis):
             delimiter: Delimitador del archivo
             header: Número de fila que contiene los encabezados
         """
-        super().__init__(file_path, date_col, glucose_col, delimiter, header, start_date, end_date, log)
+  
 
         # Convertir y validar la fecha de parto
         self.fecha_parto = pd.to_datetime(fecha_parto)
@@ -46,8 +46,13 @@ class GestationalDiabetes(GlucoseAnalysis):
         self.primer_trimestre_fin = self.fecha_concepcion + pd.Timedelta(weeks=13)
         self.segundo_trimestre_fin = self.fecha_concepcion + pd.Timedelta(weeks=26)
         
+
+        super().__init__(file_path, date_col, glucose_col, delimiter, header, start_date=self.fecha_concepcion, end_date=self.fecha_parto, log=log)
+        
         # Asegurarse de que las fechas en self.data son datetime
         self.data[self.date_col] = pd.to_datetime(self.data[self.date_col])
+
+        
         
         # Crear los DataFrames por trimestre con validación
         self.primer_trimestre_df = self._create_trimester_df(self.fecha_concepcion, self.primer_trimestre_fin)
