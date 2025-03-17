@@ -105,18 +105,25 @@ class GestationalDiabetes(GlucoseAnalysis):
         output = [f"Gestación: {semanas}+{dias} semanas\n"]
         
         gmi = self.gmi()
-        info_gestacional = self.info()
+        
+        # Calcular la disponibilidad real considerando todo el embarazo
+        num_datos_total = len(self.data)
+        intervalo_tipico = self.info()['intervalo_tipico']
+        duracion_embarazo = (self.fecha_parto - self.fecha_concepcion).total_seconds() / 60  # en minutos
+        datos_teoricos_embarazo = int(duracion_embarazo / intervalo_tipico)
+        disponibilidad_real = (num_datos_total / datos_teoricos_embarazo) * 100
 
         # Formatear la información básica de forma más legible
         output.append(f"GMI del embarazo: {gmi:.1f}%")
         output.append("Información básica del CGM:")
-        output.append(f"  - Número de datos: {info_gestacional['num_datos']:,}")
-        output.append(f"  - Período: {info_gestacional['fecha_inicio'].strftime('%d/%m/%Y')} - {info_gestacional['fecha_fin'].strftime('%d/%m/%Y')}")
-        output.append(f"  - Intervalo típico: {info_gestacional['intervalo_tipico']:.1f} minutos")
-        output.append(f"  - Datos esperados: {info_gestacional['datos_teoricos']:,}")
-        output.append(f"  - Disponibilidad: {info_gestacional['porcentaje_disponibilidad']:.1f}%")
-        output.append(f"  - Desconexiones: {info_gestacional['num_desconexiones'].split(' ')[0]}")
-        output.append(f"  - Tiempo total sin datos: {info_gestacional['tiempo_total_desconexion']:.1f} horas\n")
+        output.append(f"  - Número de datos: {num_datos_total:,}")
+        output.append(f"  - Período teórico completo: {self.fecha_concepcion.strftime('%d/%m/%Y')} - {self.fecha_parto.strftime('%d/%m/%Y')}")
+        output.append(f"  - Período real con datos: {self.info()['fecha_inicio'].strftime('%d/%m/%Y')} - {self.info()['fecha_fin'].strftime('%d/%m/%Y')}")
+        output.append(f"  - Intervalo típico: {intervalo_tipico:.1f} minutos")
+        output.append(f"  - Datos esperados (embarazo completo): {datos_teoricos_embarazo:,}")
+        output.append(f"  - Disponibilidad real: {disponibilidad_real:.1f}%")
+        output.append(f"  - Desconexiones: {self.info()['num_desconexiones'].split(' ')[0]}")
+        output.append(f"  - Tiempo total sin datos: {self.info()['tiempo_total_desconexion']:.1f} horas\n")
 
         for trimestre, datos in info_gest.items():
             output.append(f"\n=== {trimestre.upper().replace('_', ' ')} ===")

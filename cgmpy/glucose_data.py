@@ -40,90 +40,45 @@ class GlucoseData:
                 # Detectar si es un archivo Parquet por la extensión
                 is_parquet = data_source.lower().endswith('.parquet')
                 
-                file_size = os.path.getsize(data_source)
-                is_large_file = file_size > 10*1024*1024  # > 10MB
-                
-                if is_large_file and self.log:
-                    print(f"Cargando archivo grande en GlucoseData ({file_size/1024/1024:.1f} MB)...")
-                
                 if is_parquet:
-                    # Procesamiento optimizado para archivos Parquet
-                    if self.log:
-                        print("Detectado formato Parquet. Usando procesamiento optimizado.")
-                    
-                    # Leer solo las columnas necesarias
-                    usecols = [date_col, glucose_col]
-                    self.data = pd.read_parquet(data_source, columns=usecols)
-                    
-                    # Verificar tipos de datos
-                    if not pd.api.types.is_datetime64_any_dtype(self.data[date_col]) and self.log:
-                        print("Advertencia: La columna 'time' no está en formato datetime. Esto puede afectar el rendimiento.")
-                        self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-                    
-                    # Verificar si glucose es int16, convertir si es necesario
-                    if self.data[glucose_col].dtype != 'int16' and self.log:
-                        print("Advertencia: La columna 'glucose' no está en formato int16. Convirtiendo para optimizar.")
-                        self.data[glucose_col] = pd.to_numeric(self.data[glucose_col], errors='coerce', downcast='integer')
-                        self.data[glucose_col] = self.data[glucose_col].astype('int16')
+                    # Procesamiento para archivos Parquet
+                    try:
+                        self.data = pd.read_parquet(data_source, columns=[date_col, glucose_col])
+                    except Exception as e:
+                        raise ValueError(f"Error al leer el archivo Parquet: {str(e)}")
                 else:
-                    # Mantener la lógica existente para CSV
-                    # Detectar automáticamente el delimitador si no se especifica
-                    if delimiter is None:
-                        with open(data_source, 'r') as f:
-                            first_line = f.readline().strip()
-                            for delim in [',', ';', '\t']:
-                                if delim in first_line:
-                                    delimiter = delim
-                                    break
-                            else:
-                                delimiter = ','  # Default a coma
-                    
-                    # Leer una muestra para detectar tipo de fecha
-                    sample = pd.read_csv(data_source, delimiter=delimiter, header=header, nrows=5)
-                    date_is_numeric = pd.api.types.is_numeric_dtype(sample[date_col])
-                    
-                    # Crear un diccionario de tipos optimizado
-                    dtypes = {}
-                    for col in sample.columns:
-                        if col == date_col and date_is_numeric:
-                            continue  # Lo manejaremos después
-                        elif col != date_col:
-                            if pd.api.types.is_integer_dtype(sample[col]):
-                                # Cambiamos de int32 a float32 para manejar NAs
-                                dtypes[col] = 'float32'
-                            elif pd.api.types.is_float_dtype(sample[col]):
-                                dtypes[col] = 'float32'
-                    
-                    # Leer solo las columnas necesarias
-                    usecols = [date_col, glucose_col]
-                    
-                    # Leer el archivo (sin convertir fechas aún)
-                    self.data = pd.read_csv(
-                        data_source, 
-                        delimiter=delimiter, 
-                        header=header, 
-                        usecols=usecols,
-                        dtype=dtypes if is_large_file else None,
-                        engine='c' if is_large_file else 'python',
-                        na_values=['', 'NA', 'NULL', 'null', 'NaN']  # Especificamos valores nulos explícitamente
-                    )
-                    
-                    # Convertir la columna de fecha después de leer
-                    if date_is_numeric:
-                        # Detectar si son milisegundos o segundos
-                        sample_value = self.data[date_col].iloc[0] if len(self.data) > 0 else 0
-                        date_unit = 'ms' if sample_value > 10000000000 else 's'
-                        if self.log:
-                            print(self.data[date_col])
-                        # Convertir directamente a datetime64[s] usando el parámetro unit
-                        self.data[date_col] = pd.to_datetime(self.data[date_col],unit=date_unit,errors='coerce')
-                    else:
-                        # Para fechas en formato texto
-                        try:
-                            self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-                        except:
-                            # En caso de error, intentar con el convertidor personalizado
-                            self.data[date_col] = self.data[date_col].apply(parse_date)
+                    # Procesamiento para archivos CSV
+                    try:
+                        # Si no se especifica delimitador, intentar con coma
+                        if delimiter is None:
+                            delimiter = ','
+                        
+                        # Intentar leer el archivo con el delimitador especificado
+                        self.data = pd.read_csv(
+                            data_source, 
+                            delimiter=delimiter, 
+                            header=header, 
+                            usecols=[date_col, glucose_col]
+                        )
+                    except Exception as e:
+                        # Si falla con coma, intentar con punto y coma
+                        if delimiter == ',':
+                            try:
+                                self.data = pd.read_csv(
+                                    data_source, 
+                                    delimiter=';', 
+                                    header=header, 
+                                    usecols=[date_col, glucose_col]
+                                )
+                            except Exception:
+                                # Si ambos fallan, lanzar el error original
+                                raise ValueError(
+                                    f"Error al leer el archivo CSV: {str(e)}. "
+                                    "Intente especificar manualmente el delimitador con el parámetro 'delimiter'."
+                                ) from e
+                        else:
+                            # Si se especificó un delimitador y falló, lanzar el error
+                            raise ValueError(f"Error al leer el archivo CSV con delimitador '{delimiter}': {str(e)}")
             else:
                 raise FileNotFoundError(f"Archivo no encontrado: {data_source}")
         elif isinstance(data_source, pd.DataFrame):
@@ -268,16 +223,28 @@ class GlucoseData:
                         format='mixed'
                     )
             
+            # Modificación aquí: Asegurarse de que la columna de glucosa sea numérica
+            if not pd.api.types.is_numeric_dtype(self.data[glucose_col]):
+                if self.log:
+                    print(f"  - Convirtiendo columna '{glucose_col}' a numérica...")
+                # Convertir a numérico, forzando errores a NaN
+                self.data[glucose_col] = pd.to_numeric(self.data[glucose_col], errors='coerce')
+                # Eliminar filas con valores NaN después de la conversión
+                self.data = self.data.dropna(subset=[glucose_col])
+            
+            # Ahora que sabemos que es numérica, podemos intentar optimizar
             if self.data[glucose_col].dtype != 'int16':
                 if self.log:
                     print(f"  - Optimizando columna '{glucose_col}'...")
                 min_val = self.data[glucose_col].min()
                 max_val = self.data[glucose_col].max()
                 
+                # Ahora podemos hacer la comparación con seguridad
                 if pd.notna(min_val) and pd.notna(max_val) and min_val >= -32768 and max_val <= 32767:
                     self.data[glucose_col] = self.data[glucose_col].astype('int16')
                 else:
                     self.data[glucose_col] = pd.to_numeric(self.data[glucose_col], errors='coerce', downcast='float')
+            
             if self.log:
                 print(f"3. Conversión de tipos: {time.time() - t_tipos:.3f}s")
             
@@ -680,7 +647,7 @@ class Dexcom(GlucoseData):
         super().__init__(
             file_path, 
             date_col="Marca temporal (AAAA-MM-DDThh:mm:ss)", 
-            glucose_col="Nivel de glucosa (mg/dl)",
+            glucose_col="Nivel de glucosa (mg/dL)",
             start_date=start_date,
             end_date=end_date
         ) 
