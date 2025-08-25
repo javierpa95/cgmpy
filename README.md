@@ -98,3 +98,9 @@ Para cualquier consulta o sugerencia, por favor contacta al autor a través del 
 # Conclusión
 
 CGMPy es una herramienta poderosa para el análisis de datos de glucosa, ofreciendo una variedad de métricas y visualizaciones que facilitan la comprensión y el seguimiento de los niveles de glucosa. Su diseño modular y extensible lo hace ideal tanto para profesionales de la salud como para investigadores en el campo.
+
+
+Carpeta examples
+- dm - Type 1 diabetes data
+- nodm - Healthy person data
+- pregnancy - Data from a pregnancy GestationalDiabetes(file, fecha_parto="2024-09-27", week=38, day=4)

@@ -1,400 +1,29 @@
-import datetime
-from .glucose_data import GlucoseData
-from typing import Union
+"""
+Módulo de métricas de variabilidad para datos de glucosa.
+
+Este módulo contiene las métricas relacionadas con la variabilidad glucémica:
+- MAGE (Mean Amplitude of Glycemic Excursions)
+- MODD (Mean Of Daily Differences)
+- CONGA (Continuous Overlapping Net Glycemic Action)
+- Lability Index
+- Métricas de desviación estándar especializadas
+"""
+
 import numpy as np
-import pandas as pd
 import math
+import pandas as pd
+from typing import Union, Dict, Any
 
-class GlucoseMetrics(GlucoseData):
-    def __init__(self, data_source: Union[str, pd.DataFrame], 
-                 date_col: str="time", 
-                 glucose_col: str="glucose", 
-                 delimiter: Union[str, None] = None, 
-                 header: int = 0, 
-                 start_date: Union[str, datetime.datetime, None] = None,
-                 end_date: Union[str, datetime.datetime, None] = None,
-                 log: bool = False):
-        
-        # Verificar si GlucoseData ya ha sido inicializado
-        if not hasattr(self, 'data'):
-            super().__init__(data_source, date_col, glucose_col, delimiter, header, 
-                           start_date, end_date, log)
 
-    def _calculate_data_completeness(self, interval_minutes: Union[float, None] = None) -> dict:
-        """
-        Calcula el porcentaje de datos disponibles para el DataFrame actual.
-        
-        :param interval_minutes: Intervalo esperado entre mediciones en minutos. 
-                               Si es None, se calcula automáticamente.
-        :return: Diccionario con información sobre la completitud de datos
-        """
-        # Si no se especifica el intervalo, calcularlo como la mediana de las diferencias
-        if interval_minutes is None:
-            interval_minutes = self.typical_interval
 
-        # Crear una copia de los datos y ordenarlos
-        data = self.data.sort_values('time').copy()
-        
-        # Análisis para todo el período
-        tiempo_total = (data['time'].max() - data['time'].min()).total_seconds() / 60
-        datos_esperados = int(tiempo_total / interval_minutes)
-        datos_reales = len(data)
-        
-        return {
-            'inicio': data['time'].min(),
-            'fin': data['time'].max(),
-            'intervalo': interval_minutes,
-            'datos_esperados': datos_esperados,
-            'datos_reales': datos_reales,
-            'porcentaje': (datos_reales / datos_esperados) * 100 if datos_esperados > 0 else 0
-        }
+class VariabilityMetrics():
+    """
+    Clase para métricas de variabilidad de glucosa.
     
-    def _get_segment_data(self, start_time: str, duration_hours: int) -> pd.DataFrame:
-        """
-        Función auxiliar para obtener datos de un segmento del día.
-        """
-        from datetime import time, datetime, timedelta
-        
-        start_hour, start_minute = map(int, start_time.split(':'))
-        start = time(hour=start_hour, minute=start_minute)
-        
-        base = datetime(2000, 1, 1, start.hour, start.minute)
-        end_dt = base + timedelta(hours=duration_hours)
-        end = end_dt.time()
-        
-        if start <= end:
-            return self.data[self.data['time'].apply(lambda dt: start <= dt.time() < end)]
-        else:
-            return self.data[self.data['time'].apply(lambda dt: dt.time() >= start or dt.time() < end)]
+    Esta clase debe ser utilizada como mixin con GlucoseData.
+    """
     
-    def _split_data(self, frequency: str = 'W') -> dict:
-        """
-        Divide los datos de glucosa en arrays separados según la frecuencia especificada.
-        
-        :param frequency: Frecuencia de división ('D'=diario, 'W'=semanal, 'M'=mensual)
-        :return: Diccionario {periodo: {'glucose': array, 'time': array, 'metadata': dict}}
-        """
-        
-        # Validar frecuencia
-        freq_map = {
-            'D': ('D', 'día'),
-            'W': ('W-MON', 'semana'),
-            'M': ('M', 'mes')
-        }
-        
-        if frequency not in freq_map:
-            raise ValueError(f"Frecuencia '{frequency}' no soportada. Usar 'D', 'W' o 'M'")
-            
-        pd_freq, label = freq_map[frequency]
-        
-        # Crear copia eficiente con solo las columnas necesarias
-        df = self.data[['time', 'glucose']].copy()
-        
-        # Generar etiquetas de periodo según la frecuencia
-        if frequency == 'D':
-            df['periodo'] = df['time'].dt.date
-        elif frequency == 'W':
-            # Usar lunes como inicio de semana (estándar ISO)
-            df['periodo'] = df['time'].dt.to_period('W-MON').dt.start_time.dt.date
-        elif frequency == 'M':
-            # Usar primer día del mes
-            df['periodo'] = df['time'].dt.to_period('M').dt.start_time.dt.date
-            
-        # Agrupar datos por periodo
-        periodos = {}
-        for periodo, grupo in df.groupby('periodo'):
-            # Calcular metadatos del periodo
-            start_time = grupo['time'].min()
-            end_time = grupo['time'].max()
-            duration = (end_time - start_time).total_seconds() / 3600  # horas
-            
-            # Calcular completitud de datos
-            expected_points = duration * 60 / self.typical_interval
-            completeness = (len(grupo) / expected_points) * 100 if expected_points > 0 else 0
-            
-            # Guardar arrays y metadatos
-            periodos[periodo] = {
-                'glucose': grupo['glucose'].values,  # NumPy array para cálculos rápidos
-                'time': grupo['time'].values,
-                'metadata': {
-                    'start': start_time,
-                    'end': end_time,
-                    'duration_hours': duration,
-                    'completeness': completeness,
-                    'n_points': len(grupo)
-                }
-            }
-            
-        return periodos
-        
-    def calculate_metrics(self, metric_func: callable, frequency: str = 'W', 
-                         min_data_completeness: float = 70.0) -> dict:
-        """
-        Calcula una métrica específica para cada periodo según la frecuencia.
-        
-        :param metric_func: Función o nombre de método que calcula la métrica
-        :param frequency: Frecuencia de división ('D'=diario, 'W'=semanal, 'M'=mensual)
-        :param min_data_completeness: Porcentaje mínimo de datos requerido
-        :return: Diccionario {periodo: valor_métrica}
-        """
-        # Dividir datos por periodo
-        periodos = self._split_data(frequency)
-        
-        # Preparar función de métrica
-        if isinstance(metric_func, str):
-            # Si es nombre de método, obtener el método
-            if not hasattr(self, metric_func):
-                raise ValueError(f"Método '{metric_func}' no existe en GlucoseMetrics")
-            func = getattr(self, metric_func)
-        else:
-            # Si es función, usarla directamente
-            func = metric_func
-            
-        # Calcular métrica para cada periodo
-        resultados = {}
-        for periodo, datos in periodos.items():
-            # Verificar completitud mínima
-            if datos['metadata']['completeness'] < min_data_completeness:
-                continue
-                
-            # Calcular métrica
-            try:
-                if isinstance(metric_func, str):
-                    # Para métodos que requieren self, crear instancia temporal
-                    temp_gm = GlucoseMetrics(
-                        pd.DataFrame({
-                            'time': datos['time'], 
-                            'glucose': datos['glucose']
-                        })
-                    )
-                    resultado = getattr(temp_gm, metric_func)()
-                else:
-                    # Para funciones, pasar directamente el array de glucosa
-                    resultado = func(datos['glucose'])
-                    
-                # Guardar resultado con metadatos
-                resultados[periodo] = {
-                    'value': resultado,
-                    'metadata': datos['metadata']
-                }
-            except Exception as e:
-                # Manejar errores en cálculo de métrica
-                print(f"Error calculando métrica para {periodo}: {str(e)}")
-                
-        return resultados
-        
-    def calculate_multiple_metrics(self, metric_funcs: list, frequency: str = 'W',
-                                 min_data_completeness: float = 70.0) -> dict:
-        """
-        Calcula múltiples métricas para cada periodo según la frecuencia.
-        
-        :param metric_funcs: Lista de funciones o nombres de métodos
-        :param frequency: Frecuencia de división ('D'=diario, 'W'=semanal, 'M'=mensual)
-        :param min_data_completeness: Porcentaje mínimo de datos requerido
-        :return: Diccionario {periodo: {métrica1: valor1, métrica2: valor2, ...}}
-        """
-        # Dividir datos por periodo (una sola vez)
-        periodos = self._split_data(frequency)
-        
-        # Inicializar resultados
-        resultados = {periodo: {'metadata': datos['metadata']} 
-                     for periodo, datos in periodos.items() 
-                     if datos['metadata']['completeness'] >= min_data_completeness}
-        
-        # Calcular cada métrica para todos los periodos válidos
-        for metric_name in metric_funcs:
-            for periodo in resultados.keys():
-                datos = periodos[periodo]
-                
-                try:
-                    # Calcular métrica
-                    if isinstance(metric_name, str):
-                        temp_gm = GlucoseMetrics(
-                            pd.DataFrame({
-                                'time': datos['time'], 
-                                'glucose': datos['glucose']
-                            })
-                        )
-                        resultado = getattr(temp_gm, metric_name)()
-                    else:
-                        resultado = metric_name(datos['glucose'])
-                        
-                    # Guardar resultado
-                    resultados[periodo][metric_name if isinstance(metric_name, str) else metric_name.__name__] = resultado
-                except Exception as e:
-                    print(f"Error calculando {metric_name} para {periodo}: {str(e)}")
-                    
-        return resultados
-
-    ## ESTADÍSTICAS BÁSICAS
-
-    def data_completeness(self, interval_minutes: Union[float, None] = None) -> int:
-        """
-        Calcula el porcentaje de datos disponibles para el DataFrame actual.
-        :return: Porcentaje de completitud como número entero
-        """
-        return int(self._calculate_data_completeness(interval_minutes)['porcentaje'])
-    
-    def mean(self) -> float:
-        """Calcula la glucemia media."""
-        return self.data['glucose'].mean()
-    
-    def median(self) -> float:
-        """Calcula la mediana de la glucemia."""
-        return self.data['glucose'].median()
-
-    def percentile(self, percentile: float) -> float:
-        """Calcula el percentil de la glucemia."""
-        return self.data['glucose'].quantile(percentile / 100)
-    
-    def sd(self) -> float:
-        """Calcula la desviación estándar de la glucemia."""
-        return self.data['glucose'].std()
-    
-    def cv(self) -> float:
-        """Calcula el coeficiente de variación."""
-        return (self.sd() / self.mean()) * 100
-    
-    def gmi(self) -> float:
-        """
-        Calcula el Glucose Management Index (GMI).
-        :return: GMI (estimación de HbA1c)
-        :reference: DOI: 10.2337/dc18-1581
-        """
-        return round(3.31 + (0.02392 * self.mean()), 2)
-    
-    def calculate_time_in_range(self, low_threshold: float, high_threshold: float) -> float:
-        """
-        Calcula el tiempo en rango (TIR) de glucemia.
-        :param low_threshold: Umbral inferior del rango.
-        :param high_threshold: Umbral superior del rango.
-        :return: Porcentaje de tiempo en rango.
-        """
-        in_range = self.data[(self.data['glucose'] >= low_threshold) & (self.data['glucose'] <= high_threshold)]
-        return (len(in_range) / len(self.data)) * 100
-    
-    def TAR(self, threshold: float) -> float:
-        """
-        Calcula el tiempo por encima del rango (TAR).
-        :param threshold: Umbral de hiperglucemia.
-        :return: Porcentaje de lecturas por encima del umbral.
-        """
-        return (len(self.data[self.data['glucose'] > threshold]) / len(self.data)) * 100
-    
-    def TBR(self, threshold: float) -> float:
-        """
-        Calcula el tiempo por debajo del rango (TBR).
-        :param threshold: Umbral de hipoglucemia.
-        :return: Porcentaje de lecturas por debajo del umbral.
-        """
-        return (len(self.data[self.data['glucose'] < threshold]) / len(self.data)) * 100
-
-    def TAR250(self) -> float:
-        """Calcula el tiempo por encima de 250 mg/dL."""
-        return self.TAR(250)
-    
-    def TAR180(self) -> float:
-        """Calcula el tiempo en rango entre 180 y 250 mg/dL."""
-        return self.calculate_time_in_range(180, 250)
-    
-    def TAR140(self) -> float:
-        """Calcula el tiempo por encima de 140 mg/dL."""
-        return self.calculate_time_in_range(140, 250)
-    
-    def TIR(self) -> float:
-        """Calcula el tiempo en rango entre 70 y 180 mg/dL."""
-        return self.calculate_time_in_range(70, 180)
-    
-    def TIR_tight(self) -> float:
-        """Calcula el tiempo en rango entre 70 y 180 mg/dL."""
-        return self.calculate_time_in_range(70, 140)
-    
-    def TIR_pregnancy(self) -> float:
-        """Calcula el tiempo en rango entre 70 y 180 mg/dL."""
-        return self.calculate_time_in_range(63, 140)
-    
-    def TBR70(self) -> float:
-        """Calcula el tiempo por debajo de 70 mg/dL."""
-        return self.calculate_time_in_range(55, 70)
-    
-    def TBR63(self) -> float:
-        """Calcula el tiempo por debajo de 70 mg/dL."""
-        return self.TBR(63)
-    
-    def TBR55(self) -> float:
-        """Calcula el tiempo por debajo de 55 mg/dL."""
-        return self.TBR(55)
-
-    def time_statistics(self):
-        """Calcula las estadísticas de tiempo de glucosa"""
-        return {
-            '%Data': int(self._calculate_data_completeness()['porcentaje']),
-            'TIR': self.TIR(),
-            'TIR_tight': self.TIR_tight(),
-            'TBR70': self.TBR70(),
-            'TBR55': self.TBR55(),
-            'TAR250': self.TAR250(),
-            'TAR180': self.TAR180(),
-            'TAR140': self.TAR140(),
-            'GMI': self.gmi(),
-            'CV': self.cv(),
-            'Media': self.mean(),
-            'Mediana': self.median(),
-            'P5': self.percentile(5), 
-            'P25': self.percentile(25),
-            'P75': self.percentile(75),
-            'P95': self.percentile(95),
-            'Desviacion_estandar': self.sd(),
-            'Asimetria': self.data['glucose'].skew(),
-            'Curtosis': self.data['glucose'].kurtosis()
-        }
-    def time_statistics_pregnancy(self):
-        """
-        Calcula las estadísticas de tiempo de glucosa específicas para embarazo
-        siguiendo las guías internacionales para diabetes gestacional
-        """
-        return {
-            '%Data': int(self._calculate_data_completeness()['porcentaje']),
-            'TIR_pregnancy': self.TIR_pregnancy(),  # 63-140 mg/dL
-            'TBR63': self.TBR63(),    # < 63 mg/dL
-            'TAR140': self.TAR140(),  # > 140 mg/dL 
-            'TAR250': self.TAR250(),
-            'GMI': self.gmi(),
-            'CV': self.cv(),
-            'Media': self.mean(),
-            'Mediana': self.median(),
-            'P5': self.percentile(5), 
-            'P25': self.percentile(25),
-            'P75': self.percentile(75),
-            'P95': self.percentile(95),
-            'Desviacion_estandar': self.sd(),
-            'Asimetria': self.data['glucose'].skew(),
-            'Curtosis': self.data['glucose'].kurtosis()
-        }
-
-    def distribution_analysis(self):
-        """Analiza la distribución de los valores de glucosa"""
-        stats = {
-            '%Data': int(self._calculate_data_completeness()['porcentaje']),
-            'media': self.mean(),
-            'mediana': self.median(),
-            'desviacion_estandar': self.sd(),
-            'coef_variacion': self.cv(),
-            'asimetria': self.data['glucose'].skew(),
-            'curtosis': self.data['glucose'].kurtosis(),
-            'percentiles': {
-                'p25': self.percentile(25),
-                'p75': self.percentile(75),
-                'IQR': self.percentile(75) - self.percentile(25)
-            }
-        }
-        return stats
-        
-    ## VARIABILIDAD
-
-    ## DISTINTAS MEDIDAS DE LA DESVIACIÓN ESTÁNDAR
-
-    """DOI: 10.1089/dia.2009/0015 """
+    # MEDIDAS DE DESVIACIÓN
 
     def sd_total(self) -> dict:
         """
@@ -961,306 +590,6 @@ class GlucoseMetrics(GlucoseData):
             'CVSDI': self.sd_interaction()['sd']/self.sd_interaction()['mean']*100
         }
 
-
-    def pattern_stability_metrics(self) -> dict:
-        """
-        Calcula métricas de estabilidad del patrón glucémico según el artículo.
-
-        Revisar con alguien que domine estadística para comprobar todo!!
-        
-        Returns:
-            dict: Diccionario con las diferentes métricas de estabilidad
-        """
-        from sklearn.linear_model import LinearRegression
-        # 1. Ratio SDhh:mm/SDw
-        ratio_sd = (self.sd_between_timepoints()['sd'] / self.sd_within_day()['sd'])**2
-        # 1. Ratio SDhh:mm/SDw por parte del día (corregido)
-        ratio_sd_by_part_of_day = {
-            "Noche": (self.sd_between_timepoints_segment("00:00", 8)['sd'] / self.sd_within_day_segment("00:00", 8)['sd'])**2,
-            "Día": (self.sd_between_timepoints_segment("08:00", 8)['sd'] / self.sd_within_day_segment("08:00", 8)['sd'])**2,
-            "Tarde": (self.sd_between_timepoints_segment("16:00", 8)['sd'] / self.sd_within_day_segment("16:00", 8)['sd'])**2
-        }
-        
-        # 2. Correlación entre días
-        data_pivot = self.data.pivot_table(
-            index=self.data['time'].dt.strftime('%H:%M'),
-            columns=self.data['time'].dt.date,
-            values='glucose'
-        )
-        
-        # Calcular correlaciones entre días
-        correlations = []
-        days = data_pivot.columns
-        for i in range(len(days)):
-            for j in range(i + 1, len(days)):
-                day1 = data_pivot[days[i]].dropna()
-                day2 = data_pivot[days[j]].dropna()
-                common_times = day1.index.intersection(day2.index)
-                if len(common_times) > 0:
-                    r = np.corrcoef(day1[common_times], day2[common_times])[0,1]
-                    correlations.append(np.sign(r) * r**2)  # r|r| como sugiere el artículo
-        
-        avg_correlation = np.mean(correlations) if correlations else 0
-        
-        # 3. Correlación con el perfil medio
-        mean_profile = data_pivot.mean(axis=1)
-        correlations_with_mean = []
-        
-        for day in days:
-            day_data = data_pivot[day].dropna()
-            common_times = day_data.index.intersection(mean_profile.index)
-            if len(common_times) > 0:
-                r = np.corrcoef(day_data[common_times], mean_profile[common_times])[0,1]
-                correlations_with_mean.append(np.sign(r) * r**2)
-        
-        avg_correlation_with_mean = np.mean(correlations_with_mean) if correlations_with_mean else 0
-        
-        # 4. Error RMS con regresión lineal
-        all_observed = []
-        all_expected = []
-        slopes = []
-
-        for day in days:
-            # Obtener datos del día y perfil medio
-            day_data = data_pivot[day].dropna()
-            mean_data = mean_profile[day_data.index].dropna()
-            
-            # Asegurarse de que solo usamos tiempos donde tenemos ambos valores
-            common_times = day_data.index.intersection(mean_data.index)
-            
-            if len(common_times) > 1:  # Necesitamos al menos 2 puntos para regresión
-                # Filtrar NaN y preparar datos para regresión
-                x = mean_data[common_times].values.reshape(-1, 1)
-                y = day_data[common_times].values
-                
-                # Verificar que no hay NaN
-                if not np.isnan(x).any() and not np.isnan(y).any():
-                    # Regresión lineal forzando intercepto a cero
-                    reg = LinearRegression(fit_intercept=False).fit(x, y)
-                    slope = reg.coef_[0]
-                    slopes.append(slope)
-                    
-                    # Calcular residuos
-                    y_pred = reg.predict(x)
-                    all_observed.extend(y)
-                    all_expected.extend(y_pred)
-
-        # Calcular métricas
-        if all_observed:
-            rms_error = np.sqrt(np.mean((np.array(all_observed) - np.array(all_expected))**2))
-            avg_slope = np.mean(slopes)
-        else:
-            rms_error = 0
-            avg_slope = 0
-        
-        # 5. Bootstrap RMS mejorado
-        bootstrap_errors = []
-        bootstrap_slopes = []
-
-        for i, day in enumerate(days):
-            # Calcular perfil medio excluyendo el día actual
-            other_days = [d for d in days if d != day]
-            mean_profile_bootstrap = data_pivot[other_days].mean(axis=1)
-            
-            # Obtener datos del día y perfil medio bootstrap
-            day_data = data_pivot[day].dropna()
-            mean_data = mean_profile_bootstrap[day_data.index].dropna()
-            
-            # Asegurarse de que solo usamos tiempos donde tenemos ambos valores
-            common_times = day_data.index.intersection(mean_data.index)
-            
-            if len(common_times) > 1:
-                # Filtrar NaN y preparar datos para regresión
-                x = mean_data[common_times].values.reshape(-1, 1)
-                y = day_data[common_times].values
-                
-                # Verificar que no hay NaN
-                if not np.isnan(x).any() and not np.isnan(y).any():
-                    # Regresión lineal forzando intercepto a cero
-                    reg = LinearRegression(fit_intercept=False).fit(x, y)
-                    y_pred = reg.predict(x)
-                    
-                    bootstrap_errors.extend(y - y_pred)
-                    bootstrap_slopes.append(reg.coef_[0])
-
-        bootstrap_rms = np.sqrt(np.mean(np.array(bootstrap_errors)**2)) if bootstrap_errors else 0
-        avg_bootstrap_slope = np.mean(bootstrap_slopes) if bootstrap_slopes else 0
-        
-        return {
-            'ratio_SDhh:mm_SDw': ratio_sd,
-            'ratio_SDhh:mm_SDw_by_part_of_day': ratio_sd_by_part_of_day,
-            'avg_correlation_between_days': avg_correlation,
-            'avg_correlation_with_mean': avg_correlation_with_mean,
-            'rms_error': rms_error,
-            'avg_slope': avg_slope,
-            'bootstrap_rms': bootstrap_rms,
-            'avg_bootstrap_slope': avg_bootstrap_slope
-        }
-
-    def variance_components(self) -> dict:
-        """
-        Calcula y descompone la varianza total de glucosa en sus componentes principales.
-        
-        Incluye descomposición en: interdía, intradía (patrón, interacción, residual)
-        y análisis por segmentos del día.
-        
-        :return: Diccionario con los componentes de la varianza y sus porcentajes
-        """
-        # Crear copia eficiente con solo las columnas necesarias
-        df = self.data[['time', 'glucose']].copy()
-        
-        # Añadir columnas para día y hora del día
-        df['day'] = df['time'].dt.date
-        df['hour_min'] = df['time'].dt.hour * 60 + df['time'].dt.minute
-        
-        # Añadir columna para segmento del día (0=noche, 1=día, 2=tarde)
-        df['segment'] = pd.cut(
-            df['time'].dt.hour, 
-            bins=[0, 8, 16, 24], 
-            labels=[0, 1, 2], 
-            include_lowest=True
-        )
-        
-        # 1. Calcular la varianza total
-        total_variance = df['glucose'].var()
-        
-        # 2. Calcular la varianza interdía (entre días)
-        daily_means = df.groupby('day')['glucose'].mean()
-        interdía_variance = daily_means.var()
-        
-        # 3. Calcular la varianza intradía (dentro del día)
-        intradía_variance = total_variance - interdía_variance
-        
-        # 4. Descomposición de la varianza intradía
-        
-        # 4.1 Varianza del patrón (efecto hora)
-        hourly_means = df.groupby('hour_min')['glucose'].mean()
-        patrón_variance = hourly_means.var()
-        
-        # 4.2 Varianza de interacción (día x hora)
-        day_hour_means = df.groupby(['day', 'hour_min'])['glucose'].mean()
-        interacción_variance = day_hour_means.var() - patrón_variance - interdía_variance
-        
-        # 4.3 Varianza residual
-        residual_variance = total_variance - (interdía_variance + patrón_variance + interacción_variance)
-        
-        # Corregir el cálculo de varianza residual para evitar valores negativos
-        if residual_variance < 0:
-            # Si es negativo pero cercano a cero (error numérico), ajustar a cero
-            if abs(residual_variance) < 0.01 * total_variance:  # Umbral de tolerancia: 1% de la varianza total
-                residual_variance = 0
-            else:
-                # Si es significativamente negativo, ajustar la varianza de interacción
-                # para mantener la consistencia matemática
-                adjustment = abs(residual_variance)
-                interacción_variance -= adjustment
-                residual_variance = 0
-        
-        # 5. Calcular porcentajes sobre la varianza total
-        porcentaje_interdía = (interdía_variance / total_variance) * 100
-        porcentaje_intradía = (intradía_variance / total_variance) * 100
-        
-        # 6. Calcular porcentajes de cada componente como proporción de la varianza intradía
-        if intradía_variance > 0:
-            # Calcular directamente como porcentaje de la varianza intradía
-            porcentaje_patrón = (patrón_variance / intradía_variance) * 100
-            porcentaje_interacción = (interacción_variance / intradía_variance) * 100
-            porcentaje_residual = (residual_variance / intradía_variance) * 100
-            
-            # Normalizar para garantizar que suman 100%
-            total_intraday_pct = porcentaje_patrón + porcentaje_interacción + porcentaje_residual
-            if total_intraday_pct > 0:
-                porcentaje_patrón = (porcentaje_patrón / total_intraday_pct) * 100
-                porcentaje_interacción = (porcentaje_interacción / total_intraday_pct) * 100
-                porcentaje_residual = (porcentaje_residual / total_intraday_pct) * 100
-        else:
-            porcentaje_patrón = 0
-            porcentaje_interacción = 0
-            porcentaje_residual = 0
-        
-        # 7. Varianza por segmentos del día
-        segment_names = {0: 'noche', 1: 'día', 2: 'tarde'}
-        
-        # Calcular varianza, medias y conteos para cada segmento
-        segment_variances = {}
-        segment_means = {}
-        segment_counts = {}
-        
-        for seg_id, name in segment_names.items():
-            segment_data = df[df['segment'] == seg_id]['glucose']
-            segment_counts[name] = len(segment_data)
-            
-            if segment_counts[name] > 0:
-                segment_variances[name] = segment_data.var()
-                segment_means[name] = segment_data.mean()
-            else:
-                segment_variances[name] = 0
-                segment_means[name] = 0
-        
-        # Calcular varianza entre las medias de los segmentos
-        if sum(segment_counts.values()) > 0:
-            segment_means_array = np.array([segment_means[name] for name in segment_names.values() if segment_counts[name] > 0])
-            segment_weights = np.array([segment_counts[name] for name in segment_names.values() if segment_counts[name] > 0])
-            
-            if len(segment_means_array) > 1:
-                segment_means_weighted_avg = np.average(segment_means_array, weights=segment_weights)
-                between_segments_variance = np.average((segment_means_array - segment_means_weighted_avg)**2, weights=segment_weights)
-            else:
-                between_segments_variance = 0
-        else:
-            between_segments_variance = 0
-        
-        # Calcular porcentajes sobre la varianza intradía
-        segmentos_porcentaje = {}
-        for name in segment_names.values():
-            if segment_counts[name] > 0 and intradía_variance > 0:
-                within_segment_contribution = segment_variances[name] * segment_counts[name] / sum(segment_counts.values())
-                segmentos_porcentaje[name] = (within_segment_contribution / intradía_variance) * 100
-            else:
-                segmentos_porcentaje[name] = 0
-        
-        # Normalizar los porcentajes de segmentos para que sumen 100%
-        total_segment_pct = sum(segmentos_porcentaje.values())
-        if total_segment_pct > 0:
-            for name in segmentos_porcentaje:
-                segmentos_porcentaje[name] = (segmentos_porcentaje[name] / total_segment_pct) * 100
-        
-        # Armar el resultado
-        resultado = {
-            'varianza_total': total_variance,
-            'varianza_interdía': interdía_variance,
-            'varianza_intradía': intradía_variance,
-            'varianza_patrón': patrón_variance,
-            'varianza_interacción': interacción_variance,
-            'varianza_residual': residual_variance,
-            'porcentaje_interdía': porcentaje_interdía,
-            'porcentaje_intradía': porcentaje_intradía,
-            'porcentaje_patrón': porcentaje_patrón,
-            'porcentaje_interacción': porcentaje_interacción,
-            'porcentaje_residual': porcentaje_residual,
-            
-            # Añadir información por segmentos
-            'varianza_segmentos': segment_variances,
-            'varianza_entre_segmentos': between_segments_variance,
-            'porcentaje_segmentos': segmentos_porcentaje,
-            'conteos_segmentos': segment_counts
-        }
-        
-        # También incluir las desviaciones estándar
-        for key in ['total', 'interdía', 'intradía', 'patrón', 'interacción', 'residual']:
-            variance_key = f'varianza_{key}'
-            if variance_key in resultado and resultado[variance_key] > 0:
-                resultado[f'sd_{key}'] = np.sqrt(resultado[variance_key])
-            else:
-                resultado[f'sd_{key}'] = 0
-        
-        # Añadir SD para segmentos
-        resultado['sd_segmentos'] = {
-            name: np.sqrt(var) if var > 0 else 0 
-            for name, var in segment_variances.items()
-        }
-        
-        return resultado
     ## MEDIDAS AVANZADAS DE VARIABILIDAD
 
     def MAGE_Baghurst(self, threshold_sd: int = 1, approach: int = 1, plot: bool = False) -> dict:
@@ -2049,6 +1378,35 @@ class GlucoseMetrics(GlucoseData):
         }
         return variability_metrics
     
+    def variability_summary(self) -> Dict[str, Any]:
+        """
+        Resumen completo de todas las métricas de variabilidad.
+        
+        Returns:
+            dict: Resumen completo de métricas de variabilidad
+        """
+        return {
+            'basic_variability': {
+                'sd_total': self.sd_total(),
+                'cv': self.cv()
+            },
+            'excursion_metrics': {
+                'mage': self.MAGE(),
+            },
+            'inter_day_variability': {
+                'modd_1day': self.MODD(1),
+                'modd_2days': self.MODD(2),
+            },
+            'intra_day_variability': {
+                'conga_1h': self.CONGA(1),
+                'conga_2h': self.CONGA(2),
+                'conga_4h': self.CONGA(4),
+            },
+            'lability': {
+                'lability_index': self.Lability_index()
+            }
+        } 
+    
     ## MEDIDAS DE LA CALIDAD DE GLUCEMIA
     
     def M_Value(self, reference_glucose: int = 90) -> dict:
@@ -2078,14 +1436,12 @@ class GlucoseMetrics(GlucoseData):
         M_BS_values = np.abs(10 * np.log10(glucose_values/reference_glucose))**3
         M_BS_mean = np.mean(M_BS_values)
         return round(M_BS_mean, 2)
-    
 
     def j_index(self) -> float:
         """Calcula el J-index.
         DOI: 10.1055/s-2007-979906
         """
         return 0.001 * (self.mean() + self.sd())**2
-
 
     def GRADE(self, unit:str='mg/dL') -> dict:
 
@@ -2163,8 +1519,6 @@ class GlucoseMetrics(GlucoseData):
         
         return results
             
-    
-
     def LBGI(self) -> float:
         """
         Calcula el Low Blood Glucose Index (LBGI).
@@ -2258,7 +1612,6 @@ class GlucoseMetrics(GlucoseData):
                 'TIR': round(tir, 2)
             }
         }
-
 
     def ADRR(self) -> dict:
         """
@@ -2444,4 +1797,3 @@ class GlucoseMetrics(GlucoseData):
             return metrics
         except Exception as e:
             return {"error": str(e), "mensaje": "Error al calcular métricas"}
-            

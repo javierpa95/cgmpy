@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='cgmpy',
-    version='0.1.0',
-    description='A package for analyzing glucose data',
+    version='0.2.0',
+    description='A package for analyzing glucose data - Version refactorizada',
     author='Javier Peñate Arrieta',
     author_email='javierpenatearrieta@gmail.com',
     packages=find_packages(),
