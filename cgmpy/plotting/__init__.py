@@ -16,19 +16,17 @@ from .statistical_plots import StatisticalPlotter
 # Importaciones que estarán disponibles cuando se implemente
 # from .dashboard import DashboardPlotter
 
+
 # Clase combinada que integra todos los plotters modulares
 class ModularGlucosePlot(AGPPlotter, DailyPlotter, StatisticalPlotter):
     """
     Clase que combina todos los plotters modulares.
-    
+
     Esta clase permite usar los gráficos de forma modular mientras
     mantiene compatibilidad con la interfaz existente.
     """
+
     pass
 
-__all__ = [
-    'AGPPlotter',
-    'DailyPlotter', 
-    'StatisticalPlotter',
-    'ModularGlucosePlot'
-] 
+
+__all__ = ["AGPPlotter", "DailyPlotter", "StatisticalPlotter", "ModularGlucosePlot"]

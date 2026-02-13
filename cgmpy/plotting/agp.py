@@ -8,9 +8,7 @@ Este módulo contiene las funciones para generar perfiles ambulatorios:
 """
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
-from typing import Union, List
 
 
 class AGPPlotter:
@@ -29,9 +27,7 @@ class AGPPlotter:
         """
         # Preparar datos
         data_copy = self.data.copy()
-        data_copy["time_decimal"] = (
-            data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
-        ).round(2)
+        data_copy["time_decimal"] = (data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0).round(2)
 
         # Calcular percentiles
         percentiles = data_copy.groupby("time_decimal")["glucose"].agg(
@@ -49,11 +45,7 @@ class AGPPlotter:
 
         # Aplicar suavizado
         for col in percentiles.columns:
-            percentiles[col] = (
-                percentiles[col]
-                .rolling(window=smoothing_window, center=True, min_periods=1)
-                .mean()
-            )
+            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
 
         # Asegurar que los datos están ordenados
         percentiles = percentiles.sort_index()
@@ -84,9 +76,7 @@ class AGPPlotter:
         """
         # Preparar los datos
         data_copy = self.data.copy()
-        data_copy["time_decimal"] = (
-            data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
-        ).round(2)
+        data_copy["time_decimal"] = (data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0).round(2)
         data_copy["weekday"] = data_copy["time"].dt.day_name(locale="es_ES")
 
         if combined:
@@ -189,9 +179,7 @@ class AGPPlotter:
 
             if not dia_data.empty:
                 # Calcular percentiles
-                percentiles = self._calculate_day_percentiles(
-                    dia_data, smoothing_window
-                )
+                percentiles = self._calculate_day_percentiles(dia_data, smoothing_window)
 
                 # Graficar línea mediana
                 ax.plot(
@@ -264,9 +252,7 @@ class AGPPlotter:
 
             if not dia_data.empty:
                 # Calcular percentiles completos
-                percentiles = self._calculate_full_day_percentiles(
-                    dia_data, smoothing_window
-                )
+                percentiles = self._calculate_full_day_percentiles(dia_data, smoothing_window)
 
                 # Configurar zonas de glucemia
                 self._add_glucose_zones(ax)
@@ -307,11 +293,7 @@ class AGPPlotter:
 
         # Aplicar suavizado
         for col in percentiles.columns:
-            percentiles[col] = (
-                percentiles[col]
-                .rolling(window=smoothing_window, center=True, min_periods=1)
-                .mean()
-            )
+            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
 
         return percentiles
 
@@ -332,10 +314,6 @@ class AGPPlotter:
 
         # Aplicar suavizado
         for col in percentiles.columns:
-            percentiles[col] = (
-                percentiles[col]
-                .rolling(window=smoothing_window, center=True, min_periods=1)
-                .mean()
-            )
+            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
 
         return percentiles

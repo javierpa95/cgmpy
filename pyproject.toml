@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cgmpy"
+version = "0.2.0"
+description = "A package for analyzing glucose data"
+readme = "README.md"
+authors = [
+  { name = "Javier Peñate Arrieta", email = "javierpenatearrieta@gmail.com" },
+]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/javierpa95/cgmpy"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cgmpy*"]
+
+[tool.ruff]
+line-length = 120
+# Mantengo tus exclusiones, son correctas y estándar
+exclude = [".git", ".venv", "venv", "__pypackages__", "build", "dist"]
+
+[tool.ruff.lint]
+# Seleccionamos: Errores (E), Pyflakes (F), Bugbear (B - errores lógicos), Isort (I - importaciones)
+select = ["E", "F", "B", "I"]
+
+ignore = [
+    "E501", # Ignorar líneas largas. El formateador las arreglará donde pueda, 
+            # pero no te bloqueará el check si una línea es necesaria.
+]
+
+# Simplificamos fixable: que arregle solo lo que estás validando
+fixable = ["E", "F", "B", "I"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"] # Perfecto: permite imports sin usar en los init
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]

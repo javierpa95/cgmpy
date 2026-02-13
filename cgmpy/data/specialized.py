@@ -1,19 +1,21 @@
 """
 Módulo con clases especializadas para dispositivos específicos de glucosa.
 """
+
 import datetime
 from typing import Union
+
 from .core import ModularGlucoseData
 
 
 class Dexcom(ModularGlucoseData):
     """
     Clase especializada para datos de dispositivos Dexcom.
-    
+
     Esta clase hereda de ModularGlucoseData y configura automáticamente
     los nombres de columnas específicos para archivos exportados de Dexcom Clarity.
     """
-    
+
     def __init__(
         self,
         file_path: str,
@@ -23,12 +25,12 @@ class Dexcom(ModularGlucoseData):
     ):
         """
         Inicializa los datos de Dexcom.
-        
+
         :param file_path: Ruta al archivo CSV exportado de Clarity
         :param start_date: Filtro opcional de fecha inicial (YYYY-MM-DD)
         :param end_date: Filtro opcional de fecha final (YYYY-MM-DD)
         :param log: Si True, activa logs detallados de rendimiento
-        
+
         Ejemplo de uso:
         >>> dexcom = Dexcom("datos_dexcom.csv")
         >>> print(dexcom.info())
@@ -41,12 +43,13 @@ class Dexcom(ModularGlucoseData):
             end_date=end_date,
             log=log,
         )
-    
+
     def __str__(self) -> str:
         """Representación personalizada para Dexcom."""
         info = self.info()
         return (
-            f"Datos de Dexcom: {info['num_datos']} lecturas entre {info['fecha_inicio']} y {info['fecha_fin']}.\n"
+            f"Datos de Dexcom: {info['num_datos']} lecturas entre "
+            f"{info['fecha_inicio']} y {info['fecha_fin']}.\n"
             f"Intervalo típico: {info['intervalo_tipico']:.1f} minutos.\n"
             f"Disponibilidad: {info['porcentaje_disponibilidad']:.1f}%\n"
             f"Desconexiones detectadas: {info['num_desconexiones']}\n"
@@ -57,11 +60,11 @@ class Dexcom(ModularGlucoseData):
 class Libreview(ModularGlucoseData):
     """
     Clase especializada para datos de dispositivos Libreview.
-    
+
     Esta clase hereda de ModularGlucoseData y configura automáticamente
     los nombres de columnas específicos para archivos exportados de Libreview.
     """
-    
+
     def __init__(
         self,
         file_path: str,
@@ -72,13 +75,13 @@ class Libreview(ModularGlucoseData):
     ):
         """
         Inicializa los datos de Libreview.
-        
+
         :param file_path: Ruta al archivo CSV exportado de Libreview
         :param header: Fila del encabezado (normalmente 2 para Libreview)
         :param start_date: Filtro opcional de fecha inicial (YYYY-MM-DD)
         :param end_date: Filtro opcional de fecha final (YYYY-MM-DD)
         :param log: Si True, activa logs detallados de rendimiento
-        
+
         Ejemplo de uso:
         >>> libreview = Libreview("datos_libreview.csv")
         >>> print(libreview.info())
@@ -92,12 +95,13 @@ class Libreview(ModularGlucoseData):
             end_date=end_date,
             log=log,
         )
-    
+
     def __str__(self) -> str:
         """Representación personalizada para Libreview."""
         info = self.info()
         return (
-            f"Datos de Libreview: {info['num_datos']} lecturas entre {info['fecha_inicio']} y {info['fecha_fin']}.\n"
+            f"Datos de Libreview: {info['num_datos']} lecturas entre "
+            f"{info['fecha_inicio']} y {info['fecha_fin']}.\n"
             f"Intervalo típico: {info['intervalo_tipico']:.1f} minutos.\n"
             f"Disponibilidad: {info['porcentaje_disponibilidad']:.1f}%\n"
             f"Desconexiones detectadas: {info['num_desconexiones']}\n"
@@ -108,11 +112,11 @@ class Libreview(ModularGlucoseData):
 class MedtronicCarelink(ModularGlucoseData):
     """
     Clase especializada para datos de dispositivos Medtronic CareLink.
-    
+
     Esta clase hereda de ModularGlucoseData y configura automáticamente
     los nombres de columnas específicos para archivos exportados de CareLink.
     """
-    
+
     def __init__(
         self,
         file_path: str,
@@ -122,12 +126,12 @@ class MedtronicCarelink(ModularGlucoseData):
     ):
         """
         Inicializa los datos de Medtronic CareLink.
-        
+
         :param file_path: Ruta al archivo CSV exportado de CareLink
         :param start_date: Filtro opcional de fecha inicial (YYYY-MM-DD)
         :param end_date: Filtro opcional de fecha final (YYYY-MM-DD)
         :param log: Si True, activa logs detallados de rendimiento
-        
+
         Ejemplo de uso:
         >>> carelink = MedtronicCarelink("datos_carelink.csv")
         >>> print(carelink.info())
@@ -140,12 +144,13 @@ class MedtronicCarelink(ModularGlucoseData):
             end_date=end_date,
             log=log,
         )
-    
+
     def __str__(self) -> str:
         """Representación personalizada para Medtronic CareLink."""
         info = self.info()
         return (
-            f"Datos de Medtronic CareLink: {info['num_datos']} lecturas entre {info['fecha_inicio']} y {info['fecha_fin']}.\n"
+            f"Datos de Medtronic CareLink: {info['num_datos']} lecturas entre "
+            f"{info['fecha_inicio']} y {info['fecha_fin']}.\n"
             f"Intervalo típico: {info['intervalo_tipico']:.1f} minutos.\n"
             f"Disponibilidad: {info['porcentaje_disponibilidad']:.1f}%\n"
             f"Desconexiones detectadas: {info['num_desconexiones']}\n"
@@ -156,11 +161,11 @@ class MedtronicCarelink(ModularGlucoseData):
 class TandemDiabetes(ModularGlucoseData):
     """
     Clase especializada para datos de dispositivos Tandem Diabetes.
-    
+
     Esta clase hereda de ModularGlucoseData y configura automáticamente
     los nombres de columnas específicos para archivos exportados de Tandem.
     """
-    
+
     def __init__(
         self,
         file_path: str,
@@ -170,12 +175,12 @@ class TandemDiabetes(ModularGlucoseData):
     ):
         """
         Inicializa los datos de Tandem Diabetes.
-        
+
         :param file_path: Ruta al archivo CSV exportado de Tandem
         :param start_date: Filtro opcional de fecha inicial (YYYY-MM-DD)
         :param end_date: Filtro opcional de fecha final (YYYY-MM-DD)
         :param log: Si True, activa logs detallados de rendimiento
-        
+
         Ejemplo de uso:
         >>> tandem = TandemDiabetes("datos_tandem.csv")
         >>> print(tandem.info())
@@ -188,12 +193,13 @@ class TandemDiabetes(ModularGlucoseData):
             end_date=end_date,
             log=log,
         )
-    
+
     def __str__(self) -> str:
         """Representación personalizada para Tandem Diabetes."""
         info = self.info()
         return (
-            f"Datos de Tandem Diabetes: {info['num_datos']} lecturas entre {info['fecha_inicio']} y {info['fecha_fin']}.\n"
+            f"Datos de Tandem Diabetes: {info['num_datos']} lecturas entre "
+            f"{info['fecha_inicio']} y {info['fecha_fin']}.\n"
             f"Intervalo típico: {info['intervalo_tipico']:.1f} minutos.\n"
             f"Disponibilidad: {info['porcentaje_disponibilidad']:.1f}%\n"
             f"Desconexiones detectadas: {info['num_desconexiones']}\n"
@@ -204,17 +210,17 @@ class TandemDiabetes(ModularGlucoseData):
 def detect_device_type(file_path: str) -> str:
     """
     Detecta automáticamente el tipo de dispositivo basado en el archivo.
-    
+
     :param file_path: Ruta al archivo CSV
     :return: Tipo de dispositivo detectado
     """
     import pandas as pd
-    
+
     try:
         # Leer las primeras filas para detectar el formato
         sample = pd.read_csv(file_path, nrows=5)
         columns = sample.columns.tolist()
-        
+
         # Detectar por nombres de columnas característicos
         if "Marca temporal (AAAA-MM-DDThh:mm:ss)" in columns:
             return "dexcom"
@@ -226,7 +232,7 @@ def detect_device_type(file_path: str) -> str:
             return "tandem"
         else:
             return "unknown"
-            
+
     except Exception:
         return "unknown"
 
@@ -234,7 +240,7 @@ def detect_device_type(file_path: str) -> str:
 def create_specialized_loader(file_path: str, device_type: str = None, **kwargs):
     """
     Crea automáticamente el cargador especializado apropiado.
-    
+
     :param file_path: Ruta al archivo
     :param device_type: Tipo de dispositivo (si None, se detecta automáticamente)
     :param kwargs: Argumentos adicionales para el constructor
@@ -242,9 +248,9 @@ def create_specialized_loader(file_path: str, device_type: str = None, **kwargs)
     """
     if device_type is None:
         device_type = detect_device_type(file_path)
-    
+
     device_type = device_type.lower()
-    
+
     if device_type == "dexcom":
         return Dexcom(file_path, **kwargs)
     elif device_type == "libreview":
@@ -256,4 +262,5 @@ def create_specialized_loader(file_path: str, device_type: str = None, **kwargs)
     else:
         # Usar el cargador genérico si no se reconoce el tipo
         from .core import ModularGlucoseData
-        return ModularGlucoseData(file_path, **kwargs) 
+
+        return ModularGlucoseData(file_path, **kwargs)

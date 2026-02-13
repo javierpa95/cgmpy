@@ -1,106 +1,110 @@
-# CGMPy
+# 🩸 CGMPy: Continuous Glucose Monitoring Analysis
 
-Un paquete para analizar datos de glucosa.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9+-blue.svg" alt="Python Version">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Status-Modular_Refactor-orange.svg" alt="Status">
+</p>
 
-## Instalación
+**CGMPy** es una librería de Python potente y modular diseñada para el análisis de datos de **Monitoreo Continuo de Glucosa (CGM)**. Facilita la carga, el procesamiento y la visualización de datos, proporcionando métricas clínicas estándar y avanzadas de forma sencilla.
 
-pip install cgmpy
+---
 
+## 🏗️ Arquitectura Modular
 
-## Uso
+El proyecto ha sido refactorizado recientemente siguiendo principios de diseño modular para mejorar la mantenibilidad y escalabilidad.
 
-```python
-from cgmpy import GlucoseData
+### 📂 Estructura del Proyecto
 
-# Ejemplo de uso
-g = GlucoseData('ruta/al/archivo.csv',"time","glucose")
-print(g.mean())
-
+```text
+cgmpy/
+├── cgmpy/                  # 📦 Código fuente del paquete
+│   ├── analysis/           # 🧠 Orquestación (Todo-en-uno: datos + métricas + plots)
+│   │   └── core.py         # Clase GlucoseAnalysis (La forma más fácil de usarlo)
+│   ├── data/               # 📥 Gestión de Datos (Módulo Central)
+│   │   ├── core.py         # Clase ModularGlucoseData (corazón técnico)
+│   │   ├── loader.py       # Cargadores (CSV, Parquet, DF)
+│   │   ├── processor.py    # Limpieza y validación
+│   │   └── specialized.py  # Dexcom, Libreview, etc.
+│   ├── metrics/            # 📊 Lógica Clínica (Cálculos puros)
+│   │   ├── basic.py        # Media, GMI, Mediana...
+│   │   ├── time_in_range.py# TIR, TAR, TBR
+│   │   └── variability.py  # CV, MAGE, MODD, CONGA...
+│   ├── plotting/           # 📈 Visualizaciones Premium
+│   │   ├── agp.py          # Perfil Ambulatorio (AGP)
+│   │   └── daily_plots.py  # Tendencias diarias
+│   ├── agata/              # 🤖 Integración con AGATA 
+│   └── __init__.py         # 🚪 Fachada (API limpia)
+├── examples/               # 💡 Proyectos de ejemplo
+├── pyproject.toml          # ⚙️ Configuración (uv/pip)
+└── README.md               # 📖 Esta guía
 ```
 
-# Resumen del Proyecto CGMPy
+---
 
-**CGMPy** es un paquete de Python diseñado para analizar datos de glucosa de manera eficiente y detallada. Este proyecto facilita el manejo y procesamiento de datos de glucosa, proporcionando diversas métricas y herramientas de visualización para usuarios en el ámbito de la salud y la investigación.
+## 🚀 Inicio Rápido
 
-## Características Principales
+CGMPy expone una "Fachada" (Facade) en su raíz para que no tengas que preocuparte por la estructura interna si solo quieres analizar tus datos rápidamente.
 
-- **Análisis Estadístico**:
-  - Cálculo de medidas como media, mediana, desviación estándar y Glucose Management Index (GMI).
-  - Evaluación de variabilidad mediante índices como CONGA, MODD y MAGE.
-  
-- **Tiempo en Rango (TIR)**:
-  - Cálculo del tiempo que los niveles de glucosa se mantienen dentro de rangos específicos.
-  - Indicadores como TAR (Tiempo Alto en Rango) y TBR (Tiempo Bajo en Rango) para evaluar riesgos de hiperglucemia e hipoglucemia.
+```python
+from cgmpy import GlucoseAnalysis
 
-- **Índices de Labilidad**:
-  - Cálculo del índice de labilidad (LI) para evaluar la estabilidad de los niveles de glucosa en diferentes periodos (día, semana, mes).
+# 1. Análisis completo con una sola clase
+analysis = GlucoseAnalysis("datos_cgm.csv")
 
-- **Visualización de Datos**:
-  - Generación de perfiles de glucosa ambulatoria (AGP) utilizando gráficos estadísticos que muestran percentiles y rangos intercuartiles.
+# 2. Obtener un reporte completo (JSON/Dict)
+report = analysis.get_comprehensive_report()
+print(f"TIR: {report['estadisticas_tiempo']['TIR']}%")
 
-- **Compatibilidad con Dispositivos Dexcom**:
-  - Clase específica para manejar datos provenientes de dispositivos Dexcom, facilitando la integración y análisis de datos recogidos mediante estos dispositivos.
+# 3. Generar un Dashboard visual
+analysis.plot_comprehensive_dashboard()
+```
 
-## Instalación
+---
 
-Puedes instalar CGMPy utilizando pip:
+## ✨ Características Principales
 
+### 📊 Análisis Estadístico y Clínico
+- **Métricas Estándar**: Media, Mediana, Desviación Estándar y GMI.
+- **Variabilidad Glucémica**: Índices avanzados como **CV, CONGA, MODD, MAGE, J-Index, LBGI, HBGI**.
+- **Tiempo en Rango (TIR)**: Cálculo preciso de TIR, TAR (hiper) y TBR (hipo) según guías internacionales.
+
+### 📥 Carga de Datos Inteligente
+- **Multi-dispositivo**: Soporte nativo y detección automática para **Dexcom Clarity**, **FreeStyle Libre (Libreview)**, Tandem y Medtronic.
+- **Rendimiento**: Optimizado mediante el uso de **Apache Parquet** para el manejo eficiente de grandes volúmenes de datos.
+
+### 📈 Visualización Avanzada
+- Generación de **AGP (Ambulatory Glucose Profile)** estándar profesional.
+- Gráficos diarios interactivos y análisis estadístico profundo.
+
+---
+
+## 🛠️ Desarrollo e Instalación
+
+### Recomendado (usando uv o pip)
 ```bash
-pip install cgmpy
+# Instalación local en modo desarrollo
+pip install -e .
 ```
 
-## Uso Básico
+### Gestión de Dependencias
+El proyecto utiliza `pyproject.toml` como única fuente de verdad para dependencias y configuración de herramientas como **Ruff** (linting) y **Pytest** (testing).
 
-```python
-from cgmpy import GlucoseData
+---
 
-# Inicializar con el archivo CSV de datos de glucosa
-g = GlucoseData('ruta/al/archivo.csv', "time", "glucose")
+## 📝 Ejemplos Incluidos
+En la carpeta `examples/` encontrarás datos reales (anonimizados) para probar el paquete:
+- `dm.csv`: Datos de paciente con Diabetes Tipo 1.
+- `nodm.csv`: Datos de sujeto sano (normoglucémico).
+- `pregnancy.csv`: Análisis específico de diabetes gestacional.
 
-# Calcular la glucemia media
-print(g.mean())
-```
+---
 
-## Estructura del Proyecto
+## 👤 Autor
+**Javier Peñate Arrieta**
+📧 [javierpenatearrieta@gmail.com](mailto:javierpenatearrieta@gmail.com)
 
-- **cgmpy/**: Módulo principal que contiene las clases `GlucoseData` y `Dexcom` para el análisis de datos.
-- **setup.py**: Script de configuración para la instalación del paquete.
-- **README.md**: Documentación básica del proyecto.
-- **.gitignore**: Archivo para ignorar archivos específicos en el control de versiones.
+---
 
-## Dependencias
-
-CGMPy requiere las siguientes bibliotecas de Python:
-
-- numpy
-- pandas
-- matplotlib
-
-Estas se instalan automáticamente durante la instalación del paquete.
-
-## Contribuciones
-
-Las contribuciones son bienvenidas. Puedes enviar issues o pull requests para mejorar el paquete y agregar nuevas funcionalidades.
-
-## Autor
-
-**Javier Peñate Arrieta**  
-Correo electrónico: [javierpenatearrieta@gmail.com](mailto:javierpenatearrieta@gmail.com)
-
-# License
-
-Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
-
-# Contacto
-
-Para cualquier consulta o sugerencia, por favor contacta al autor a través del correo electrónico proporcionado.
-
-# Conclusión
-
-CGMPy es una herramienta poderosa para el análisis de datos de glucosa, ofreciendo una variedad de métricas y visualizaciones que facilitan la comprensión y el seguimiento de los niveles de glucosa. Su diseño modular y extensible lo hace ideal tanto para profesionales de la salud como para investigadores en el campo.
-
-
-Carpeta examples
-- dm - Type 1 diabetes data
-- nodm - Healthy person data
-- pregnancy - Data from a pregnancy GestationalDiabetes(file, fecha_parto="2024-09-27", week=38, day=4)
+## 📜 Licencia
+Este proyecto está bajo la licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para más detalles.

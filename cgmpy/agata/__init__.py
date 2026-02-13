@@ -3,7 +3,7 @@
 """
 Subpaquete de integración con la librería py_agata.
 
-Este subpaquete proporciona las herramientas necesarias para preparar y analizar 
+Este subpaquete proporciona las herramientas necesarias para preparar y analizar
 datos de cgmpy utilizando la librería externa py_agata, actuando como un puente
 entre ambas.
 
@@ -14,11 +14,8 @@ Funciones Públicas:
 
 # Importar las funciones que quieres exponer públicamente desde este subpaquete
 from .adapter import prepare_data_for_agata
-from .metrics import analyze_with_agata
+from .metrics import AgataAnalysis, analyze_one_arm, analyze_with_agata
 
 # Definir qué se importa cuando un usuario ejecuta 'from cgmpy.agata import *'
 # Es una buena práctica para definir la API pública del subpaquete.
-__all__ = [
-    'prepare_data_for_agata',
-    'analyze_with_agata'
-]
+__all__ = ["prepare_data_for_agata", "analyze_with_agata", "analyze_one_arm", "AgataAnalysis"]

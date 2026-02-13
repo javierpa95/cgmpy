@@ -3,7 +3,7 @@ Módulo de datos refactorizado para cgmpy.
 
 Este módulo proporciona una arquitectura modular para el manejo de datos de glucosa:
 - DataLoader: Carga de datos desde diferentes fuentes
-- DataProcessor: Procesamiento y validación de datos  
+- DataProcessor: Procesamiento y validación de datos
 - DataAnalyzer: Análisis básico de datos
 - DataExporter: Exportación a diferentes formatos
 - ModularGlucoseData: Clase principal que integra todos los módulos
@@ -16,11 +16,12 @@ Clases especializadas por dispositivo:
 """
 
 # Importar clases principales
-from .core import ModularGlucoseData
-from .loader import DataLoader
-from .processor import DataProcessor
 from .analyzer import DataAnalyzer
+from .core import ModularGlucoseData
 from .exporter import DataExporter
+from .loader import DataLoader
+from .pregnancy_data import PregnancyData, PregnancyDataHandler
+from .processor import DataProcessor
 
 # Importar clases especializadas
 from .specialized import (
@@ -28,8 +29,8 @@ from .specialized import (
     Libreview,
     MedtronicCarelink,
     TandemDiabetes,
+    create_specialized_loader,
     detect_device_type,
-    create_specialized_loader
 )
 
 # Mantener compatibilidad hacia atrás
@@ -38,22 +39,21 @@ GlucoseData = ModularGlucoseData
 
 __all__ = [
     # Clase principal
-    'ModularGlucoseData',
-    'GlucoseData',  # Alias para compatibilidad
-    
+    "ModularGlucoseData",
+    "GlucoseData",  # Alias para compatibilidad
     # Módulos especializados
-    'DataLoader',
-    'DataProcessor', 
-    'DataAnalyzer',
-    'DataExporter',
-    
+    "DataLoader",
+    "DataProcessor",
+    "DataAnalyzer",
+    "DataExporter",
     # Clases especializadas por dispositivo
-    'Dexcom',
-    'Libreview',
-    'MedtronicCarelink',
-    'TandemDiabetes',
-    
+    "Dexcom",
+    "Libreview",
+    "MedtronicCarelink",
+    "TandemDiabetes",
     # Utilidades
-    'detect_device_type',
-    'create_specialized_loader'
-] 
+    "detect_device_type",
+    "create_specialized_loader",
+    "PregnancyData",
+    "PregnancyDataHandler",
+]

@@ -1,12 +1,11 @@
 # cgmpy/agata/adapter.py
 
 import pandas as pd
+
 from ..data.core import ModularGlucoseData
 
-def prepare_data_for_agata(
-    glucose_data: ModularGlucoseData, 
-    resample_freq: str = '5min'
-) -> pd.DataFrame:
+
+def prepare_data_for_agata(glucose_data: ModularGlucoseData, resample_freq: str = "5min") -> pd.DataFrame:
     """
     Prepara los datos de un objeto cgmpy para ser analizados por py_agata,
     manejando tiempos de inicio no alineados.
@@ -27,7 +26,7 @@ def prepare_data_for_agata(
 
     # Ahora, eliminamos duplicados. Si 00:01 y 00:03 se redondearon a 00:00,
     # nos quedamos con el primero que apareció.
-    df_limpio = df_limpio.drop_duplicates(subset=[date_col], keep='first')
+    df_limpio = df_limpio.drop_duplicates(subset=[date_col], keep="first")
 
     # El resto del proceso ya funciona perfectamente
     tiempo_inicio = df_limpio[date_col].min()
@@ -36,12 +35,9 @@ def prepare_data_for_agata(
     df_homogeneo = pd.DataFrame({date_col: rango_tiempo})
 
     # Fusionar con los datos ya estandarizados
-    df_final = df_homogeneo.merge(df_limpio, on=date_col, how='left')
+    df_final = df_homogeneo.merge(df_limpio, on=date_col, how="left")
 
     # Renombrar columnas
-    df_final = df_final.rename(columns={
-        date_col: 't',
-        glucose_col: 'glucose'
-    })
+    df_final = df_final.rename(columns={date_col: "t", glucose_col: "glucose"})
 
-    return df_final[['t', 'glucose']]
+    return df_final[["t", "glucose"]]

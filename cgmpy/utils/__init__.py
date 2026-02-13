@@ -13,10 +13,13 @@ Este módulo contiene funciones y clases auxiliares para:
 # from .validators import DataValidator
 # from .config import GlucoseConfig
 
+
 # Por ahora, importamos desde la ubicación actual para mantener compatibilidad
 # Evitamos import circular usando import diferido
 def parse_date(*args, **kwargs):
     from ..utils import parse_date as _parse_date
+
     return _parse_date(*args, **kwargs)
 
-__all__ = ['parse_date'] 
+
+__all__ = ["parse_date"]
