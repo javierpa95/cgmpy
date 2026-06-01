@@ -1,0 +1,55 @@
+{
+  // ==========================================
+  // CGMPy — VSCode recommended extensions
+  // ==========================================
+  // VSCode will prompt users to install these on first open.
+
+  "recommendations": [
+    // Python ecosystem
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-python.vscode-python-envfile",
+
+    // Linting / formatting
+    "charliermarsh.ruff",
+
+    // Type checking
+    "ms-python.mypy-type-checker",
+
+    // Testing
+    "ms-python.pytest",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Markdown / docs
+    "davidanson.vscode-markdownlint",
+    "yzhang.markdown-all-in-one",
+
+    // YAML / TOML
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+
+    // Containers
+    "ms-vscode-remote.remote-containers",
+    "ms-azuretools.vscode-docker",
+
+    // General quality-of-life
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    "editorconfig.editorconfig",
+
+    // Commit conventions
+    "vivaxy.vscode-conventional-commits"
+  ],
+
+  "unwantedRecommendations": [
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "njpwerner.autodocstring",
+    "ms-toolsai.jupyter",
+    "ms-toolsai.datawrangler"
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  // ==========================================
+  // CGMPy — VSCode tasks
+  // ==========================================
+  // Run via Ctrl+Shift+P → "Tasks: Run Task" or Terminal → Run Task.
+  // Most delegate to `make` so the same commands work in CI.
+
+  "version": "2.0.0",
+
+  "options": {
+    "env": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "cwd": "${workspaceFolder}"
+  },
+
+  "tasks": [
+    {
+      "label": "install (dev)",
+      "type": "process",
+      "command": "make",
+      "args": ["install-dev"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "build"
+    },
+    {
+      "label": "test (fast)",
+      "type": "process",
+      "command": "make",
+      "args": ["test-fast"],
+      "problemMatcher": ["$pytest"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "test"
+    },
+    {
+      "label": "test (full)",
+      "type": "process",
+      "command": "make",
+      "args": ["test"],
+      "problemMatcher": ["$pytest"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "test"
+    },
+    {
+      "label": "test (coverage)",
+      "type": "process",
+      "command": "make",
+      "args": ["test-coverage"],
+      "problemMatcher": ["$pytest"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "test"
+    },
+    {
+      "label": "lint (check)",
+      "type": "process",
+      "command": "make",
+      "args": ["lint"],
+      "problemMatcher": ["$ruff"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "lint"
+    },
+    {
+      "label": "lint (fix)",
+      "type": "process",
+      "command": "make",
+      "args": ["lint-fix"],
+      "problemMatcher": ["$ruff"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "lint"
+    },
+    {
+      "label": "format",
+      "type": "process",
+      "command": "make",
+      "args": ["format"],
+      "problemMatcher": ["$ruff"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "lint"
+    },
+    {
+      "label": "typecheck",
+      "type": "process",
+      "command": "make",
+      "args": ["typecheck"],
+      "problemMatcher": ["$mypy"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "test"
+    },
+    {
+      "label": "security",
+      "type": "process",
+      "command": "make",
+      "args": ["security"],
+      "problemMatcher": ["$bandit"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "lint"
+    },
+    {
+      "label": "docs: serve",
+      "type": "process",
+      "command": "make",
+      "args": ["docs-serve"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "build"
+    },
+    {
+      "label": "docs: build",
+      "type": "process",
+      "command": "make",
+      "args": ["docs-build"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "build"
+    },
+    {
+      "label": "build: sdist + wheel",
+      "type": "process",
+      "command": "make",
+      "args": ["build"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "build"
+    },
+    {
+      "label": "pre-commit (all files)",
+      "type": "process",
+      "command": "make",
+      "args": ["pre-commit-all"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "lint"
+    },
+    {
+      "label": "clean",
+      "type": "process",
+      "command": "make",
+      "args": ["clean"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "group": "build"
+    }
+  ]
+}

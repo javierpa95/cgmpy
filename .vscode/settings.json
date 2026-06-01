@@ -1,0 +1,161 @@
+{
+  // ==========================================
+  // CGMPy — VSCode workspace settings
+  // ==========================================
+  // These settings apply to anyone who opens the project in VSCode.
+  // Personal overrides should go in .vscode/settings.local.json
+  // (which is gitignored).
+
+  // -------------------- Python interpreter --------------------
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.analysis.autoImportSources": ["cgmpy"],
+  "python.analysis.extraPaths": ["${workspaceFolder}"],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.useLibraryCodeForTypes": true,
+  "python.analysis.autoFormatStrings": true,
+
+  // -------------------- Editor formatting --------------------
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+  "editor.rulers": [100, 120],
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.stickyScroll.enabled": true,
+  "editor.minimap.enabled": false,
+  "editor.unicodeHighlight.invisibleCharacters": false,
+
+  // -------------------- Files: encoding + EOL --------------------
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.autoSave": "onFocusChange",
+
+  // -------------------- Ruff (linter + formatter) --------------------
+  "ruff.enable": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+  "ruff.lint.args": ["--config=${workspaceFolder}/pyproject.toml"],
+  "ruff.format.args": ["--config=${workspaceFolder}/pyproject.toml"],
+  "ruff.importStrategy": "fromEnvironment",
+  "ruff.interpreter": ["${workspaceFolder}/.venv/Scripts/python.exe"],
+
+  // -------------------- MyPy (type checker) --------------------
+  "mypy-type-checker.args": ["--config-file=${workspaceFolder}/pyproject.toml"],
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+  "mypy-type-checker.interpreter": ["${workspaceFolder}/.venv/Scripts/python.exe"],
+
+  // -------------------- Testing (pytest) --------------------
+  "testing.pytestEnabled": true,
+  "pytest.pytestEnabled": true,
+  "pytest.args": [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short"
+  ],
+  "pytest.cwd": "${workspaceFolder}",
+  "pytest.env": {
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "pytest.unittestEnabled": false,
+  "pytest.outputCapture": "summary",
+
+  // -------------------- Markdown / Docs --------------------
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    },
+    "editor.formatOnSave": false
+  },
+  "markdownlint.config": {
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD046": false
+  },
+
+  // -------------------- YAML / JSON / TOML --------------------
+  "[yaml]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[toml]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
+  },
+
+  // -------------------- Files / search --------------------
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/.git": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/*.egg-info": true,
+    "**/.coverage": true,
+    "**/htmlcov": true,
+    "**/.venv": true,
+    "**/venv": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/.git": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/*.egg-info": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/node_modules": true
+  },
+
+  // -------------------- Terminal --------------------
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell"
+    }
+  },
+  "terminal.integrated.cwd": "${workspaceFolder}",
+
+  // -------------------- Git --------------------
+  "git.enabled": true,
+  "git.openRepositoryInParentFolders": "always",
+  "git.confirmSync": false,
+  "git.inputValidationSubjectLength": 72,
+  "git.useEditorAsCommitInput": false,
+  "diffEditor.ignoreTrimWhitespace": false,
+
+  // -------------------- Emmet (no HTML in library) --------------------
+  "emmet.showExpandedAbbreviation": "never",
+
+  // -------------------- Telemetry --------------------
+  "telemetry.telemetryLevel": "off",
+  "extensions.supportUntrustedWorkspaces": {
+    "ms-python.python": { "supported": true },
+    "charliermarsh.ruff": { "supported": true }
+  }
+}

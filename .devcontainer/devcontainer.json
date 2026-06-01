@@ -1,0 +1,80 @@
+{
+  // ==========================================
+  // CGMPy — Development container
+  // ==========================================
+  // Open in VSCode: "Dev Containers: Reopen in Container" (F1).
+  // Builds on python:3.11-slim and installs the package + dev/docs
+  // extras on top of a curated set of CLI tools.
+
+  "name": "CGMPy Dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "configureZshAsDefaultShell": false
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "configureGitConfig": false
+    },
+    "ghcr.io/ansible/devcontainer-features/uv:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/workspaces/cgmpy/.venv/bin/python",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "ms-python.pytest",
+        "eamodio.gitlens",
+        "davidanson.vscode-markdownlint",
+        "yzhang.markdown-all-in-one",
+        "tamasfe.even-better-toml",
+        "usernamehw.errorlens",
+        "editorconfig.editorconfig",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  },
+
+  "postCreateCommand": "scripts/container-init.sh",
+
+  "containerUser": "vscode",
+  "remoteUser": "vscode",
+  "userEnvProbe": "loginShell",
+
+  "forwardPorts": [
+    8000
+  ],
+
+  "portsAttributes": {
+    "8000": {
+      "label": "mkdocs serve",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "mounts": [
+    "source=cgmpy-uv-cache,target=/home/vscode/.cache/uv,type=volume",
+    "source=cgmpy-venv,target=/workspaces/cgmpy/.venv,type=volume"
+  ],
+
+  "runServices": [],
+
+  "shutdownAction": "stopCompose",
+
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "8gb"
+  }
+}

@@ -31,6 +31,20 @@ uv pip install -e ".[dev,docs,agata]"
 pre-commit install
 ```
 
+### Alternative: dev container (Docker / VSCode)
+
+If you have Docker and the **Dev Containers** VSCode extension
+(`ms-vscode-remote.remote-containers`), the project ships a
+pre-configured container with all dependencies pre-installed:
+
+1. Open the project in VSCode.
+2. Run **Dev Containers: Reopen in Container** (F1).
+3. Wait for `scripts/container-init.sh` to finish.
+
+The container uses `mcr.microsoft.com/devcontainers/python:3.11-bullseye`
+plus the `uv` feature. See [`.devcontainer/devcontainer.json`](https://github.com/javierpa95/cgmpy/blob/main/.devcontainer/devcontainer.json)
+for the full configuration.
+
 ## Verify the setup
 
 ```bash
