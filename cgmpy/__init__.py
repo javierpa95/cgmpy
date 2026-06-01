@@ -12,6 +12,7 @@ from .data.analyzer import DataAnalyzer
 from .data.core import ModularGlucoseData
 from .data.exporter import DataExporter
 from .data.loader import DataLoader
+from .data.pregnancy_data import PregnancyData, PregnancyDataHandler
 from .data.processor import DataProcessor
 from .data.specialized import Dexcom, Libreview
 from .metrics import ModularGlucoseMetrics
@@ -72,6 +73,8 @@ __all__ = [
     "GlucoseMetrics",
     "GlucosePlot",
     "GestationalDiabetes",
+    "PregnancyData",
+    "PregnancyDataHandler",
     "GlucoseAnalysis",
     "Dexcom",
     "Libreview",

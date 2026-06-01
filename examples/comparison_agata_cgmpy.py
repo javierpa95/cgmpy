@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from py_agata.py_agata import Agata
 
-from cgmpy.glucose_metrics import GlucoseMetrics
+from cgmpy import GlucoseMetrics
 
 cgm = Agata()
 
@@ -19,13 +19,13 @@ if not os.path.exists(ruta):
 df = pd.read_csv(ruta)
 
 # Convertir la columna time a datetime (corrigiendo timestamps Unix)
-df["time"] = pd.to_datetime(df["time"], unit="s")  # Asumiendo que son segundos desde epoch
+df["time"] = pd.to_datetime(df["time"])  # Let pandas infer format
 
 print(df.head())
 
 # Filtrar datos entre el 21 y 25 de marzo (ambos incluidos)
-fecha_inicio = pd.to_datetime("2023-03-21 00:00:00")
-fecha_fin = pd.to_datetime("2023-03-25 23:59:59")
+fecha_inicio = pd.to_datetime("2023-02-01 00:00:00")
+fecha_fin = pd.to_datetime("2023-02-05 23:59:59")
 
 df_filtrado = df[(df["time"] >= fecha_inicio) & (df["time"] <= fecha_fin)]
 
@@ -150,11 +150,12 @@ except Exception as e:
     resultados = capon.analyze_glucose_profile(glucose_data)
     print(resultados)
 
-print("-------------CGMPY-------------------")
+# -------------CGMPY-------------------
 
 cgm = GlucoseMetrics(df_filtrado, date_col="t")
 
-resultados_cgmpy = cgm.calculate_all_metrics()
+# Use all_simplified() for a flat dictionary with main metrics
+resultados_cgmpy = cgm.all_simplified()
 
 print(resultados_cgmpy)
 
@@ -174,59 +175,59 @@ def formatear_valor(valor, decimales=2):
         return str(valor)
 
 
-# Métricas básicas para comparar
+# Métricas básicas para comparar (Keys updated to English)
 metricas_comparacion = {
     "Media de glucosa": {
         "py_agata": resultados["variability"]["mean_glucose"],
-        "cgmpy": resultados_cgmpy["media"],
+        "cgmpy": resultados_cgmpy["Mean"],
     },
     "Mediana de glucosa": {
         "py_agata": resultados["variability"]["median_glucose"],
-        "cgmpy": resultados_cgmpy["mediana"],
+        "cgmpy": resultados_cgmpy["Median"],
     },
     "Desviación estándar": {
         "py_agata": resultados["variability"]["std_glucose"],
-        "cgmpy": resultados_cgmpy["desviacion_estandar"],
+        "cgmpy": resultados_cgmpy["SD"],
     },
     "Coeficiente de variación (%)": {
         "py_agata": resultados["variability"]["cv_glucose"],
-        "cgmpy": resultados_cgmpy["cv"],
+        "cgmpy": resultados_cgmpy["CV"],
     },
     "GMI": {
         "py_agata": resultados["variability"]["gmi"],
-        "cgmpy": resultados_cgmpy["gmi"],
+        "cgmpy": resultados_cgmpy["GMI"],
     },
     "TIR (%)": {
         "py_agata": resultados["time_in_ranges"]["time_in_target"],
-        "cgmpy": resultados_cgmpy["tir"],
+        "cgmpy": resultados_cgmpy["TIR"],
     },
     "TIR Tight (%)": {
         "py_agata": resultados["time_in_ranges"]["time_in_tight_target"],
-        "cgmpy": resultados_cgmpy["tir_tight"],
+        "cgmpy": resultados_cgmpy["TIR_tight"],
     },
     "TBR < 70 (%)": {
         "py_agata": resultados["time_in_ranges"]["time_in_hypoglycemia"],
-        "cgmpy": resultados_cgmpy["tbr70"],
+        "cgmpy": resultados_cgmpy["TBR70"],
     },
     "TAR > 180 (%)": {
         "py_agata": resultados["time_in_ranges"]["time_in_hyperglycemia"],
-        "cgmpy": resultados_cgmpy["tar180"],
+        "cgmpy": resultados_cgmpy["TAR180"],
     },
-    "LBGI": {"py_agata": resultados["risk"]["lbgi"], "cgmpy": resultados_cgmpy["lbgi"]},
-    "HBGI": {"py_agata": resultados["risk"]["hbgi"], "cgmpy": resultados_cgmpy["hbgi"]},
-    "ADRR": {"py_agata": resultados["risk"]["adrr"], "cgmpy": resultados_cgmpy["adrr"]},
-    "GRI": {"py_agata": resultados["risk"]["gri"], "cgmpy": resultados_cgmpy["gri"]},
+    "LBGI": {"py_agata": resultados["risk"]["lbgi"], "cgmpy": resultados_cgmpy["LBGI"]},
+    "HBGI": {"py_agata": resultados["risk"]["hbgi"], "cgmpy": resultados_cgmpy["HBGI"]},
+    "ADRR": {"py_agata": resultados["risk"]["adrr"], "cgmpy": resultados_cgmpy["ADRR"]},
+    "GRI": {"py_agata": resultados["risk"]["gri"], "cgmpy": resultados_cgmpy["GRI"]},
     "MAGE": {
         "py_agata": resultados["variability"]["mage_index"],
-        "cgmpy": resultados_cgmpy["mage_avg"],
+        "cgmpy": resultados_cgmpy["MAGE"],
     },
     "MODD": {
         "py_agata": resultados["variability"]["modd"],
-        "cgmpy": resultados_cgmpy["modd"],
+        "cgmpy": resultados_cgmpy["MODD"],
     },
     "J-Index": {
         "py_agata": resultados["variability"]["j_index"],
-        "cgmpy": resultados_cgmpy["j_index"],
+        "cgmpy": resultados_cgmpy["J-Index"],
     },
 }
 

@@ -8,10 +8,13 @@ Este módulo contiene las clases y funciones para calcular:
 - Métricas avanzadas: GRADE, GRI, M-Value, J-Index
 """
 
+from typing import Any, Dict
+
 import pandas as pd
 
 # Importaciones que están disponibles ahora
 from .basic import BasicMetrics
+from .targets import GlucoseTargets, get_targets
 from .time_in_range import TimeInRangeMetrics
 from .variability import VariabilityMetrics
 
@@ -28,47 +31,62 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
     mantiene compatibilidad con la interfaz existente.
     """
 
-    def all(self) -> dict:
+    def all(self) -> Dict[str, Any]:
         """
-        Calcula todas las métricas disponibles de glucosa.
-
-        Esta función integra todas las métricas de los tres módulos:
-        - Métricas básicas (BasicMetrics)
-        - Métricas de tiempo en rango (TimeInRangeMetrics)
-        - Métricas de variabilidad (VariabilityMetrics)
-
-        Returns:
-            dict: Diccionario completo con todas las métricas calculadas
+        Calculates all available glucose metrics with optional progress logging.
         """
+        import time
+
+        start_time = time.time()
+        do_log = getattr(self, "log", False)
+
         try:
-            # Inicializar diccionario de resultados
+            if do_log:
+                print("\n[Metrics] Starting complete analysis...")
+
             all_metrics = {}
 
-            # 1. MÉTRICAS BÁSICAS (BasicMetrics)
+            # 1. BASIC METRICS
+            if do_log:
+                print("  -> Calculating basic metrics (Mean, GMI, CV)...", end="", flush=True)
+            s = time.time()
             try:
-                basic_metrics = self.calculate_all_metrics()
+                basic_metrics = BasicMetrics.calculate_all_metrics(self)
                 all_metrics["basic"] = basic_metrics
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
             except Exception as e:
-                all_metrics["basic"] = {"error": f"Error en métricas básicas: {str(e)}"}
+                all_metrics["basic"] = {"error": f"Error: {str(e)}"}
 
-            # 2. MÉTRICAS DE TIEMPO EN RANGO (TimeInRangeMetrics)
+            # 2. TIME IN RANGE
+            if do_log:
+                print("  -> Calculating Time in Range (TIR, TAR, TBR)...", end="", flush=True)
+            s = time.time()
             try:
                 time_metrics = self.time_range_summary()
                 all_metrics["time_in_range"] = time_metrics
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
             except Exception as e:
-                all_metrics["time_in_range"] = {"error": f"Error en tiempo en rango: {str(e)}"}
+                all_metrics["time_in_range"] = {"error": f"Error: {str(e)}"}
 
-            # 3. MÉTRICAS DE VARIABILIDAD (VariabilityMetrics)
+            # 3. VARIABILITY
+            if do_log:
+                print("  -> Calculating variability metrics (This may take a while)...")
+            var_start = time.time()
             try:
-                # Métricas de desviación estándar
+                # SD Metrics
+                if do_log:
+                    print("     - Standard Deviations...", end="", flush=True)
+                s = time.time()
                 sd_metrics = {
                     "sd_total": self.sd_total(),
                     "sd_within_day": self.sd_within_day(),
                     "sd_between_timepoints": self.sd_between_timepoints(),
                     "sd_segments": {
-                        "noche": self.sd_segment("00:00", 8),
-                        "dia": self.sd_segment("08:00", 8),
-                        "tarde": self.sd_segment("16:00", 8),
+                        "noche": self.sd_within_day_segment("00:00", 8),
+                        "dia": self.sd_within_day_segment("08:00", 8),
+                        "tarde": self.sd_within_day_segment("16:00", 8),
                     },
                     "sd_within_series": {
                         "1h": self.sd_within_series(hours=1),
@@ -80,11 +98,21 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "sd_same_timepoint_adjusted": self.sd_same_timepoint_adjusted(),
                     "sd_interaction": self.sd_interaction(),
                 }
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
 
-                # Métricas de coeficiente de variación
+                # CV Metrics
+                if do_log:
+                    print("     - Coefficient of Variation...", end="", flush=True)
+                s = time.time()
                 cv_metrics = self.calculate_all_cv_metrics()
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
 
-                # Métricas de excursiones
+                # MAGE
+                if do_log:
+                    print("     - MAGE (Baghurst & Simple)...", end="", flush=True)
+                s = time.time()
                 try:
                     mage_metrics = self.MAGE_Baghurst()
                     excursion_metrics = {
@@ -92,9 +120,14 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                         "mage_simple": self.MAGE(),
                     }
                 except Exception as e:
-                    excursion_metrics = {"error": f"Error en MAGE: {str(e)}"}
+                    excursion_metrics = {"error": str(e)}
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
 
-                # Métricas de variabilidad inter e intradiaria
+                # Other Variability
+                if do_log:
+                    print("     - MODD, CONGA, Lability Index...", end="", flush=True)
+                s = time.time()
                 variability_metrics = {
                     "modd": self.MODD(),
                     "conga": {
@@ -106,8 +139,13 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     },
                     "lability_index": self.Lability_index(),
                 }
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
 
-                # Métricas de calidad de glucosa
+                # Quality Metrics
+                if do_log:
+                    print("     - Quality Indices (GRI, HBGI, LBGI, GRADE)...", end="", flush=True)
+                s = time.time()
                 quality_metrics = {
                     "m_value": self.M_Value(),
                     "j_index": self.j_index(),
@@ -118,6 +156,8 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "gri_pregnancy": self.GRI(pregnancy=True),
                     "adrr": self.ADRR(),
                 }
+                if do_log:
+                    print(f" Done ({time.time() - s:.2f}s)")
 
                 all_metrics["variability"] = {
                     "sd_metrics": sd_metrics,
@@ -126,97 +166,118 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "variability_metrics": variability_metrics,
                     "quality_metrics": quality_metrics,
                 }
+                if do_log:
+                    print(f"  -> Variability total: {time.time() - var_start:.2f}s")
 
             except Exception as e:
-                all_metrics["variability"] = {"error": f"Error en métricas de variabilidad: {str(e)}"}
+                all_metrics["variability"] = {"error": str(e)}
 
-            # 4. RESUMEN GENERAL
-            try:
-                summary = {
-                    "total_metrics": len(all_metrics),
-                    "modules": list(all_metrics.keys()),
-                    "calculation_timestamp": pd.Timestamp.now().isoformat(),
-                    "data_summary": {
-                        "total_readings": len(self.data),
-                        "date_range": {
-                            "start": self.data["time"].min().isoformat(),
-                            "end": self.data["time"].min().isoformat(),
-                        },
-                        "data_completeness": self.data_completeness(),
+            # 4. SUMMARY
+            summary = {
+                "total_metrics": len(all_metrics),
+                "modules": list(all_metrics.keys()),
+                "calculation_timestamp": pd.Timestamp.now().isoformat(),
+                "data_summary": {
+                    "total_readings": len(self.data),
+                    "date_range": {
+                        "start": self.data["time"].min().isoformat(),
+                        "end": self.data["time"].max().isoformat(),
                     },
-                }
-                all_metrics["summary"] = summary
+                    "data_completeness": self.data_completeness(),
+                },
+            }
+            all_metrics["summary"] = summary
 
-            except Exception as e:
-                all_metrics["summary"] = {"error": f"Error en resumen: {str(e)}"}
+            if do_log:
+                print(f"[Metrics] Analysis completed in {time.time() - start_time:.2f}s\n")
 
             return all_metrics
 
         except Exception as e:
-            return {
-                "error": f"Error general en cálculo de métricas: {str(e)}",
-                "type": "general_error",
-            }
+            return {"error": f"General error: {str(e)}"}
 
     def all_simplified(self) -> dict:
         """
         Versión simplificada de all() que devuelve solo los valores principales.
+        Calcula únicamente las métricas necesarias para mejorar el rendimiento.
 
         Returns:
             dict: Diccionario con métricas principales en formato plano
         """
         try:
-            # Obtener todas las métricas
-            full_metrics = self.all()
-
-            # Extraer solo los valores principales
             simplified = {}
 
-            # Métricas básicas principales
-            if "basic" in full_metrics and "error" not in full_metrics["basic"]:
+            if len(self.data) == 0:
+                print("Advertencia: No hay datos para calcular métricas.")
+                return {
+                    "DataCompleteness": 0,
+                    "GMI": None, "Mean": None, "Median": None, "SD": None, "CV": None,
+                    "TIR": 0, "TIR_tight": 0, "MAGE": None, "GRI": None
+                }
+
+            print("Calculando métricas simplificadas...")
+
+
+            # 1. Basic main metrics
+            basic = BasicMetrics.calculate_all_metrics(self)
+            simplified.update(
+                {
+                    "DataCompleteness": self.data_completeness(),
+                    "GMI": basic.get("GMI"),
+                    "Mean": basic.get("Mean"),
+                    "Median": basic.get("Median"),
+                    "SD": basic.get("Std"),
+                    "CV": basic.get("CV"),
+                }
+            )
+
+            # 2. Main Time In Range (TIR)
+            targets = self.current_targets
+            is_pregnancy = targets.name.lower() == "pregnancy"
+
+            simplified.update(
+                {
+                    "TIR": self.TIR(),
+                    "TIR_tight": self.TIR_tight(),
+                }
+            )
+
+            # Assign keys and values based on target type
+            if is_pregnancy:
                 simplified.update(
                     {
-                        "GMI": full_metrics["basic"].get("GMI"),
-                        "Media": full_metrics["basic"].get("Media"),
-                        "Mediana": full_metrics["basic"].get("Mediana"),
-                        "SD": full_metrics["basic"].get("Desviacion_estandar"),
-                        "CV": full_metrics["basic"].get("CV"),
+                        "TAR140": self.TAR_total(),
+                        "TAR250": self.TAR_L2(),
+                        "TBR63": self.TBR_total(),
+                        "TBR55": self.TBR_L2(),
+                    }
+                )
+            else:
+                simplified.update(
+                    {
+                        "TAR180": self.TAR_total(),
+                        "TAR250": self.TAR_L2(),
+                        "TBR70": self.TBR_total(),
+                        "TBR54": self.TBR_L2(),
                     }
                 )
 
-            # Tiempo en rango principal
-            if "time_in_range" in full_metrics and "error" not in full_metrics["time_in_range"]:
-                simplified.update(
-                    {
-                        "TIR": full_metrics["time_in_range"].get("standard_ranges", {}).get("TIR"),
-                        "TAR180": full_metrics["time_in_range"].get("standard_ranges", {}).get("TAR180"),
-                        "TAR250": full_metrics["time_in_range"].get("standard_ranges", {}).get("TAR250"),
-                        "TBR70": full_metrics["time_in_range"].get("standard_ranges", {}).get("TBR70"),
-                        "TBR55": full_metrics["time_in_range"].get("standard_ranges", {}).get("TBR55"),
-                    }
-                )
-
-            # Variabilidad principal
-            if "variability" in full_metrics and "error" not in full_metrics["variability"]:
-                sd_metrics = full_metrics["variability"].get("sd_metrics", {})
-                simplified.update(
-                    {
-                        "SDw": sd_metrics.get("sd_within_day", {}).get("sd"),
-                        "SDdm": sd_metrics.get("sd_daily_mean", {}).get("sd"),
-                        "MAGE": full_metrics["variability"]
-                        .get("excursion_metrics", {})
-                        .get("mage_baghurst", {})
-                        .get("MAGE_avg"),
-                        "CONGA4": full_metrics["variability"]
-                        .get("variability_metrics", {})
-                        .get("conga", {})
-                        .get("4h", {})
-                        .get("value"),
-                        "LBGI": full_metrics["variability"].get("quality_metrics", {}).get("lbgi"),
-                        "HBGI": full_metrics["variability"].get("quality_metrics", {}).get("hbgi"),
-                        "GRI": full_metrics["variability"].get("quality_metrics", {}).get("gri", {}).get("GRI"),
-                    }
-                )
+            # 3. Main Variability & Risk
+            # Solo calculamos lo que se va a mostrar
+            simplified.update(
+                {
+                    "SDw": self.sd_within_day().get("sd"),
+                    "SDdm": self.sd_daily_mean().get("sd"),
+                    "MAGE": self.MAGE(),
+                    "MODD": self.MODD().get("value"),
+                    "CONGA4": self.CONGA(hours=4).get("value"),
+                    "LBGI": self.LBGI(),
+                    "HBGI": self.HBGI(),
+                    "ADRR": self.ADRR().get("adrr"),
+                    "GRI": self.GRI(pregnancy=is_pregnancy).get("GRI"),
+                    "J-Index": self.j_index(),
+                }
+            )
 
             return simplified
 

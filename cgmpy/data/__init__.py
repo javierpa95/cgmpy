@@ -1,21 +1,21 @@
 """
-Módulo de datos refactorizado para cgmpy.
+Refactored data module for cgmpy.
 
-Este módulo proporciona una arquitectura modular para el manejo de datos de glucosa:
-- DataLoader: Carga de datos desde diferentes fuentes
-- DataProcessor: Procesamiento y validación de datos
-- DataAnalyzer: Análisis básico de datos
-- DataExporter: Exportación a diferentes formatos
-- ModularGlucoseData: Clase principal que integra todos los módulos
+This module provides a modular architecture for glucose data handling:
+- DataLoader: Data loading from different sources
+- DataProcessor: Data processing and validation
+- DataAnalyzer: Basic data analysis
+- DataExporter: Export to different formats
+- ModularGlucoseData: Main class integrating all modules
 
-Clases especializadas por dispositivo:
-- Dexcom: Para datos de Dexcom Clarity
-- Libreview: Para datos de Libreview
-- MedtronicCarelink: Para datos de Medtronic CareLink
-- TandemDiabetes: Para datos de Tandem Diabetes
+Specialized classes by device:
+- Dexcom: For Dexcom Clarity data
+- Libreview: For Libreview data
+- MedtronicCarelink: For Medtronic CareLink data
+- TandemDiabetes: For Tandem Diabetes data
 """
 
-# Importar clases principales
+# Import main classes
 from .analyzer import DataAnalyzer
 from .core import ModularGlucoseData
 from .exporter import DataExporter
@@ -23,7 +23,7 @@ from .loader import DataLoader
 from .pregnancy_data import PregnancyData, PregnancyDataHandler
 from .processor import DataProcessor
 
-# Importar clases especializadas
+# Import specialized classes
 from .specialized import (
     Dexcom,
     Libreview,
@@ -33,25 +33,25 @@ from .specialized import (
     detect_device_type,
 )
 
-# Mantener compatibilidad hacia atrás
-# Los usuarios pueden seguir usando: from cgmpy import GlucoseData
+# Keep backward compatibility
+# Users can still use: from cgmpy import GlucoseData
 GlucoseData = ModularGlucoseData
 
 __all__ = [
-    # Clase principal
+    # Main class
     "ModularGlucoseData",
-    "GlucoseData",  # Alias para compatibilidad
-    # Módulos especializados
+    "GlucoseData",  # Alias for compatibility
+    # Specialized modules
     "DataLoader",
     "DataProcessor",
     "DataAnalyzer",
     "DataExporter",
-    # Clases especializadas por dispositivo
+    # Specialized classes by device
     "Dexcom",
     "Libreview",
     "MedtronicCarelink",
     "TandemDiabetes",
-    # Utilidades
+    # Utilities
     "detect_device_type",
     "create_specialized_loader",
     "PregnancyData",

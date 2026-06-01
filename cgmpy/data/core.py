@@ -1,14 +1,15 @@
 """
-Módulo principal para el manejo modular de datos de glucosa.
+Main module for modular glucose data management.
 """
 
 import datetime
 import logging
 import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import pandas as pd
 
+from ..metrics.targets import GlucoseTargets, get_targets
 from .analyzer import DataAnalyzer
 from .exporter import DataExporter
 from .loader import DataLoader
@@ -17,14 +18,81 @@ from .processor import DataProcessor
 
 class ModularGlucoseData:
     """
-    Clase principal refactorizada para manejo modular de datos de glucosa.
+    Refactored main class for modular glucose data management.
 
-    Esta clase integra todos los módulos especializados:
-    - DataLoader: Carga de datos desde diferentes fuentes
-    - DataProcessor: Procesamiento y validación de datos
-    - DataAnalyzer: Análisis básico de datos
-    - DataExporter: Exportación a diferentes formatos
+    This class integrates all specialized modules:
+    - DataLoader: Data loading from different sources
+    - DataProcessor: Data processing and validation
+    - DataAnalyzer: Basic data analysis
+    - DataExporter: Data export to different formats
     """
+
+    @classmethod
+    def from_sources(
+        cls,
+        sources: List[Union[str, pd.DataFrame, "ModularGlucoseData"]],
+        date_col: str = "time",
+        glucose_col: str = "glucose",
+        delimiter: Union[str, None] = None,
+        header: int = 0,
+        log: bool = False,
+        target_type: str = "diabetes",
+        **kwargs,
+    ) -> "ModularGlucoseData":
+        """
+        Creates an instance by merging multiple data sources.
+
+        This method handles loading, column renaming, and initial merging.
+        The constructor will then handle duplicate removal and sorting.
+
+        :param sources: List of sources (paths, DataFrames, or ModularGlucoseData instances)
+        :param date_col: Default date column name for new sources
+        :param glucose_col: Default glucose column name for new sources
+        :param delimiter: Delimiter for CSV files
+        :param header: Header row for CSV files
+        :param log: Whether to enable logging
+        :param target_type: Type of glucose targets ('diabetes' or 'pregnancy')
+        :param kwargs: Additional arguments for the constructor
+        :return: A new ModularGlucoseData instance containing all merged data
+        """
+        temp_loader = DataLoader()
+        temp_processor = DataProcessor()
+        all_dfs = []
+
+        for source in sources:
+            if isinstance(source, ModularGlucoseData):
+                # If it's another instance, we take its already processed data
+                df = source.get_raw_data()
+                # These are already named 'time' and 'glucose'
+                all_dfs.append(df)
+
+            elif isinstance(source, (str, pd.DataFrame)):
+                # Load the source (if string) or take the DataFrame
+                raw_df = temp_loader.load_from_source(source, date_col, glucose_col, delimiter, header)
+                # Standardize column names before concatenation
+                standard_df = temp_processor.rename_columns(raw_df, date_col, glucose_col)
+                all_dfs.append(standard_df)
+
+            else:
+                raise TypeError(f"Unsupported source type: {type(source)}")
+
+        if not all_dfs:
+            raise ValueError("No valid sources provided.")
+
+        # Concatenate all standardized DataFrames
+        combined_df = pd.concat(all_dfs, ignore_index=True)
+
+        # Create the final instance.
+        # Note: We pass date_col="time" and glucose_col="glucose" because
+        # we've already standardized them above.
+        return cls(
+            combined_df,
+            date_col="time",
+            glucose_col="glucose",
+            log=log,
+            target_type=target_type,
+            **kwargs,
+        )
 
     def __init__(
         self,
@@ -36,46 +104,67 @@ class ModularGlucoseData:
         start_date: Union[str, datetime.datetime, None] = None,
         end_date: Union[str, datetime.datetime, None] = None,
         log: bool = False,
+        target_type: str = "diabetes",
+        regularize: bool = False,
+        regularize_interval: int = 5,
+        regularize_max_gap: int = 30,
     ):
         """
-        Inicializa los datos de glucosa con arquitectura modular.
+        Initializes glucose data with modular architecture.
 
-        :param data_source: Archivo CSV/Parquet o DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha/hora
-        :param glucose_col: Nombre de la columna de valores de glucosa
-        :param delimiter: Delimitador para archivos CSV
-        :param header: Fila de encabezado para archivos CSV
-        :param start_date: Fecha de inicio para filtrar datos (opcional)
-        :param end_date: Fecha de fin para filtrar datos (opcional)
-        :param log: Si True, activa logs detallados de rendimiento
+        :param data_source: CSV/Parquet file or DataFrame with data
+        :param date_col: Name of the date/time column
+        :param glucose_col: Name of the glucose values column
+        :param delimiter: Delimiter for CSV files
+        :param header: Header row for CSV files
+        :param start_date: Start date for filtering data (optional)
+        :param end_date: End date for filtering data (optional)
+        :param log: If True, enables detailed performance logs
+        :param target_type: Type of glucose targets ('diabetes' or 'pregnancy')
         """
-        # Configuración del logging
+        # Logging configuration
         self.log = log
         self.logger = self._setup_logger()
 
-        # Almacenar parámetros
+        # Store parameters
         self.date_col = date_col
         self.glucose_col = glucose_col
+        self.target_type = target_type
 
-        # Inicializar módulos
+        # Initialize targets
+        if isinstance(target_type, GlucoseTargets):
+            self.targets = target_type
+        else:
+            self.targets = get_targets(target_type)
+
+        # Initialize modules
         self.loader = DataLoader(self.logger)
         self.processor = DataProcessor(self.logger)
         self.analyzer = DataAnalyzer(self.logger)
         self.exporter = DataExporter(self.logger)
 
-        # Procesar datos
+        # Process data
         self.data, self.time_diffs, self.typical_interval = self._initialize_data(
-            data_source, date_col, glucose_col, delimiter, header, start_date, end_date
+            data_source,
+            date_col,
+            glucose_col,
+            delimiter,
+            header,
+            start_date,
+            end_date,
+            regularize,
+            regularize_interval,
+            regularize_max_gap,
         )
 
-        # Diccionario para almacenar logs de operaciones
+        # Dictionary to store operation logs
         self.logs = {}
 
     def _setup_logger(self) -> logging.Logger:
         """
-        Configura el logger para la clase.
+        Configures the logger for the class.
 
-        :return: Logger configurado
+        :return: Configured logger
         """
         logger = logging.getLogger(__name__)
 
@@ -97,52 +186,71 @@ class ModularGlucoseData:
         header: int,
         start_date: Union[str, datetime.datetime, None],
         end_date: Union[str, datetime.datetime, None],
-    ) -> tuple:
+        regularize: bool = False,
+        regularize_interval: int = 5,
+        regularize_max_gap: int = 30,
+    ) -> Tuple[pd.DataFrame, pd.Series, float]:
         """
-        Inicializa y procesa los datos usando los módulos.
+        Initializes and processes data using modules.
 
-        :return: Tupla con (data, time_diffs, typical_interval)
+        :return: Tuple with (data, time_diffs, typical_interval)
         """
         t_start = time.time()
 
-        # Paso 1: Cargar datos
+        # Step 1: Load data
         t0 = time.time()
         raw_data = self.loader.load_from_source(data_source, date_col, glucose_col, delimiter, header)
         t1 = time.time()
 
-        # Paso 2: Renombrar columnas
+        # Step 2: Rename columns
         t2 = time.time()
         data = self.processor.rename_columns(raw_data, date_col, glucose_col)
         t3 = time.time()
 
-        # Paso 3: Filtrar por fechas
+        # Step 3: Filter by dates
         t4 = time.time()
         if start_date is not None or end_date is not None:
             data = self.processor.filter_by_dates(data, start_date, end_date)
         t5 = time.time()
 
-        # Paso 4: Procesar datos
+        # Step 4: Process data
         t6 = time.time()
         processed_data, time_diffs = self.processor.process_data(data, "time", "glucose", self.log)
         t7 = time.time()
 
-        # Paso 5: Calcular intervalo típico
+        # Step 5: Calculate typical interval
         t8 = time.time()
         typical_interval = self.analyzer.calculate_typical_interval(time_diffs, self.log)
         t9 = time.time()
 
+        # Step 6: Optional Regularization
+        if regularize:
+            t10 = time.time()
+            processed_data = self.processor.regularize(
+                processed_data,
+                interval_mins=regularize_interval,
+                max_gap_mins=regularize_max_gap,
+                date_col="time",
+                glucose_col="glucose",
+            )
+            time_diffs = processed_data["time"].diff()
+            typical_interval = self.analyzer.calculate_typical_interval(time_diffs, self.log)
+            t11 = time.time()
+            if self.log:
+                self.logger.debug(f"Regularization applied: {t11 - t10:.3f}s")
+
         t_end = time.time()
 
-        # Logging de tiempos
+        # Performance logging
         if self.log:
             self.logger.debug(f"""
-            Tiempos de inicialización modular:
-            Carga de datos: {t1 - t0:.3f}s
-            Renombrado de columnas: {t3 - t2:.3f}s
-            Filtrado por fechas: {t5 - t4:.3f}s
-            Procesamiento de datos: {t7 - t6:.3f}s
-            Cálculo de intervalo típico: {t9 - t8:.3f}s
-            Tiempo total: {t_end - t_start:.3f}s
+            Modular initialization timing:
+            Data loading: {t1 - t0:.3f}s
+            Column renaming: {t3 - t2:.3f}s
+            Date filtering: {t5 - t4:.3f}s
+            Data processing: {t7 - t6:.3f}s
+            Typical interval calculation: {t9 - t8:.3f}s
+            Total time: {t_end - t_start:.3f}s
             """)
 
         if self.log:
@@ -152,52 +260,52 @@ class ModularGlucoseData:
 
     def get_typical_interval(self) -> float:
         """
-        Devuelve el intervalo típico entre mediciones en minutos.
+        Returns the typical interval between measurements in minutes.
 
-        :return: Intervalo típico en minutos
+        :return: Typical interval in minutes
         """
         return self.typical_interval
 
     def info(self, include_disconnections: bool = False) -> Dict[str, Any]:
         """
-        Muestra información básica del archivo en formato JSON.
+        Shows basic file information.
 
-        :param include_disconnections: Si incluir detalles de desconexiones
-        :return: Diccionario con información básica
+        :param include_disconnections: Whether to include disconnection details
+        :return: Dictionary with basic information
         """
         return self.analyzer.get_basic_info(self.data, self.time_diffs, self.typical_interval, include_disconnections)
 
     def __str__(self) -> str:
         """
-        Representación en string del objeto con información básica.
+        String representation of the object with basic information.
 
-        :return: String con resumen de información
+        :return: String with information summary
         """
         info = self.info()
         return self.analyzer.get_summary_string(info)
 
     def get_data_quality_metrics(self) -> Dict[str, Any]:
         """
-        Calcula métricas de calidad de los datos.
+        Calculates data quality metrics.
 
-        :return: Diccionario con métricas de calidad
+        :return: Dictionary with quality metrics
         """
         return self.analyzer.get_data_quality_metrics(self.data, self.time_diffs, self.typical_interval)
 
     def get_logs(self) -> Dict[str, Any]:
         """
-        Devuelve todos los logs almacenados.
+        Returns all stored logs.
 
-        :return: Diccionario con logs generados
+        :return: Dictionary with generated logs
         """
         if not self.log:
-            self.logger.warning("Logging no está activado. Inicialice la clase con log=True para generar logs.")
+            self.logger.warning("Logging is not enabled. Initialize the class with log=True to generate logs.")
             return {}
         return self.logs
 
-    # Métodos de exportación - Delegan al DataExporter
+    # Export methods - Delegate to DataExporter
     def to_parquet(self, file_path: str, compression: str = "snappy", sort: bool = True):
-        """Delega al DataExporter para guardar en formato Parquet."""
+        """Delegates to DataExporter to save in Parquet format."""
         self.exporter.to_parquet(self.data, file_path, compression, sort)
 
     def append_to_parquet(
@@ -206,109 +314,163 @@ class ModularGlucoseData:
         compression: str = "snappy",
         handle_duplicates: str = "keep_new",
     ) -> int:
-        """Delega al DataExporter para añadir a archivo Parquet existente."""
+        """Delegates to DataExporter to append to an existing Parquet file."""
         return self.exporter.append_to_parquet(self.data, file_path, compression, handle_duplicates)
 
     def to_csv(self, file_path: str, separator: str = ",", include_index: bool = False):
-        """Delega al DataExporter para guardar en formato CSV."""
+        """Delegates to DataExporter to save in CSV format."""
         self.exporter.to_csv(self.data, file_path, separator, include_index)
 
     def to_excel(self, file_path: str, sheet_name: str = "glucose_data"):
-        """Delega al DataExporter para guardar en formato Excel."""
+        """Delegates to DataExporter to save in Excel format."""
         self.exporter.to_excel(self.data, file_path, sheet_name)
 
-    # Métodos de acceso a datos
+    # Data access methods
     def get_raw_data(self) -> pd.DataFrame:
         """
-        Devuelve el DataFrame con los datos procesados.
+        Returns the DataFrame with processed data.
 
-        :return: DataFrame con los datos de glucosa
+        :return: DataFrame with glucose data
         """
         return self.data.copy()
 
     def get_glucose_values(self) -> pd.Series:
         """
-        Devuelve solo los valores de glucosa.
+        Returns only glucose values.
 
-        :return: Series con valores de glucosa
+        :return: Series with glucose values
         """
         return self.data["glucose"].copy()
 
     def get_timestamps(self) -> pd.Series:
         """
-        Devuelve solo los timestamps.
+        Returns only timestamps.
 
-        :return: Series con timestamps
+        :return: Series with timestamps
         """
         return self.data["time"].copy()
 
     def get_time_differences(self) -> pd.Series:
         """
-        Devuelve las diferencias de tiempo entre mediciones.
+        Returns time differences between measurements.
 
-        :return: Series con diferencias de tiempo
+        :return: Series with time differences
         """
         return self.time_diffs.copy()
 
-    # Métodos de filtrado
+    # Filtering methods
     def filter_by_date_range(
         self,
         start_date: Union[str, datetime.datetime],
         end_date: Union[str, datetime.datetime],
     ) -> "ModularGlucoseData":
         """
-        Crea una nueva instancia filtrada por rango de fechas.
+        Creates a new instance filtered by date range.
 
-        :param start_date: Fecha de inicio
-        :param end_date: Fecha de fin
-        :return: Nueva instancia con datos filtrados
+        :param start_date: Start date
+        :param end_date: End date
+        :return: New instance with filtered data
         """
-        # Usar el processor para filtrar los datos
+        # Use the processor to filter data
         filtered_data = self.processor.filter_by_dates(self.data, start_date, end_date)
 
-        # Crear nueva instancia usando el constructor
+        # Create new instance using the constructor
         return self._create_filtered_instance(filtered_data)
 
     def filter_by_glucose_range(self, min_glucose: float, max_glucose: float) -> "ModularGlucoseData":
         """
-        Crea una nueva instancia filtrada por rango de glucosa.
+        Creates a new instance filtered by glucose range.
 
-        :param min_glucose: Valor mínimo de glucosa
-        :param max_glucose: Valor máximo de glucosa
-        :return: Nueva instancia con datos filtrados
+        :param min_glucose: Minimum glucose value
+        :param max_glucose: Maximum glucose value
+        :return: New instance with filtered data
         """
         mask = (self.data["glucose"] >= min_glucose) & (self.data["glucose"] <= max_glucose)
         filtered_data = self.data[mask].copy()
 
         if len(filtered_data) == 0:
-            raise ValueError("No hay datos en el rango de glucosa especificado.")
+            raise ValueError("No data in the specified glucose range.")
 
         return self._create_filtered_instance(filtered_data)
 
+    def regularize(self, interval_mins: int = 5, max_gap_mins: int = 30) -> "ModularGlucoseData":
+        """
+        Regularizes the current instance's data in-place.
+        Returns self for method chaining.
+
+        Args:
+            interval_mins: Target interval in minutes.
+            max_gap_mins: Maximum gap to interpolate.
+
+        Returns:
+            ModularGlucoseData: The current instance with uniform frequency.
+        """
+        # 1. Use processor to regularize data
+        self.data = self.processor.regularize(
+            self.data, interval_mins=interval_mins, max_gap_mins=max_gap_mins, date_col="time", glucose_col="glucose"
+        )
+
+        # 2. Update time differences and internal metrics
+        self.time_diffs = self.data["time"].diff()
+        self.typical_interval = self.analyzer.calculate_typical_interval(self.time_diffs)
+
+        # 3. Refresh trimesters if specialized for pregnancy
+        if hasattr(self, "_split_trimesters"):
+            self.trimesters = self._split_trimesters()
+
+        if self.log:
+            self.logger.info(f"Data regularized in-place to {interval_mins}min.")
+
+        return self
+
     def _create_filtered_instance(self, filtered_data: pd.DataFrame) -> "ModularGlucoseData":
         """
-        Crea una nueva instancia con datos filtrados.
+        Creates a new instance (clone) with modified data.
 
-        :param filtered_data: DataFrame con los datos filtrados
-        :return: Nueva instancia de ModularGlucoseData
+        :param filtered_data: DataFrame with filtered or modified data
+        :return: New ModularGlucoseData instance
         """
-        # Crear nueva instancia
-        new_instance = ModularGlucoseData.__new__(ModularGlucoseData)
+        cls = self.__class__
+        new_instance = cls.__new__(cls)
 
-        # Copiar configuración
+        # Copy state
         new_instance.log = self.log
         new_instance.logger = self.logger
         new_instance.date_col = self.date_col
         new_instance.glucose_col = self.glucose_col
+        new_instance.target_type = self.target_type
+        new_instance.targets = self.targets
+
+        # Initialize modules
         new_instance.loader = self.loader
         new_instance.processor = self.processor
         new_instance.analyzer = self.analyzer
         new_instance.exporter = self.exporter
         new_instance.logs = {}
 
-        # Asignar datos filtrados y recalcular métricas
-        new_instance.data = filtered_data
-        new_instance.time_diffs = filtered_data["time"].diff()
+        # Copy delivery/conception dates if PregnancyData
+        for attr in ["delivery_date", "conception_date", "gestation_week"]:
+            if hasattr(self, attr):
+                setattr(new_instance, attr, getattr(self, attr))
+
+        # Refresh dependent data
+        new_instance.data = filtered_data.copy()
+        new_instance.time_diffs = new_instance.data["time"].diff()
+        new_instance.typical_interval = self.analyzer.calculate_typical_interval(new_instance.time_diffs)
+
+        # Refresh trimesters if PregnancyData
+        if hasattr(self, "_split_trimesters"):
+            new_instance.trimesters = new_instance._split_trimesters()
+
+        return new_instance
+        # We check if the current object has these attributes before copying
+        for attr in ["delivery_date", "conception_date", "gestation_week", "trimesters"]:
+            if hasattr(self, attr):
+                setattr(new_instance, attr, getattr(self, attr))
+
+        # Assign data and recalculate internal metrics
+        new_instance.data = filtered_data.copy()
+        new_instance.time_diffs = new_instance.data["time"].diff()
         new_instance.typical_interval = self.analyzer.calculate_typical_interval(new_instance.time_diffs)
 
         return new_instance
