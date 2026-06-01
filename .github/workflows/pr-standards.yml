@@ -1,0 +1,132 @@
+name: PR Standards
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  conventional-commits:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Conventional Commits (feat, fix, ...) at the start of the PR title
+          # Single source of truth: commitlint.config.cjs
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            chore
+            ci
+            build
+            revert
+          requireScope: true
+          scopes: |
+            data
+            metrics
+            plotting
+            analysis
+            agata
+            utils
+            docs
+            ci
+            deps
+            release
+            agents
+            examples
+            tests
+            harness
+            tooling
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject must start with a lower-case letter (imperative mood).
+
+  changelog-check:
+    name: Remind to update CHANGELOG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check CHANGELOG.md
+        id: check
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -qE "^cgmpy/.*\.py$"; then
+            if ! git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "^CHANGELOG.md$"; then
+              echo "should_update=true" >> "$GITHUB_OUTPUT"
+              echo "::warning::cgmpy/ changed but CHANGELOG.md did not. If this PR is user-facing, add an entry under [Unreleased]."
+            else
+              echo "should_update=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "should_update=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment on PR
+        if: steps.check.outputs.should_update == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '📝 **Documentation reminder**\n\nYou modified `cgmpy/` but did not update `CHANGELOG.md`. If this PR is user-facing (feat/fix), please add an entry under `## [Unreleased]`. If it is purely internal (chore, refactor, test, ci), you can ignore this reminder.\n\nSee `AGENTS.md` §3 — Documentation Golden Rule.'
+            })
+
+  size-label:
+    name: Label PR size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Label PR
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+        continue-on-error: true
+
+  size-warning:
+    name: Warn on large PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Count diff
+        id: diff
+        run: |
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
+          LINES=$(git diff --shortstat origin/${{ github.base_ref }}...HEAD | awk '{print $4 + $6}')
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "lines=$LINES" >> "$GITHUB_OUTPUT"
+
+      - name: Warn if large
+        if: steps.diff.outputs.files > 20 || steps.diff.outputs.lines > 500
+        run: |
+          echo "::warning::This PR changes ${{ steps.diff.outputs.files }} files and ~${{ steps.diff.outputs.lines }} lines."
+          echo "::warning::Per AGENTS.md §6, prefer small, focused PRs. Consider splitting."

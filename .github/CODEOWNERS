@@ -1,0 +1,18 @@
+# Default reviewers for CGMPy
+# Until a team is formed, all changes go through the maintainer.
+
+*   @javierpa95
+
+# Data layer requires extra review (PHI sensitivity)
+/cgmpy/data/        @javierpa95
+/cgmpy/agata/       @javierpa95
+/tests/fixtures/    @javierpa95
+/examples/          @javierpa95
+
+# CI/CD changes
+/.github/           @javierpa95
+/Makefile           @javierpa95
+/pyproject.toml     @javierpa95
+
+# Public API
+/cgmpy/__init__.py  @javierpa95
