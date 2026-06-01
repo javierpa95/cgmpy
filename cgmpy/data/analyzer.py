@@ -1,5 +1,5 @@
 """
-Módulo para análisis básico de datos de glucosa.
+Module for basic glucose data analysis.
 """
 
 import logging
@@ -12,14 +12,14 @@ import pandas as pd
 
 class DataAnalyzer:
     """
-    Clase responsable del análisis básico de datos de glucosa.
+    Class responsible for basic analysis of glucose data.
     """
 
     def __init__(self, logger: logging.Logger | None = None):
         """
-        Inicializa el DataAnalyzer.
+        Initializes the DataAnalyzer.
 
-        :param logger: Logger para registrar operaciones
+        :param logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
 
@@ -27,35 +27,35 @@ class DataAnalyzer:
         self, time_diffs: pd.Series, log_performance: bool = False
     ) -> float:
         """
-        Calcula el intervalo típico entre mediciones en minutos.
+        Calculates the typical interval between measurements in minutes.
 
-        :param time_diffs: Series con las diferencias de tiempo
-        :param log_performance: Si True, registra métricas de rendimiento
-        :return: Intervalo típico en minutos
+        :param time_diffs: Series with the time differences
+        :param log_performance: If True, records performance metrics
+        :return: Typical interval in minutes
         """
         if log_performance:
             t_start = time.time()
-            self.logger.debug("\n--- ANÁLISIS DE CÁLCULO DE INTERVALO TÍPICO ---")
+            self.logger.debug("\n--- TYPICAL INTERVAL CALCULATION ANALYSIS ---")
 
-        # Convertir a array de NumPy para operaciones más rápidas
+        # Convert to NumPy array for faster operations
         time_diffs_seconds = time_diffs.dt.total_seconds().values
-        # Filtrar valores válidos (mayores que 0)
+        # Filter valid values (greater than 0)
         valid_diffs = time_diffs_seconds[time_diffs_seconds > 0]
 
         if len(valid_diffs) > 0:
-            # Usar NumPy para calcular la mediana (más rápido)
-            intervalo = np.median(valid_diffs) / 60
+            # Use NumPy to calculate the median (faster)
+            interval = np.median(valid_diffs) / 60
         else:
-            # Valor predeterminado si no hay diferencias válidas
-            intervalo = 5.0
+            # Default value if no valid differences
+            interval = 5.0
 
         if log_performance:
             t_end = time.time()
-            self.logger.debug(f"Cálculo optimizado de mediana: {t_end - t_start:.3f}s")
-            self.logger.debug(f"Tiempo total de cálculo de intervalo: {t_end - t_start:.3f}s")
-            self.logger.debug("--- FIN DEL ANÁLISIS ---\n")
+            self.logger.debug(f"Optimized median calculation: {t_end - t_start:.3f}s")
+            self.logger.debug(f"Total interval calculation time: {t_end - t_start:.3f}s")
+            self.logger.debug("--- END OF ANALYSIS ---\n")
 
-        return abs(intervalo)
+        return abs(interval)
 
     def get_basic_info(
         self,
@@ -65,63 +65,61 @@ class DataAnalyzer:
         include_disconnections: bool = False,
     ) -> dict[str, Any]:
         """
-        Genera información básica sobre los datos de glucosa.
+        Generates basic information about the glucose data.
 
-        :param data: DataFrame con los datos de glucosa
-        :param time_diffs: Series con las diferencias de tiempo
-        :param typical_interval: Intervalo típico entre mediciones
-        :param include_disconnections: Si incluir detalles de desconexiones
-        :return: Diccionario con información básica
+        :param data: DataFrame with the glucose data
+        :param time_diffs: Series with the time differences
+        :param typical_interval: Typical interval between measurements
+        :param include_disconnections: Whether to include disconnection details
+        :return: Dictionary with basic information
         """
-        # Información básica
-        num_datos = len(data)
-        fecha_inicio = data["time"].min()
-        fecha_fin = data["time"].max()
+        # Basic information
+        n_records = len(data)
+        start_date = data["time"].min()
+        end_date = data["time"].max()
 
-        # Análisis de desconexiones
-        umbral_desconexion = pd.Timedelta(minutes=typical_interval + 10)
-        desconexiones = time_diffs[time_diffs > umbral_desconexion]
-        num_desconexiones = len(desconexiones)
+        # Disconnection analysis
+        disconnection_threshold = pd.Timedelta(minutes=typical_interval + 10)
+        disconnections = time_diffs[time_diffs > disconnection_threshold]
+        n_disconnections = len(disconnections)
 
-        # Tiempo total de desconexión
-        tiempo_total_desconexion = desconexiones.sum()
-        horas_desconexion = tiempo_total_desconexion.total_seconds() / 3600
+        # Total disconnection time
+        total_disconnection_time = disconnections.sum()
+        disconnection_hours = total_disconnection_time.total_seconds() / 3600
 
-        # Uso de memoria
-        memoria_bytes = data.memory_usage(deep=True).sum()
-        memoria_mb = memoria_bytes / (1024 * 1024)
+        # Memory usage
+        memory_bytes = data.memory_usage(deep=True).sum()
+        memory_mb = memory_bytes / (1024 * 1024)
 
-        # Datos teóricos esperados
-        tiempo_total = (data["time"].max() - data["time"].min()).total_seconds() / 60
+        # Expected theoretical data
+        total_time = (data["time"].max() - data["time"].min()).total_seconds() / 60
 
-        # Evitar errores si tiempo_total o typical_interval son inválidos
-        if pd.isna(tiempo_total) or typical_interval <= 0:
-            datos_teoricos = 0
+        # Avoid errors if total_time or typical_interval are invalid
+        if pd.isna(total_time) or typical_interval <= 0:
+            expected_data = 0
         else:
-            datos_teoricos = int(tiempo_total / typical_interval)
+            expected_data = int(total_time / typical_interval)
 
-        porcentaje_disponibilidad = (
-            (num_datos / datos_teoricos * 100) if datos_teoricos > 0 else 0.0
-        )
+        completeness = (n_records / expected_data * 100) if expected_data > 0 else 0.0
 
         # Create summary dictionary
         summary = {
-            "n_records": num_datos,
-            "start_date": fecha_inicio,
-            "end_date": fecha_fin,
+            "n_records": n_records,
+            "start_date": start_date,
+            "end_date": end_date,
             "typical_interval": typical_interval,
-            "expected_data": datos_teoricos,
-            "completeness": porcentaje_disponibilidad,
+            "expected_data": expected_data,
+            "completeness": completeness,
             "n_disconnections": (
-                f"{num_desconexiones} disconnections (For more info, "
+                f"{n_disconnections} disconnections (For more info, "
                 "use info(include_disconnections=True))"
             ),
-            "total_disconnection_time": horas_desconexion,
-            "memory_usage_mb": memoria_mb,
+            "total_disconnection_time": disconnection_hours,
+            "memory_usage_mb": memory_mb,
         }
 
         if include_disconnections:
-            summary["disconnection_list"] = self._get_disconnection_details(data, desconexiones)
+            summary["disconnection_list"] = self._get_disconnection_details(data, disconnections)
 
         return summary
 
@@ -180,18 +178,18 @@ class DataAnalyzer:
         self, data: pd.DataFrame, time_diffs: pd.Series, typical_interval: float
     ) -> dict[str, Any]:
         """
-        Calcula métricas de calidad de los datos.
+        Calculates data quality metrics.
 
-        :param data: DataFrame con los datos
-        :param time_diffs: Series con las diferencias de tiempo
-        :param typical_interval: Intervalo típico entre mediciones
-        :return: Diccionario con métricas de calidad
+        :param data: DataFrame with data
+        :param time_diffs: Series with time differences
+        :param typical_interval: Typical interval between measurements
+        :return: Dictionary with quality metrics
         """
-        # Calcular gaps en los datos
-        umbral_gap = pd.Timedelta(minutes=typical_interval * 2)
-        gaps = time_diffs[time_diffs > umbral_gap]
+        # Calculate gaps in the data
+        gap_threshold = pd.Timedelta(minutes=typical_interval * 2)
+        gaps = time_diffs[time_diffs > gap_threshold]
 
-        # Calcular estadísticas de intervalos
+        # Calculate interval statistics
         valid_intervals = time_diffs[time_diffs > pd.Timedelta(0)].dt.total_seconds() / 60
 
         return {

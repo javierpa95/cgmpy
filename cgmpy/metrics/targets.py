@@ -13,6 +13,26 @@ class GlucoseTargets:
     hyper_level2: float
     name: str = "Standard"
 
+    @property
+    def tir_low(self) -> float:
+        """Lower bound of the Time-in-Range band (mg/dL). Alias for ``target_low``."""
+        return self.target_low
+
+    @property
+    def tir_high(self) -> float:
+        """Upper bound of the Time-in-Range band (mg/dL). Alias for ``target_high``."""
+        return self.target_high
+
+    @property
+    def very_low(self) -> float:
+        """Level-2 hypoglycemia cut-off (mg/dL). Alias for ``hypo_level2``."""
+        return self.hypo_level2
+
+    @property
+    def very_high(self) -> float:
+        """Level-2 hyperglycemia cut-off (mg/dL). Alias for ``hyper_level2``."""
+        return self.hyper_level2
+
     @classmethod
     def standard(cls):
         """

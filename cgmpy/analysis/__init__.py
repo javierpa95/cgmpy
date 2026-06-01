@@ -1,14 +1,14 @@
 """
-Módulo de análisis especializado de glucosa.
+Specialized glucose analysis module.
 
-Este módulo contiene las clases y funciones para:
-- Análisis general de glucosa (combinando datos, métricas y gráficos)
-- Análisis de diabetes gestacional
-- Generación de reportes
-- Análisis comparativos
+This module contains the classes and functions for:
+- General glucose analysis (combining data, metrics and plots)
+- Gestational diabetes analysis
+- Report generation
+- Comparative analysis
 """
 
-# Importaciones desde las nuevas ubicaciones refactorizadas
+# Imports from the new refactored locations
 from ..metrics.pregnancy import GestationalDiabetes
 from .core import GlucoseAnalysis
 

@@ -12,10 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from cgmpy.metrics.targets import GlucoseTargets
-
-if TYPE_CHECKING:
-    pass
+from .targets import GlucoseTargets
 
 
 class TimeInRangeMetrics:

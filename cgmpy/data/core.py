@@ -2,6 +2,7 @@
 Main module for modular glucose data management.
 """
 
+import copy
 import datetime
 import logging
 import time
@@ -446,28 +447,8 @@ class ModularGlucoseData:
         :param filtered_data: DataFrame with filtered or modified data
         :return: New ModularGlucoseData instance
         """
-        cls = self.__class__
-        new_instance = cls.__new__(cls)
-
-        # Copy state
-        new_instance.log = self.log
-        new_instance.logger = self.logger
-        new_instance.date_col = self.date_col
-        new_instance.glucose_col = self.glucose_col
-        new_instance.target_type = self.target_type
-        new_instance.targets = self.targets
-
-        # Initialize modules
-        new_instance.loader = self.loader
-        new_instance.processor = self.processor
-        new_instance.analyzer = self.analyzer
-        new_instance.exporter = self.exporter
+        new_instance = copy.copy(self)
         new_instance.logs = {}
-
-        # Copy delivery/conception dates if PregnancyData
-        for attr in ["delivery_date", "conception_date", "gestation_week"]:
-            if hasattr(self, attr):
-                setattr(new_instance, attr, getattr(self, attr))
 
         # Refresh dependent data
         new_instance.data = filtered_data.copy()
@@ -479,18 +460,5 @@ class ModularGlucoseData:
         # Refresh trimesters if PregnancyData
         if hasattr(self, "_split_trimesters"):
             new_instance.trimesters = new_instance._split_trimesters()
-
-        return new_instance
-        # We check if the current object has these attributes before copying
-        for attr in ["delivery_date", "conception_date", "gestation_week", "trimesters"]:
-            if hasattr(self, attr):
-                setattr(new_instance, attr, getattr(self, attr))
-
-        # Assign data and recalculate internal metrics
-        new_instance.data = filtered_data.copy()
-        new_instance.time_diffs = new_instance.data["time"].diff()
-        new_instance.typical_interval = self.analyzer.calculate_typical_interval(
-            new_instance.time_diffs
-        )
 
         return new_instance

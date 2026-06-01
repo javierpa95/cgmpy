@@ -1,21 +1,21 @@
 """
-Módulo de utilidades para el manejo de datos de glucosa.
+Utilities module for handling glucose data.
 
-Este módulo contiene funciones y clases auxiliares para:
-- Utilidades de fecha y hora
-- Validadores de datos médicos
-- Configuración centralizada
-- Funciones de ayuda general
+This module contains helper functions and classes for:
+- Date and time utilities
+- Medical data validators
+- Centralised configuration
+- General helper functions
 """
 
-# Importaciones que estarán disponibles cuando se implemente
+# Imports that will be available when implemented
 # from .date_utils import parse_date
 # from .validators import DataValidator
 # from .config import GlucoseConfig
 
 
-# Por ahora, importamos desde la ubicación actual para mantener compatibilidad
-# Evitamos import circular usando import diferido
+# For now, we import from the current location to maintain backward compatibility
+# We avoid circular imports by using a lazy import
 def parse_date(*args, **kwargs):
     from ..utils import parse_date as _parse_date
 

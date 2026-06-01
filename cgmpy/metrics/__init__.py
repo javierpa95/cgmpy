@@ -1,34 +1,36 @@
 """
-Módulo de métricas y estadísticas de glucosa.
+Glucose metrics and statistics module.
 
-Este módulo contiene las clases y funciones para calcular:
-- Métricas básicas: media, mediana, percentiles, GMI
-- Tiempo en rango: TIR, TAR, TBR
-- Variabilidad: SD, CV, MAGE, MODD, CONGA
-- Métricas avanzadas: GRADE, GRI, M-Value, J-Index
+This module contains the classes and functions to calculate:
+- Basic metrics: mean, median, percentiles, GMI
+- Time in range: TIR, TAR, TBR
+- Variability: SD, CV, MAGE, MODD, CONGA
+- Advanced metrics: GRADE, GRI, M-Value, J-Index
 """
 
+import logging
 from typing import Any
 
 import pandas as pd
 
-# Importaciones que están disponibles ahora
+# Imports that are available now
 from .basic import BasicMetrics
 from .targets import GlucoseTargets, get_targets
 from .time_in_range import TimeInRangeMetrics
+from .validation import ValidationReport, validate_glucose_range
 from .variability import VariabilityMetrics
 
-# Importaciones que estarán disponibles cuando se implemente
+# Imports that will be available when implemented
 # from .advanced import AdvancedMetrics
 
 
-# Clase combinada que integra todas las métricas modulares
+# Combined class that integrates all modular metrics
 class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics):
     """
-    Clase que combina todas las métricas modulares.
+    Class that combines all modular metrics.
 
-    Esta clase permite usar las métricas de forma modular mientras
-    mantiene compatibilidad con la interfaz existente.
+    This class allows using metrics in a modular way while
+    maintaining compatibility with the existing interface.
     """
 
     def all(self) -> dict[str, Any]:
@@ -39,45 +41,46 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
 
         start_time = time.time()
         do_log = getattr(self, "log", False)
+        logger = getattr(self, "logger", logging.getLogger(__name__))
 
         try:
             if do_log:
-                print("\n[Metrics] Starting complete analysis...")
+                logger.info("\n[Metrics] Starting complete analysis...")
 
             all_metrics = {}
 
             # 1. BASIC METRICS
             if do_log:
-                print("  -> Calculating basic metrics (Mean, GMI, CV)...", end="", flush=True)
+                logger.info("  -> Calculating basic metrics (Mean, GMI, CV)...")
             s = time.time()
             try:
                 basic_metrics = BasicMetrics.calculate_all_metrics(self)
                 all_metrics["basic"] = basic_metrics
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
             except Exception as e:
                 all_metrics["basic"] = {"error": f"Error: {e!s}"}
 
             # 2. TIME IN RANGE
             if do_log:
-                print("  -> Calculating Time in Range (TIR, TAR, TBR)...", end="", flush=True)
+                logger.info("  -> Calculating Time in Range (TIR, TAR, TBR)...")
             s = time.time()
             try:
                 time_metrics = self.time_range_summary()
                 all_metrics["time_in_range"] = time_metrics
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
             except Exception as e:
                 all_metrics["time_in_range"] = {"error": f"Error: {e!s}"}
 
             # 3. VARIABILITY
             if do_log:
-                print("  -> Calculating variability metrics (This may take a while)...")
+                logger.info("  -> Calculating variability metrics (This may take a while)...")
             var_start = time.time()
             try:
                 # SD Metrics
                 if do_log:
-                    print("     - Standard Deviations...", end="", flush=True)
+                    logger.info("     - Standard Deviations...")
                 s = time.time()
                 sd_metrics = {
                     "sd_total": self.sd_total(),
@@ -99,19 +102,19 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "sd_interaction": self.sd_interaction(),
                 }
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
 
                 # CV Metrics
                 if do_log:
-                    print("     - Coefficient of Variation...", end="", flush=True)
+                    logger.info("     - Coefficient of Variation...")
                 s = time.time()
                 cv_metrics = self.calculate_all_cv_metrics()
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
 
                 # MAGE
                 if do_log:
-                    print("     - MAGE (Baghurst & Simple)...", end="", flush=True)
+                    logger.info("     - MAGE (Baghurst & Simple)...")
                 s = time.time()
                 try:
                     mage_metrics = self.MAGE_Baghurst()
@@ -122,11 +125,11 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                 except Exception as e:
                     excursion_metrics = {"error": str(e)}
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
 
                 # Other Variability
                 if do_log:
-                    print("     - MODD, CONGA, Lability Index...", end="", flush=True)
+                    logger.info("     - MODD, CONGA, Lability Index...")
                 s = time.time()
                 variability_metrics = {
                     "modd": self.MODD(),
@@ -140,11 +143,11 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "lability_index": self.Lability_index(),
                 }
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
 
                 # Quality Metrics
                 if do_log:
-                    print("     - Quality Indices (GRI, HBGI, LBGI, GRADE)...", end="", flush=True)
+                    logger.info("     - Quality Indices (GRI, HBGI, LBGI, GRADE)...")
                 s = time.time()
                 quality_metrics = {
                     "m_value": self.M_Value(),
@@ -157,7 +160,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "adrr": self.ADRR(),
                 }
                 if do_log:
-                    print(f" Done ({time.time() - s:.2f}s)")
+                    logger.info(" Done (%.2fs)", time.time() - s)
 
                 all_metrics["variability"] = {
                     "sd_metrics": sd_metrics,
@@ -167,7 +170,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "quality_metrics": quality_metrics,
                 }
                 if do_log:
-                    print(f"  -> Variability total: {time.time() - var_start:.2f}s")
+                    logger.info("  -> Variability total: %.2fs", time.time() - var_start)
 
             except Exception as e:
                 all_metrics["variability"] = {"error": str(e)}
@@ -189,7 +192,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
             all_metrics["summary"] = summary
 
             if do_log:
-                print(f"[Metrics] Analysis completed in {time.time() - start_time:.2f}s\n")
+                logger.info("[Metrics] Analysis completed in %.2fs", time.time() - start_time)
 
             return all_metrics
 
@@ -198,17 +201,23 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
 
     def all_simplified(self) -> dict:
         """
-        Versión simplificada de all() que devuelve solo los valores principales.
-        Calcula únicamente las métricas necesarias para mejorar el rendimiento.
+        Simplified version of all() that returns only the main values.
+        Calculates only the metrics needed for improved performance.
 
         Returns:
-            dict: Diccionario con métricas principales en formato plano
+            dict: Dictionary with main metrics in flat format
         """
+        import time
+
+        logger = getattr(self, "logger", logging.getLogger(__name__))
+        do_log = getattr(self, "log", False)
+
         try:
             simplified = {}
 
             if len(self.data) == 0:
-                print("Advertencia: No hay datos para calcular métricas.")
+                if do_log:
+                    logger.warning("No data available to calculate metrics.")
                 return {
                     "DataCompleteness": 0,
                     "GMI": None,
@@ -222,7 +231,9 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                     "GRI": None,
                 }
 
-            print("Calculando métricas simplificadas...")
+            if do_log:
+                logger.info("Calculating simplified metrics...")
+            s = time.time()
 
             # 1. Basic main metrics
             basic = BasicMetrics.calculate_all_metrics(self)
@@ -269,7 +280,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                 )
 
             # 3. Main Variability & Risk
-            # Solo calculamos lo que se va a mostrar
+            # We only calculate what will be displayed
             simplified.update(
                 {
                     "SDw": self.sd_within_day().get("sd"),
@@ -285,10 +296,13 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                 }
             )
 
+            if do_log:
+                logger.info("Simplified metrics calculated in %.2fs", time.time() - s)
+
             return simplified
 
         except Exception as e:
-            return {"error": f"Error en métricas simplificadas: {e!s}"}
+            return {"error": f"Error calculating simplified metrics: {e!s}"}
 
     pass
 
@@ -297,5 +311,7 @@ __all__ = [
     "BasicMetrics",
     "ModularGlucoseMetrics",
     "TimeInRangeMetrics",
+    "ValidationReport",
     "VariabilityMetrics",
+    "validate_glucose_range",
 ]

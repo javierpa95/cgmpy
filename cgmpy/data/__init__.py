@@ -33,17 +33,12 @@ from .specialized import (
     detect_device_type,
 )
 
-# Keep backward compatibility
-# Users can still use: from cgmpy import GlucoseData
-GlucoseData = ModularGlucoseData
-
 __all__ = [
     "DataAnalyzer",
     "DataExporter",
     "DataLoader",
     "DataProcessor",
     "Dexcom",
-    "GlucoseData",
     "Libreview",
     "MedtronicCarelink",
     "ModularGlucoseData",

@@ -1,10 +1,10 @@
 """
-Módulo principal de análisis de glucosa.
+Main glucose analysis module.
 
-Este módulo combina todas las funcionalidades de análisis:
-- Manejo de datos (ModularGlucoseData)
-- Métricas y estadísticas (módulos de metrics)
-- Visualización (módulos de plotting)
+This module combines all analysis functionality:
+- Data handling (ModularGlucoseData)
+- Metrics and statistics (metrics modules)
+- Visualization (plotting modules)
 """
 
 import datetime
@@ -30,16 +30,15 @@ class GlucoseAnalysis(
     StatisticalPlotter,
 ):
     """
-    Clase que combina todas las funcionalidades de análisis de glucosa.
+    Class combining all glucose analysis functionality.
 
-    Esta clase hereda de:
-    - ModularGlucoseData: Manejo de datos
-    - BasicMetrics: Métricas básicas (media, mediana, GMI, etc.)
-    - TimeInRangeMetrics: Métricas de tiempo en rango (TIR, TAR, TBR)
-    - VariabilityMetrics: Métricas de variabilidad (MAGE, MODD, CONGA, etc.)
-    - AGPPlotter: Gráficos de perfil ambulatorio
-    - DailyPlotter: Gráficos diarios
-    - StatisticalPlotter: Gráficos estadísticos
+    Inherits from:
+    - ModularGlucoseData: Data handling
+    - TimeInRangeMetrics: Time in range metrics (TIR, TAR, TBR)
+    - VariabilityMetrics: Variability metrics (MAGE, MODD, CONGA, etc.)
+    - AGPPlotter: Ambulatory profile plots
+    - DailyPlotter: Daily plots
+    - StatisticalPlotter: Statistical plots
     """
 
     def __init__(
@@ -54,19 +53,19 @@ class GlucoseAnalysis(
         log: bool = False,
     ):
         """
-        Inicializa el análisis completo de glucosa.
+        Initializes the full glucose analysis.
 
         Args:
-            data_source: Fuente de datos (archivo o DataFrame)
-            date_col: Nombre de la columna de fecha
-            glucose_col: Nombre de la columna de glucosa
-            delimiter: Delimitador del archivo
-            header: Número de fila que contiene los encabezados
-            start_date: Fecha de inicio para filtrar datos
-            end_date: Fecha de fin para filtrar datos
-            log: Si activar logs detallados
+            data_source: Data source (file or DataFrame)
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            delimiter: File delimiter
+            header: Header row number
+            start_date: Start date for filtering data
+            end_date: End date for filtering data
+            log: Whether to enable detailed logs
         """
-        # Inicializar ModularGlucoseData
+        # Initialize ModularGlucoseData
         super().__init__(
             data_source=data_source,
             date_col=date_col,
@@ -80,57 +79,57 @@ class GlucoseAnalysis(
 
     def get_comprehensive_report(self) -> dict[str, Any]:
         """
-        Genera un reporte completo con todas las métricas disponibles.
+        Generates a comprehensive report with all available metrics.
 
         Returns:
-            dict: Reporte completo con todas las métricas
+            dict: Complete report with all metrics
         """
         report = {
-            "informacion_basica": self.info(),
-            "metricas_basicas": self.basic_statistics_summary(),
-            "estadisticas_tiempo": self.time_statistics(),
-            "metricas_variabilidad": self.calculate_all_variability_metrics(),
-            "calidad_datos": self.get_data_quality_metrics(),
+            "basic_info": self.info(),
+            "basic_metrics": self.basic_statistics_summary(),
+            "time_statistics": self.time_statistics(),
+            "variability_metrics": self.calculate_all_variability_metrics(),
+            "data_quality": self.get_data_quality_metrics(),
         }
 
         return report
 
     def get_summary_string(self) -> str:
         """
-        Genera un resumen en texto del análisis.
+        Generates a text summary of the analysis.
 
         Returns:
-            str: Resumen del análisis
+            str: Analysis summary
         """
         summary = []
-        summary.append("=== ANÁLISIS COMPLETO DE GLUCOSA ===")
+        summary.append("=== COMPREHENSIVE GLUCOSE ANALYSIS ===")
         summary.append("")
 
-        # Información básica
+        # Basic information
         info = self.info()
-        summary.append("📊 DATOS:")
-        summary.append(f"  - Registros: {info['num_datos']:,}")
+        summary.append("DATA:")
+        summary.append(f"  - Records: {info['n_records']:,}")
         summary.append(
-            f"  - Período: {info['fecha_inicio'].strftime('%d/%m/%Y')} - {info['fecha_fin'].strftime('%d/%m/%Y')}"
+            f"  - Period: {info['start_date'].strftime('%d/%m/%Y')} - {info['end_date'].strftime('%d/%m/%Y')}"
         )
-        summary.append(f"  - Disponibilidad: {info['porcentaje_disponibilidad']:.1f}%")
+        summary.append(f"  - Availability: {info['completeness']:.1f}%")
         summary.append("")
 
-        # Métricas básicas
+        # Basic metrics
         basic = self.basic_statistics_summary()
-        summary.append("📈 MÉTRICAS BÁSICAS:")
+        summary.append("BASIC METRICS:")
         summary.append(f"  - GMI: {basic['GMI']:.1f}%")
-        summary.append(f"  - Media: {basic['Media']:.1f} mg/dL")
-        summary.append(f"  - Mediana: {basic['Mediana']:.1f} mg/dL")
-        summary.append(f"  - Desviación estándar: {basic['Desviacion_estandar']:.1f} mg/dL")
+        summary.append(f"  - Mean: {basic['Mean']:.1f} mg/dL")
+        summary.append(f"  - Median: {basic['Median']:.1f} mg/dL")
+        summary.append(f"  - Std Dev: {basic['Std']:.1f} mg/dL")
         summary.append(f"  - CV: {basic['CV']:.1f}%")
         summary.append("")
 
-        # Tiempo en rango
+        # Time in range
         time_stats = self.time_statistics()
-        summary.append("⏰ TIEMPO EN RANGO:")
+        summary.append("TIME IN RANGE:")
         summary.append(f"  - TIR (70-180): {time_stats['TIR']:.1f}%")
-        summary.append(f"  - TIR estricto (70-140): {time_stats['TIR_tight']:.1f}%")
+        summary.append(f"  - TIR tight (70-140): {time_stats['TIR_tight']:.1f}%")
         summary.append(f"  - TBR70 (55-70): {time_stats['TBR70']:.1f}%")
         summary.append(f"  - TBR55 (<55): {time_stats['TBR55']:.1f}%")
         summary.append(f"  - TAR140 (140-250): {time_stats['TAR140']:.1f}%")
@@ -138,9 +137,9 @@ class GlucoseAnalysis(
         summary.append(f"  - TAR250 (>250): {time_stats['TAR250']:.1f}%")
         summary.append("")
 
-        # Variabilidad
+        # Variability
         variability = self.calculate_all_variability_metrics()
-        summary.append("📊 VARIABILIDAD:")
+        summary.append("VARIABILITY:")
         summary.append(f"  - MAGE: {variability.get('MAGE', 'N/A')}")
         summary.append(f"  - MODD: {variability.get('MODD', 'N/A')}")
         summary.append(f"  - CONGA: {variability.get('CONGA', 'N/A')}")
@@ -152,50 +151,50 @@ class GlucoseAnalysis(
 
     def plot_comprehensive_dashboard(self, figsize: tuple = (20, 12)):
         """
-        Genera un dashboard completo con múltiples gráficos.
+        Generates a comprehensive dashboard with multiple plots.
 
         Args:
-            figsize: Tamaño de la figura
+            figsize: Figure size
         """
         import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(2, 3, figsize=figsize)
-        fig.suptitle("Dashboard Completo de Análisis de Glucosa", fontsize=16, fontweight="bold")
+        fig.suptitle("Comprehensive Glucose Analysis Dashboard", fontsize=16, fontweight="bold")
 
-        # Gráfico 1: AGP
+        # Plot 1: AGP
         self.plot_agp()
-        axes[0, 0].set_title("Perfil Ambulatorio (AGP)")
+        axes[0, 0].set_title("Ambulatory Profile (AGP)")
 
-        # Gráfico 2: Distribución
+        # Plot 2: Distribution
         self.histogram()
-        axes[0, 1].set_title("Distribución de Glucosa")
+        axes[0, 1].set_title("Glucose Distribution")
 
-        # Gráfico 3: Tiempo en rango
+        # Plot 3: Time in range
         self.plot_time_in_range()
-        axes[0, 2].set_title("Tiempo en Rango")
+        axes[0, 2].set_title("Time in Range")
 
-        # Gráfico 4: Variabilidad
+        # Plot 4: Variability
         self.plot_variability_dashboard()
-        axes[1, 0].set_title("Análisis de Variabilidad")
+        axes[1, 0].set_title("Variability Analysis")
 
-        # Gráfico 5: Días superpuestos
+        # Plot 5: Overlapping days
         self.plot_overlapping_days()
-        axes[1, 1].set_title("Días Superpuestos")
+        axes[1, 1].set_title("Overlapping Days")
 
-        # Gráfico 6: Boxplots semanales
+        # Plot 6: Weekly boxplots
         self.plot_week_boxplots()
-        axes[1, 2].set_title("Boxplots Semanales")
+        axes[1, 2].set_title("Weekly Boxplots")
 
         plt.tight_layout()
         plt.show()
 
     def export_report(self, file_path: str, format: str = "json"):
         """
-        Exporta el reporte completo a un archivo.
+        Exports the complete report to a file.
 
         Args:
-            file_path: Ruta del archivo de salida
-            format: Formato de exportación ('json', 'csv', 'excel')
+            file_path: Output file path
+            format: Export format ('json', 'csv', 'excel')
         """
         report = self.get_comprehensive_report()
 
@@ -206,40 +205,40 @@ class GlucoseAnalysis(
                 json.dump(report, f, indent=2, default=str, ensure_ascii=False)
 
         elif format.lower() == "csv":
-            # Convertir reporte a DataFrame plano
+            # Convert report to flat DataFrame
             flat_report = self._flatten_report(report)
             flat_report.to_csv(file_path, index=False)
 
         elif format.lower() == "excel":
-            # Crear Excel con múltiples hojas
+            # Create Excel with multiple sheets
             with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                # Hoja 1: Información básica
-                pd.DataFrame([report["informacion_basica"]]).to_excel(
-                    writer, sheet_name="Info_Basica", index=False
+                # Sheet 1: Basic info
+                pd.DataFrame([report["basic_info"]]).to_excel(
+                    writer, sheet_name="Basic_Info", index=False
                 )
 
-                # Hoja 2: Métricas básicas
-                pd.DataFrame([report["metricas_basicas"]]).to_excel(
-                    writer, sheet_name="Metricas_Basicas", index=False
+                # Sheet 2: Basic metrics
+                pd.DataFrame([report["basic_metrics"]]).to_excel(
+                    writer, sheet_name="Basic_Metrics", index=False
                 )
 
-                # Hoja 3: Tiempo en rango
-                pd.DataFrame([report["estadisticas_tiempo"]]).to_excel(
-                    writer, sheet_name="Tiempo_Rango", index=False
+                # Sheet 3: Time in range
+                pd.DataFrame([report["time_statistics"]]).to_excel(
+                    writer, sheet_name="Time_Range", index=False
                 )
 
         else:
-            raise ValueError(f"Formato no soportado: {format}")
+            raise ValueError(f"Unsupported format: {format}")
 
     def _flatten_report(self, report: dict[str, Any]) -> pd.DataFrame:
         """
-        Convierte el reporte anidado a un DataFrame plano.
+        Converts the nested report to a flat DataFrame.
 
         Args:
-            report: Reporte anidado
+            report: Nested report
 
         Returns:
-            pd.DataFrame: Reporte plano
+            pd.DataFrame: Flat report
         """
         flat_data = {}
 

@@ -113,11 +113,11 @@ class DataExporter:
         # Final information
         records_added = len(final_data) - len(existing_data)
         file_size = Path(file_path).stat().st_size / 1024 / 1024
-        print("Data added successfully:")
-        print(f"  - Records added: {records_added:,}")
-        print(f"  - Total records: {len(final_data):,}")
-        print(f"  - File size: {file_size:.2f} MB")
-        print(f"  - Total time: {t_save - t_start:.3f}s")
+        self.logger.info("Data added successfully:")
+        self.logger.info(f"  - Records added: {records_added:,}")
+        self.logger.info(f"  - Total records: {len(final_data):,}")
+        self.logger.info(f"  - File size: {file_size:.2f} MB")
+        self.logger.info(f"  - Total time: {t_save - t_start:.3f}s")
 
         return records_added
 
@@ -164,10 +164,10 @@ class DataExporter:
         :param data: DataFrame with data
         :return: DataFrame without duplicates
         """
-        duplicados = data.duplicated(subset=["time"], keep="first")
-        if duplicados.any():
-            num_duplicados = duplicados.sum()
-            self.logger.info(f"  - Removing {num_duplicados} duplicate timestamps...")
+        duplicates = data.duplicated(subset=["time"], keep="first")
+        if duplicates.any():
+            n_duplicates = duplicates.sum()
+            self.logger.info(f"  - Removing {n_duplicates} duplicate timestamps...")
             return data.drop_duplicates(subset=["time"], keep="first")
         return data
 
@@ -239,12 +239,12 @@ class DataExporter:
         :param save_time: Save time
         """
         file_size = Path(file_path).stat().st_size / 1024 / 1024
-        print(f"Data saved in Parquet format at: {file_path}")
-        print(f"  - File size: {file_size:.2f} MB")
-        print(f"  - Save time: {save_time:.3f}s")
-        print(f"  - Records saved: {len(data):,}")
-        print(f"  - Date range: {data['time'].min()} to {data['time'].max()}")
-        print("  - Format ready for fast loading")
+        self.logger.info(f"Data saved in Parquet format at: {file_path}")
+        self.logger.info(f"  - File size: {file_size:.2f} MB")
+        self.logger.info(f"  - Save time: {save_time:.3f}s")
+        self.logger.info(f"  - Records saved: {len(data):,}")
+        self.logger.info(f"  - Date range: {data['time'].min()} to {data['time'].max()}")
+        self.logger.info("  - Format ready for fast loading")
 
     def to_csv(
         self,
@@ -268,10 +268,10 @@ class DataExporter:
         t_end = time.time()
 
         file_size = Path(file_path).stat().st_size / 1024 / 1024
-        print(f"Data saved in CSV format at: {file_path}")
-        print(f"  - File size: {file_size:.2f} MB")
-        print(f"  - Save time: {t_end - t_start:.3f}s")
-        print(f"  - Records saved: {len(data):,}")
+        self.logger.info(f"Data saved in CSV format at: {file_path}")
+        self.logger.info(f"  - File size: {file_size:.2f} MB")
+        self.logger.info(f"  - Save time: {t_end - t_start:.3f}s")
+        self.logger.info(f"  - Records saved: {len(data):,}")
 
     def to_excel(self, data: pd.DataFrame, file_path: str, sheet_name: str = "glucose_data"):
         """
@@ -288,7 +288,7 @@ class DataExporter:
         t_end = time.time()
 
         file_size = Path(file_path).stat().st_size / 1024 / 1024
-        print(f"Data saved in Excel format at: {file_path}")
-        print(f"  - File size: {file_size:.2f} MB")
-        print(f"  - Save time: {t_end - t_start:.3f}s")
-        print(f"  - Records saved: {len(data):,}")
+        self.logger.info(f"Data saved in Excel format at: {file_path}")
+        self.logger.info(f"  - File size: {file_size:.2f} MB")
+        self.logger.info(f"  - Save time: {t_end - t_start:.3f}s")
+        self.logger.info(f"  - Records saved: {len(data):,}")

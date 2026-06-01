@@ -1,14 +1,14 @@
 # cgmpy/__init__.py
 
-# Importaciones modulares (internas)
+# Modular (internal) imports
 from . import agata, analysis, data, metrics, plotting, utils
 
-# Wrapper para Agata
+# Agata wrapper
 from .agata.metrics import AgataAnalysis
 from .analysis.core import GlucoseAnalysis
 from .data.analyzer import DataAnalyzer
 
-# Importaciones específicas de módulos refactorizados
+# Specific imports from refactored modules
 from .data.core import ModularGlucoseData
 from .data.exporter import DataExporter
 from .data.loader import DataLoader
@@ -26,16 +26,16 @@ from .plotting.statistical_plots import StatisticalPlotter
 from .utils.date_utils import parse_date, validate_date_range
 
 
-# Clases principales con nombres tradicionales (estándar)
+# Main classes with traditional (standard) names
 class GlucoseData(ModularGlucoseData):
     """
-    Clase principal para manejo de datos de glucosa.
+    Main class for handling glucose data.
 
-    Esta clase proporciona funcionalidad completa para:
-    - Carga de datos desde CSV, Parquet o DataFrame
-    - Procesamiento y validación de datos
-    - Análisis básico de información
-    - Exportación a diferentes formatos
+    This class provides complete functionality for:
+    - Loading data from CSV, Parquet or DataFrame
+    - Data processing and validation
+    - Basic information analysis
+    - Exporting to different formats
     """
 
     pass
@@ -43,32 +43,32 @@ class GlucoseData(ModularGlucoseData):
 
 class GlucoseMetrics(ModularGlucoseData, ModularGlucoseMetrics):
     """
-    Clase principal para métricas de glucosa.
+    Main class for glucose metrics.
 
-    Esta clase combina:
-    - Manejo de datos (GlucoseData)
-    - Métricas básicas (media, mediana, GMI, etc.)
-    - Métricas de tiempo en rango (TIR, TAR, TBR)
-    - Métricas de variabilidad (MAGE, MODD, CONGA, etc.)
+    This class combines:
+    - Data handling (GlucoseData)
+    - Basic metrics (mean, median, GMI, etc.)
+    - Time in range metrics (TIR, TAR, TBR)
+    - Variability metrics (MAGE, MODD, CONGA, etc.)
     """
 
 
 class GlucosePlot(ModularGlucoseData, AGPPlotter, DailyPlotter, StatisticalPlotter):
     """
-    Clase principal para visualización de glucosa.
+    Main class for glucose visualization.
 
-    Esta clase combina:
-    - Manejo de datos (GlucoseData)
-    - Gráficos de perfil ambulatorio (AGP)
-    - Gráficos diarios y variaciones
-    - Gráficos estadísticos y análisis
+    This class combines:
+    - Data handling (GlucoseData)
+    - Ambulatory glucose profile (AGP) plots
+    - Daily plots and variations
+    - Statistical plots and analysis
     """
 
     pass
 
 
 __all__ = [
-    # Clases principales (nombres tradicionales)
+    # Main classes (traditional names)
     "AGPPlotter",
     "AgataAnalysis",
     "BasicMetrics",
@@ -90,7 +90,7 @@ __all__ = [
     "StatisticalPlotter",
     "TimeInRangeMetrics",
     "VariabilityMetrics",
-    # Utilidades
+    # Utilities
     "agata",
     "analysis",
     "data",
@@ -102,7 +102,7 @@ __all__ = [
 ]
 
 
-# Información del paquete
+# Package info
 __version__ = "0.5.0"
 __author__ = "Javier Peñate Arrieta"
-__description__ = "Paquete modular para análisis de datos de glucosa de monitoreo continuo (CGM)"
+__description__ = "Modular package for continuous glucose monitoring (CGM) data analysis"

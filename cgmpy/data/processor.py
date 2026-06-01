@@ -8,6 +8,8 @@ import time
 import numpy as np
 import pandas as pd
 
+from ..metrics.validation import ValidationReport, validate_glucose_range
+
 
 class DataProcessor:
     """
@@ -21,6 +23,7 @@ class DataProcessor:
         :param logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
+        self._last_validation_report: ValidationReport | None = None
 
     def process_data(
         self,
@@ -64,9 +67,9 @@ class DataProcessor:
 
         if log_performance:
             t_end = time.time()
-            memoria_bytes = processed_data.memory_usage(deep=True).sum()
-            memoria_mb = memoria_bytes / (1024 * 1024)
-            self.logger.debug(f"DataFrame memory usage: {memoria_mb:.2f} MB")
+            memory_bytes = processed_data.memory_usage(deep=True).sum()
+            memory_mb = memory_bytes / (1024 * 1024)
+            self.logger.debug(f"DataFrame memory usage: {memory_mb:.2f} MB")
             self.logger.debug(f"Total processing time: {t_end - t_start:.3f}s")
             self.logger.debug("--- END OF ANALYSIS ---\n")
 
@@ -123,16 +126,16 @@ class DataProcessor:
         processed_data = data.copy()
 
         # Check and remove nulls
-        t_nulos = time.time()
+        t_nulls = time.time()
         if processed_data.isna().any().any():
             processed_data = processed_data.dropna(subset=[date_col, glucose_col])
             if log_performance:
-                self.logger.debug(f"  - Removed null values: {time.time() - t_nulos:.3f}s")
+                self.logger.debug(f"  - Removed null values: {time.time() - t_nulls:.3f}s")
         elif log_performance:
-            self.logger.debug(f"  - No null values found: {time.time() - t_nulos:.3f}s")
+            self.logger.debug(f"  - No null values found: {time.time() - t_nulls:.3f}s")
 
         # Check and sort
-        t_orden = time.time()
+        t_sort = time.time()
         if not processed_data[date_col].is_monotonic_increasing:
             if log_performance:
                 self.logger.debug("  - Sorting data...")
@@ -141,7 +144,7 @@ class DataProcessor:
             self.logger.debug("  - Data already sorted")
 
         if log_performance:
-            self.logger.debug(f"  - Order verification: {time.time() - t_orden:.3f}s")
+            self.logger.debug(f"  - Order verification: {time.time() - t_sort:.3f}s")
 
         # Optimized calculation of time differences
         t_diff = time.time()
@@ -177,16 +180,16 @@ class DataProcessor:
         processed_data = data.copy()
 
         # Handle nulls
-        t_nulos = time.time()
+        t_nulls = time.time()
         processed_data = self._handle_nulls(processed_data, date_col, glucose_col)
         if log_performance:
-            self.logger.debug(f"2. Null removal: {time.time() - t_nulos:.3f}s")
+            self.logger.debug(f"2. Null removal: {time.time() - t_nulls:.3f}s")
 
         # Type conversion
-        t_tipos = time.time()
+        t_types = time.time()
         processed_data = self._convert_data_types(processed_data, date_col, glucose_col)
         if log_performance:
-            self.logger.debug(f"3. Type conversion: {time.time() - t_tipos:.3f}s")
+            self.logger.debug(f"3. Type conversion: {time.time() - t_types:.3f}s")
 
         # Handle duplicates
         t_dups = time.time()
@@ -195,10 +198,10 @@ class DataProcessor:
             self.logger.debug(f"4. Duplicate processing: {time.time() - t_dups:.3f}s")
 
         # Sorting
-        t_orden = time.time()
+        t_sort = time.time()
         processed_data = self._sort_data(processed_data, date_col)
         if log_performance:
-            self.logger.debug(f"5. Sorting: {time.time() - t_orden:.3f}s")
+            self.logger.debug(f"5. Sorting: {time.time() - t_sort:.3f}s")
 
         # Calculate differences
         t_diff = time.time()
@@ -217,12 +220,12 @@ class DataProcessor:
         :param glucose_col: Name of the glucose column
         :return: DataFrame without nulls
         """
-        filas_antes = len(data)
+        rows_before = len(data)
         data_cleaned = data.dropna(subset=[date_col, glucose_col])
-        filas_despues = len(data_cleaned)
+        rows_after = len(data_cleaned)
 
-        if filas_antes > filas_despues:
-            self.logger.debug(f"  - Removed {filas_antes - filas_despues} rows with null values.")
+        if rows_before > rows_after:
+            self.logger.debug(f"  - Removed {rows_before - rows_after} rows with null values.")
 
         return data_cleaned
 
@@ -254,9 +257,9 @@ class DataProcessor:
         if not pd.api.types.is_numeric_dtype(data_converted[glucose_col]):
             self.logger.debug(f"  - Converting column '{glucose_col}' to numeric...")
 
-            # Si es tipo objeto (string), manejamos posibles comas decimales
+            # If the column is object (string), handle possible decimal commas
             if data_converted[glucose_col].dtype == "object":
-                # Reemplazamos comas por puntos para soportar formatos europeos
+                # Replace commas with dots to support European formats
                 data_converted[glucose_col] = (
                     data_converted[glucose_col].astype(str).str.replace(",", ".", regex=False)
                 )
@@ -285,6 +288,13 @@ class DataProcessor:
                     data_converted[glucose_col], errors="coerce", downcast="float"
                 )
 
+        # Validate that glucose values are within a physiologically plausible range.
+        # `validate_glucose_range` expects a column named "glucose"; rename
+        # locally on a copy so the caller's column name is preserved.
+        if glucose_col in data_converted.columns and not data_converted.empty:
+            validation_view = data_converted.rename(columns={glucose_col: "glucose"})
+            self._last_validation_report = validate_glucose_range(validation_view, warn=True)
+
         return data_converted
 
     def _handle_duplicates(
@@ -298,13 +308,13 @@ class DataProcessor:
         :param glucose_col: Name of the glucose column
         :return: DataFrame without duplicates
         """
-        mask_duplicados = data.duplicated(subset=[date_col], keep=False)
-        num_duplicados = mask_duplicados.sum()
+        mask_duplicates = data.duplicated(subset=[date_col], keep=False)
+        n_duplicates = mask_duplicates.sum()
 
-        if num_duplicados > 0:
-            self.logger.debug(f"  - Found {num_duplicados // 2} duplicate timestamps. Resolving...")
+        if n_duplicates > 0:
+            self.logger.debug(f"  - Found {n_duplicates // 2} duplicate timestamps. Resolving...")
 
-            df_dups = data[mask_duplicados].copy()
+            df_dups = data[mask_duplicates].copy()
             df_dups["diff"] = df_dups.groupby(date_col)[glucose_col].transform(
                 lambda x: (x - x.mean()).abs()
             )
@@ -312,7 +322,7 @@ class DataProcessor:
             idx_to_keep = df_dups.groupby(date_col)["diff"].idxmin()
 
             return pd.concat(
-                [data[~mask_duplicados], df_dups.loc[idx_to_keep].drop(columns="diff")]
+                [data[~mask_duplicates], df_dups.loc[idx_to_keep].drop(columns="diff")]
             )
 
         return data

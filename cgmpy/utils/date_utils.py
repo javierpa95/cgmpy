@@ -1,8 +1,8 @@
 """
-Módulo de utilidades para manejo de fechas.
+Date handling utilities module.
 
-Este módulo contiene funciones auxiliares para el procesamiento
-y validación de fechas en diferentes formatos.
+This module contains helper functions for processing
+and validating dates in different formats.
 """
 
 import datetime
@@ -14,29 +14,29 @@ def parse_date(
     date_string: str | pd.Timestamp | datetime.datetime,
 ) -> pd.Timestamp:
     """
-    Parsea una fecha desde diferentes formatos comunes.
+    Parses a date from different common formats.
 
     Args:
-        date_string: Fecha en formato string, Timestamp o datetime
+        date_string: Date in string, Timestamp or datetime format
 
     Returns:
-        pd.Timestamp: Fecha parseada
+        pd.Timestamp: Parsed date
 
     Raises:
-        ValueError: Si no se puede parsear la fecha
+        ValueError: If the date cannot be parsed
     """
-    # Si ya es un Timestamp o datetime, devolverlo directamente
+    # If it's already a Timestamp or datetime, return it directly
     if isinstance(date_string, pd.Timestamp | datetime.datetime):
         return pd.Timestamp(date_string)
 
-    # Si es string, intentar parsear con diferentes formatos
+    # If it's a string, try parsing with different formats
     if isinstance(date_string, str):
         formats = [
-            "%Y-%m-%d",  # Formato ISO básico: 2024-03-27
-            "%d/%m/%Y %H:%M",  # Formato 1: 07/10/2022 00:00
-            "%Y-%m-%dT%H:%M:%S",  # Formato 2: 2023-02-01T01:08:04
-            "%d-%m-%Y %H:%M",  # Formato 3: 21-03-2023 16:01
-            "%Y-%m-%d %H:%M:%S",  # Formato 4: 2022-07-24 00:12:00
+            "%Y-%m-%d",  # Basic ISO format: 2024-03-27
+            "%d/%m/%Y %H:%M",  # Format 1: 07/10/2022 00:00
+            "%Y-%m-%dT%H:%M:%S",  # Format 2: 2023-02-01T01:08:04
+            "%d-%m-%Y %H:%M",  # Format 3: 21-03-2023 16:01
+            "%Y-%m-%d %H:%M:%S",  # Format 4: 2022-07-24 00:12:00
         ]
 
         for fmt in formats:
@@ -45,9 +45,9 @@ def parse_date(
             except ValueError:
                 continue
 
-        raise ValueError(f"No se pudo parsear la fecha: {date_string}")
+        raise ValueError(f"Could not parse the date: {date_string}")
 
-    raise ValueError(f"Tipo de dato no soportado: {type(date_string)}")
+    raise ValueError(f"Unsupported data type: {type(date_string)}")
 
 
 def validate_date_range(
@@ -55,17 +55,17 @@ def validate_date_range(
     end_date: str | pd.Timestamp | datetime.datetime | None,
 ) -> tuple:
     """
-    Valida y parsea un rango de fechas.
+    Validates and parses a date range.
 
     Args:
-        start_date: Fecha de inicio (opcional)
-        end_date: Fecha de fin (opcional)
+        start_date: Start date (optional)
+        end_date: End date (optional)
 
     Returns:
         tuple: (start_date_parsed, end_date_parsed)
 
     Raises:
-        ValueError: Si las fechas son inválidas o el rango es incorrecto
+        ValueError: If the dates are invalid or the range is incorrect
     """
     start_parsed = None
     end_parsed = None
@@ -76,22 +76,22 @@ def validate_date_range(
     if end_date is not None:
         end_parsed = parse_date(end_date)
 
-    # Validar que start_date <= end_date si ambas están presentes
+    # Validate that start_date <= end_date if both are present
     if start_parsed is not None and end_parsed is not None and start_parsed > end_parsed:
-        raise ValueError("La fecha de inicio debe ser anterior a la fecha de fin")
+        raise ValueError("Start date must be before end date")
 
     return start_parsed, end_parsed
 
 
 def format_date_for_display(date: pd.Timestamp | datetime.datetime) -> str:
     """
-    Formatea una fecha para mostrar en pantalla.
+    Formats a date for display.
 
     Args:
-        date: Fecha a formatear
+        date: Date to format
 
     Returns:
-        str: Fecha formateada como string
+        str: Date formatted as string
     """
     if isinstance(date, pd.Timestamp | datetime.datetime):
         return date.strftime("%d/%m/%Y %H:%M")
@@ -100,13 +100,13 @@ def format_date_for_display(date: pd.Timestamp | datetime.datetime) -> str:
 
 def get_date_components(date: pd.Timestamp | datetime.datetime) -> dict:
     """
-    Extrae los componentes de una fecha.
+    Extracts the components of a date.
 
     Args:
-        date: Fecha a analizar
+        date: Date to analyze
 
     Returns:
-        dict: Diccionario con año, mes, día, hora, minuto, segundo
+        dict: Dictionary with year, month, day, hour, minute, second
     """
     if isinstance(date, pd.Timestamp | datetime.datetime):
         return {
@@ -128,20 +128,20 @@ def calculate_date_difference(
     unit: str = "days",
 ) -> float:
     """
-    Calcula la diferencia entre dos fechas.
+    Calculates the difference between two dates.
 
     Args:
-        date1: Primera fecha
-        date2: Segunda fecha
-        unit: Unidad de tiempo ('days', 'hours', 'minutes', 'seconds')
+        date1: First date
+        date2: Second date
+        unit: Time unit ('days', 'hours', 'minutes', 'seconds')
 
     Returns:
-        float: Diferencia en la unidad especificada
+        float: Difference in the specified unit
     """
     if not isinstance(date1, pd.Timestamp | datetime.datetime) or not isinstance(
         date2, pd.Timestamp | datetime.datetime
     ):
-        raise ValueError("Ambas fechas deben ser Timestamp o datetime")
+        raise ValueError("Both dates must be Timestamp or datetime")
 
     diff = abs(date2 - date1)
 
@@ -154,33 +154,33 @@ def calculate_date_difference(
     elif unit == "seconds":
         return diff.total_seconds()
     else:
-        raise ValueError(f"Unidad no soportada: {unit}")
+        raise ValueError(f"Unsupported unit: {unit}")
 
 
 def is_business_day(date: pd.Timestamp | datetime.datetime) -> bool:
     """
-    Verifica si una fecha es un día laboral (lunes a viernes).
+    Checks if a date is a business day (Monday to Friday).
 
     Args:
-        date: Fecha a verificar
+        date: Date to check
 
     Returns:
-        bool: True si es día laboral, False en caso contrario
+        bool: True if it is a business day, False otherwise
     """
     if isinstance(date, pd.Timestamp | datetime.datetime):
-        return date.weekday() < 5  # 0-4 son lunes a viernes
+        return date.weekday() < 5  # 0-4 are Monday to Friday
     return False
 
 
 def get_quarter_dates(date: pd.Timestamp | datetime.datetime) -> tuple:
     """
-    Obtiene las fechas de inicio y fin del trimestre para una fecha dada.
+    Gets the start and end dates of the quarter for a given date.
 
     Args:
-        date: Fecha de referencia
+        date: Reference date
 
     Returns:
-        tuple: (inicio_trimestre, fin_trimestre)
+        tuple: (quarter_start, quarter_end)
     """
     if isinstance(date, pd.Timestamp | datetime.datetime):
         year = date.year
@@ -197,4 +197,4 @@ def get_quarter_dates(date: pd.Timestamp | datetime.datetime) -> tuple:
 
         return start_date, end_date
 
-    raise ValueError("Fecha debe ser Timestamp o datetime")
+    raise ValueError("Date must be Timestamp or datetime")

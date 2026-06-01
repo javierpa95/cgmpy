@@ -1,29 +1,29 @@
 """
-Módulo de visualización de datos de glucosa.
+Glucose data visualization module.
 
-Este módulo contiene las clases y funciones para:
-- Perfiles ambulatorios de glucosa (AGP)
-- Gráficos diarios y de superposición
-- Gráficos estadísticos: histogramas, boxplots
-- Dashboards y visualizaciones combinadas
+This module contains the classes and functions for:
+- Ambulatory glucose profiles (AGP)
+- Daily and overlay plots
+- Statistical plots: histograms, boxplots
+- Dashboards and combined visualisations
 """
 
-# Importaciones disponibles
+# Available imports
 from .agp import AGPPlotter
 from .daily_plots import DailyPlotter
 from .statistical_plots import StatisticalPlotter
 
-# Importaciones que estarán disponibles cuando se implemente
+# Imports that will be available when implemented
 # from .dashboard import DashboardPlotter
 
 
-# Clase combinada que integra todos los plotters modulares
+# Combined class that integrates all modular plotters
 class ModularGlucosePlot(AGPPlotter, DailyPlotter, StatisticalPlotter):
     """
-    Clase que combina todos los plotters modulares.
+    Class that combines all modular plotters.
 
-    Esta clase permite usar los gráficos de forma modular mientras
-    mantiene compatibilidad con la interfaz existente.
+    This class allows using the plots in a modular way while
+    maintaining compatibility with the existing interface.
     """
 
     pass

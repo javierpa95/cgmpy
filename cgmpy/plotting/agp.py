@@ -1,10 +1,10 @@
 """
-Módulo de gráficos de perfil ambulatorio de glucosa (AGP).
+Module for ambulatory glucose profile (AGP) plots.
 
-Este módulo contiene las funciones para generar perfiles ambulatorios:
-- AGP estándar
-- AGP por días de la semana
-- Funciones auxiliares para cálculo de percentiles
+This module contains functions to generate ambulatory profiles:
+- Standard AGP
+- AGP by day of week
+- Helper functions for percentile calculation
 """
 
 import matplotlib.pyplot as plt
@@ -13,25 +13,25 @@ import numpy as np
 
 class AGPPlotter:
     """
-    Clase para generar gráficos de perfil ambulatorio de glucosa (AGP).
+    Class to generate ambulatory glucose profile (AGP) plots.
 
-    Esta clase debe ser utilizada como mixin con GlucoseData.
+    This class should be used as a mixin with GlucoseData.
     """
 
     def plot_agp(self, smoothing_window: int = 15):
         """
-        Genera y muestra el Perfil de Glucosa Ambulatoria (AGP) mejorado.
+        Generates and displays the enhanced Ambulatory Glucose Profile (AGP).
 
         Args:
-            smoothing_window: Ventana de suavizado en minutos (por defecto 15)
+            smoothing_window: Smoothing window in minutes (default 15)
         """
-        # Preparar datos
+        # Prepare data
         data_copy = self.data.copy()
         data_copy["time_decimal"] = (
             data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
         ).round(2)
 
-        # Calcular percentiles
+        # Calculate percentiles
         percentiles = data_copy.groupby("time_decimal")["glucose"].agg(
             [
                 lambda x: np.percentile(x, 5),
@@ -42,48 +42,48 @@ class AGPPlotter:
             ]
         )
 
-        # Renombrar columnas
+        # Rename columns
         percentiles.columns = [0.05, 0.25, 0.5, 0.75, 0.95]
 
-        # Aplicar suavizado
+        # Apply smoothing
         for col in percentiles.columns:
             percentiles[col] = (
                 percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
             )
 
-        # Asegurar que los datos están ordenados
+        # Ensure data is sorted
         percentiles = percentiles.sort_index()
 
-        # Crear figura
+        # Create figure
         fig, ax = plt.subplots(figsize=(14, 8))
 
-        # Configurar zonas de glucemia
+        # Configure glycemia zones
         self._add_glucose_zones(ax)
 
-        # Plotear percentiles
+        # Plot percentiles
         self._plot_percentiles(ax, percentiles)
 
-        # Configurar gráfico
-        self._configure_agp_plot(ax, "Perfil de Glucosa Ambulatoria (AGP)")
+        # Configure chart
+        self._configure_agp_plot(ax, "Ambulatory Glucose Profile (AGP)")
 
         plt.tight_layout()
         plt.show()
 
     def generate_week_agp(self, smoothing_window: int = 15, combined: bool = True):
         """
-        Genera y muestra el Perfil de Glucosa Ambulatoria (AGP) por días de la semana.
+        Generates and displays the Ambulatory Glucose Profile (AGP) by day of week.
 
         Args:
-            smoothing_window: Ventana de suavizado en minutos (por defecto 15)
-            combined: Si es True, muestra todos los días en un solo gráfico.
-                     Si es False, muestra un subplot para cada día.
+            smoothing_window: Smoothing window in minutes (default 15)
+            combined: If True, displays all days in a single chart.
+                     If False, displays a subplot for each day.
         """
-        # Preparar los datos
+        # Prepare data
         data_copy = self.data.copy()
         data_copy["time_decimal"] = (
             data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
         ).round(2)
-        data_copy["weekday"] = data_copy["time"].dt.day_name(locale="es_ES")
+        data_copy["weekday"] = data_copy["time"].dt.day_name()
 
         if combined:
             self._plot_combined_week_agp(data_copy, smoothing_window)
@@ -91,34 +91,34 @@ class AGPPlotter:
             self._plot_separate_week_agp(data_copy, smoothing_window)
 
     def _add_glucose_zones(self, ax):
-        """Añade las zonas de glucemia al gráfico."""
-        ax.axhspan(0, 70, facecolor="#ffcccb", alpha=0.3, label="Hipoglucemia")
-        ax.axhspan(70, 180, facecolor="#90ee90", alpha=0.3, label="Rango objetivo")
-        ax.axhspan(180, 400, facecolor="#ffcccb", alpha=0.3, label="Hiperglucemia")
+        """Adds the glycemia zones to the chart."""
+        ax.axhspan(0, 70, facecolor="#ffcccb", alpha=0.3, label="Hypoglycemia")
+        ax.axhspan(70, 180, facecolor="#90ee90", alpha=0.3, label="Target range")
+        ax.axhspan(180, 400, facecolor="#ffcccb", alpha=0.3, label="Hyperglycemia")
 
-        # Líneas horizontales en 70 y 180 mg/dL
+        # Horizontal lines at 70 and 180 mg/dL
         ax.axhline(y=70, color="red", linestyle="--", linewidth=1)
         ax.axhline(y=180, color="red", linestyle="--", linewidth=1)
 
     def _plot_percentiles(self, ax, percentiles):
-        """Plotea las líneas de percentiles."""
-        # Línea mediana
+        """Plots the percentile lines."""
+        # Median line
         ax.plot(
             percentiles.index,
             percentiles[0.5],
-            label="Mediana",
+            label="Median",
             color="blue",
             linewidth=2,
         )
 
-        # Rango intercuartil
+        # Interquartile range
         ax.fill_between(
             percentiles.index,
             percentiles[0.25],
             percentiles[0.75],
             color="blue",
             alpha=0.3,
-            label="Rango Intercuartil",
+            label="Interquartile Range",
         )
 
         # Percentiles 5-95%
@@ -132,38 +132,38 @@ class AGPPlotter:
         )
 
     def _configure_agp_plot(self, ax, title: str):
-        """Configura los elementos comunes del gráfico AGP."""
-        # Etiquetas y título
-        ax.set_xlabel("Hora del Día", fontsize=12)
-        ax.set_ylabel("Nivel de Glucosa (mg/dL)", fontsize=12)
+        """Configures common elements of the AGP chart."""
+        # Labels and title
+        ax.set_xlabel("Time of Day", fontsize=12)
+        ax.set_ylabel("Glucose Level (mg/dL)", fontsize=12)
         ax.set_title(title, fontsize=16, fontweight="bold")
 
-        # Leyenda
-        ax.legend(title="Leyenda", loc="upper left", fontsize=10)
+        # Legend
+        ax.legend(title="Legend", loc="upper left", fontsize=10)
 
-        # Cuadrícula
+        # Grid
         ax.grid(True, linestyle=":", alpha=0.6)
 
-        # Configuración del eje x
+        # X-axis configuration
         ax.set_xticks(range(0, 25, 3))
         ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
 
-        # Límites del eje y
+        # Y-axis limits
         ax.set_ylim(0, 400)
 
     def _plot_combined_week_agp(self, data_copy, smoothing_window: int):
-        """Plotea AGP combinado para todos los días de la semana."""
-        # Orden de los días y colores
-        dias = [
-            "Lunes",
-            "Martes",
-            "Miércoles",
-            "Jueves",
-            "Viernes",
-            "Sábado",
-            "Domingo",
+        """Plots combined AGP for all weekdays."""
+        # Order of days and colors
+        days = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
         ]
-        colores = [
+        colors = [
             "#FF6B6B",
             "#4ECDC4",
             "#45B7D1",
@@ -173,30 +173,30 @@ class AGPPlotter:
             "#9B59B6",
         ]
 
-        # Crear figura
+        # Create figure
         fig, ax = plt.subplots(figsize=(15, 8))
 
-        # Configurar zonas de glucemia
+        # Configure glycemia zones
         self._add_glucose_zones(ax)
 
-        for dia, color in zip(dias, colores, strict=False):
-            # Filtrar datos para el día específico
-            dia_data = data_copy[data_copy["weekday"] == dia]
+        for day, color in zip(days, colors, strict=False):
+            # Filter data for the specific day
+            day_data = data_copy[data_copy["weekday"] == day]
 
-            if not dia_data.empty:
-                # Calcular percentiles
-                percentiles = self._calculate_day_percentiles(dia_data, smoothing_window)
+            if not day_data.empty:
+                # Calculate percentiles
+                percentiles = self._calculate_day_percentiles(day_data, smoothing_window)
 
-                # Graficar línea mediana
+                # Plot median line
                 ax.plot(
                     percentiles.index,
                     percentiles[0.5],
-                    label=f"{dia} (n={len(dia_data['time'].dt.date.unique())} días)",
+                    label=f"{day} (n={len(day_data['time'].dt.date.unique())} days)",
                     color=color,
                     linewidth=2,
                 )
 
-                # Área del IQR con transparencia
+                # IQR area with transparency
                 ax.fill_between(
                     percentiles.index,
                     percentiles[0.25],
@@ -205,24 +205,24 @@ class AGPPlotter:
                     alpha=0.1,
                 )
 
-        # Configuración del gráfico
+        # Chart configuration
         ax.set_title(
-            "Perfil de Glucosa Ambulatoria (AGP) por Día de la Semana",
+            "Ambulatory Glucose Profile (AGP) by Day of Week",
             fontsize=14,
             pad=20,
         )
-        ax.set_xlabel("Hora del Día", fontsize=12)
-        ax.set_ylabel("Nivel de Glucosa (mg/dL)", fontsize=12)
+        ax.set_xlabel("Time of Day", fontsize=12)
+        ax.set_ylabel("Glucose Level (mg/dL)", fontsize=12)
         ax.set_ylim(0, 400)
         ax.grid(True, linestyle=":", alpha=0.6)
 
-        # Configuración del eje x
+        # X-axis configuration
         ax.set_xticks(range(0, 25, 3))
         ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
 
-        # Leyenda
+        # Legend
         ax.legend(
-            title="Días de la semana",
+            title="Days of the week",
             loc="center left",
             bbox_to_anchor=(1, 0.5),
             fontsize=10,
@@ -232,52 +232,52 @@ class AGPPlotter:
         plt.show()
 
     def _plot_separate_week_agp(self, data_copy, smoothing_window: int):
-        """Plotea AGP separado para cada día de la semana."""
-        dias = [
-            "Lunes",
-            "Martes",
-            "Miércoles",
-            "Jueves",
-            "Viernes",
-            "Sábado",
-            "Domingo",
+        """Plots separate AGP for each weekday."""
+        days = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
         ]
 
-        # Crear subplots
+        # Create subplots
         fig, axes = plt.subplots(7, 1, figsize=(15, 20), sharex=True)
         fig.suptitle(
-            "Perfil de Glucosa Ambulatoria (AGP) por Día de la Semana",
+            "Ambulatory Glucose Profile (AGP) by Day of Week",
             fontsize=16,
             fontweight="bold",
             y=0.92,
         )
 
-        for ax, dia in zip(axes, dias, strict=False):
-            # Filtrar datos para el día específico
-            dia_data = data_copy[data_copy["weekday"] == dia]
+        for ax, day in zip(axes, days, strict=False):
+            # Filter data for the specific day
+            day_data = data_copy[data_copy["weekday"] == day]
 
-            if not dia_data.empty:
-                # Calcular percentiles completos
-                percentiles = self._calculate_full_day_percentiles(dia_data, smoothing_window)
+            if not day_data.empty:
+                # Calculate full percentiles
+                percentiles = self._calculate_full_day_percentiles(day_data, smoothing_window)
 
-                # Configurar zonas de glucemia
+                # Configure glycemia zones
                 self._add_glucose_zones(ax)
 
-                # Plotear percentiles
+                # Plot percentiles
                 self._plot_percentiles(ax, percentiles)
 
-                # Configurar subplot
+                # Configure subplot
                 ax.set_title(
-                    f"{dia} (n={len(dia_data['time'].dt.date.unique())} días)",
+                    f"{day} (n={len(day_data['time'].dt.date.unique())} days)",
                     fontsize=12,
                     pad=10,
                 )
-                ax.set_ylabel("Glucosa (mg/dL)", fontsize=10)
+                ax.set_ylabel("Glucose (mg/dL)", fontsize=10)
                 ax.set_ylim(0, 400)
                 ax.grid(True, linestyle=":", alpha=0.6)
 
-        # Configurar eje x solo en el último subplot
-        axes[-1].set_xlabel("Hora del Día", fontsize=12)
+        # Configure x-axis only on the last subplot
+        axes[-1].set_xlabel("Time of Day", fontsize=12)
         axes[-1].set_xticks(range(0, 25, 3))
         axes[-1].set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
 
@@ -285,7 +285,7 @@ class AGPPlotter:
         plt.show()
 
     def _calculate_day_percentiles(self, dia_data, smoothing_window: int):
-        """Calcula percentiles para datos de un día específico (25, 50, 75)."""
+        """Calculate percentiles for data from a specific day (25, 50, 75)."""
         percentiles = dia_data.groupby("time_decimal")["glucose"].agg(
             [
                 lambda x: np.percentile(x, 25),
@@ -306,7 +306,7 @@ class AGPPlotter:
         return percentiles
 
     def _calculate_full_day_percentiles(self, dia_data, smoothing_window: int):
-        """Calcula percentiles completos para datos de un día específico (5, 25, 50, 75, 95)."""
+        """Calculate full percentiles for data from a specific day (5, 25, 50, 75, 95)."""
         percentiles = dia_data.groupby("time_decimal")["glucose"].agg(
             [
                 lambda x: np.percentile(x, 5),

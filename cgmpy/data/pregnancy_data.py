@@ -37,7 +37,7 @@ class PregnancyData(ModularGlucoseData):
         """
         Initializes pregnancy data.
         """
-        # Inicialización base de ModularGlucoseData
+        # Base initialization of ModularGlucoseData
         super().__init__(
             data_source=data_source,
             date_col=date_col,
@@ -139,6 +139,7 @@ class PregnancyData(ModularGlucoseData):
         """
         return self.decimal_to_weeks_days(self.gestation_week)
 
+
     def __str__(self) -> str:
         """
         Overwrites the string representation to include pregnancy-specific information.
@@ -194,5 +195,5 @@ class PregnancyData(ModularGlucoseData):
         return "\n".join(summary)
 
 
-# Alias para mantener compatibilidad si fuera necesario (opcional)
+# Alias to maintain backward compatibility if needed (optional)
 PregnancyDataHandler = PregnancyData
