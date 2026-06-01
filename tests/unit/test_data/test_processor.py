@@ -34,9 +34,10 @@ class TestDataProcessor:
         """The processor returns the typical sample interval in minutes."""
         processor = DataProcessor()
         _, diffs = processor.process_data(raw_df, "time", "glucose")
-        # 5-minute sampling → typical interval 5.0
+        # 5-minute sampling → typical interval 5.0 minutes
         if hasattr(diffs, "mean"):
-            assert diffs.mean() == pytest.approx(5.0, abs=0.1)
+            mean_minutes = diffs.mean().total_seconds() / 60
+            assert mean_minutes == pytest.approx(5.0, abs=0.1)
 
     def test_process_coerces_numeric(self) -> None:
         """Non-numeric glucose strings are coerced (and dropped if unparseable)."""

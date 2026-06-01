@@ -1,7 +1,9 @@
-import pytest
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
+import pytest
+
 
 @pytest.fixture
 def stable_glucose_df():
@@ -12,6 +14,7 @@ def stable_glucose_df():
     glucose = [100 for _ in range(288)]
     return pd.DataFrame({"time": times, "glucose": glucose})
 
+
 @pytest.fixture
 def variable_glucose_df():
     """Generates a highly variable glucose DataFrame with highs and lows."""
@@ -21,16 +24,18 @@ def variable_glucose_df():
     glucose = 120 + 50 * np.sin(np.linspace(0, 4 * np.pi, 288)) + np.random.normal(0, 5, 288)
     return pd.DataFrame({"time": times, "glucose": glucose})
 
+
 @pytest.fixture
 def glucose_df_with_gaps():
     """Generates a glucose DataFrame with a 2-hour gap in the middle."""
     start_time = datetime(2024, 1, 1, 12, 0)
     times_part1 = [start_time + timedelta(minutes=5 * i) for i in range(100)]
     times_part2 = [start_time + timedelta(minutes=5 * i) for i in range(124, 288)]
-    
+
     times = times_part1 + times_part2
     glucose = [110] * len(times)
     return pd.DataFrame({"time": times, "glucose": glucose})
+
 
 @pytest.fixture
 def mock_csv_file(tmp_path, stable_glucose_df):

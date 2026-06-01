@@ -43,7 +43,7 @@ def _make_synthetic(n_days: int = 30, sample_minutes: int = 5) -> pd.DataFrame:
 
 def _time_it(label: str, fn) -> float:
     start = time.perf_counter()
-    result = fn()
+    fn()
     elapsed_ms = (time.perf_counter() - start) * 1000
     print(f"  {label:30s} {elapsed_ms:8.2f} ms")
     return elapsed_ms

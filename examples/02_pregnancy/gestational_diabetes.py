@@ -2,7 +2,7 @@
 
 Demonstrates:
 - Loading pregnancy-trimester data.
-- Using `GlucoseTargets.pregnancy()` (TIR 63–140 mg/dL).
+- Using `GlucoseTargets.pregnancy()` (TIR 63-140 mg/dL).
 - Computing `GestationalDiabetes`-specific metrics.
 
 Run from the project root:

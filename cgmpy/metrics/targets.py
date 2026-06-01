@@ -46,6 +46,9 @@ class GlucoseTargets:
         )
 
 
+_VALID_TARGET_TYPES = frozenset({"diabetes", "pregnancy"})
+
+
 def get_targets(target_type: str = "diabetes") -> GlucoseTargets:
     """
     Factory function to get glucose targets.
@@ -55,7 +58,14 @@ def get_targets(target_type: str = "diabetes") -> GlucoseTargets:
 
     Returns:
         GlucoseTargets object.
+
+    Raises:
+        ValueError: If `target_type` is not a recognised profile name.
     """
-    if target_type.lower() == "pregnancy":
+    normalized = target_type.lower()
+    if normalized not in _VALID_TARGET_TYPES:
+        valid = ", ".join(sorted(_VALID_TARGET_TYPES))
+        raise ValueError(f"Unknown target type {target_type!r}. Valid options are: {valid}.")
+    if normalized == "pregnancy":
         return GlucoseTargets.pregnancy()
     return GlucoseTargets.standard()

@@ -18,28 +18,36 @@ class TestDataLoader:
     def test_load_dm_csv(self) -> None:
         """The T1D fixture loads without errors and has glucose + time columns."""
         loader = DataLoader()
-        df = loader.load_from_csv(str(FIXTURES / "dm.csv"))
+        df = loader.load_from_source(
+            str(FIXTURES / "dm.csv"), date_col="time", glucose_col="glucose"
+        )
         assert not df.empty
         assert "glucose" in df.columns
-        # The 'time' column is normalized to a standard name.
-        assert any(c.lower() in ("time", "timestamp", "datetime", "date") for c in df.columns)
+        # The 'time' column is preserved under the name we requested.
+        assert "time" in df.columns
 
     def test_load_nodm_csv(self) -> None:
         """The non-diabetic fixture loads."""
         loader = DataLoader()
-        df = loader.load_from_csv(str(FIXTURES / "nodm.csv"))
+        df = loader.load_from_source(
+            str(FIXTURES / "nodm.csv"), date_col="time", glucose_col="glucose"
+        )
         assert not df.empty
+        assert "glucose" in df.columns
 
     def test_load_pregnancy_csv(self) -> None:
         """The pregnancy fixture loads."""
         loader = DataLoader()
-        df = loader.load_from_csv(str(FIXTURES / "pregnancy.csv"))
+        df = loader.load_from_source(
+            str(FIXTURES / "pregnancy.csv"), date_col="time", glucose_col="glucose"
+        )
         assert not df.empty
+        assert "glucose" in df.columns
 
     def test_load_from_dataframe(self, stable_glucose_df: pd.DataFrame) -> None:
         """Loading from a DataFrame returns a usable DataFrame."""
         loader = DataLoader()
-        df = loader.load_from_dataframe(stable_glucose_df)
+        df = loader.load_from_source(stable_glucose_df, date_col="time", glucose_col="glucose")
         assert len(df) == len(stable_glucose_df)
         assert "glucose" in df.columns
 
@@ -48,10 +56,12 @@ class TestDataLoader:
         loader = DataLoader()
         missing = tmp_path / "does_not_exist.csv"
         with pytest.raises((FileNotFoundError, ValueError, OSError)):
-            loader.load_from_csv(str(missing))
+            loader.load_from_source(str(missing), date_col="time", glucose_col="glucose")
 
     def test_glucose_values_are_numeric(self) -> None:
-        """After load, glucose column is numeric (non-numeric rows are dropped)."""
+        """After load, glucose column is numeric (the loader casts via usecols)."""
         loader = DataLoader()
-        df = loader.load_from_csv(str(FIXTURES / "dm.csv"))
+        df = loader.load_from_source(
+            str(FIXTURES / "dm.csv"), date_col="time", glucose_col="glucose"
+        )
         assert pd.api.types.is_numeric_dtype(df["glucose"])

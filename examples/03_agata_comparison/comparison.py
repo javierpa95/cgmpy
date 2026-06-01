@@ -65,7 +65,7 @@ def main() -> None:
     for label, a_path, c_path in metric_map:
         a_val = _nested(agata_results, a_path)
         c_val = _nested(cgm_results, c_path)
-        if isinstance(a_val, (int, float)) and isinstance(c_val, (int, float)):
+        if isinstance(a_val, int | float) and isinstance(c_val, int | float):
             diff = abs(a_val - c_val)
             rows.append(
                 {

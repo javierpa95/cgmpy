@@ -37,7 +37,9 @@ def main() -> None:
     # 4. Try with pregnancy-specific cutoffs
     pregnancy = get_targets("pregnancy")
     pregnancy_report = analysis.get_comprehensive_report(targets=pregnancy)
-    print(f"Pregnancy-adjusted TIR (63–140 mg/dL): {pregnancy_report['time_in_range']['tir']:.1f} %")
+    print(
+        f"Pregnancy-adjusted TIR (63-140 mg/dL): {pregnancy_report['time_in_range']['tir']:.1f} %"
+    )
 
     # 5. Render the AGP dashboard (saved next to this file)
     out_path = Path(__file__).parent / "agp_dashboard.png"
