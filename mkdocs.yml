@@ -1,0 +1,151 @@
+site_name: CGMPy — Continuous Glucose Monitoring Analysis
+site_description: A modular Python library for CGM data analysis, with clinical metrics, pregnancy workflows, and AGATA parity.
+site_url: https://javierpa95.github.io/cgmpy/
+site_author: Javier Peñate Arrieta
+
+repo_name: javierpa95/cgmpy
+repo_url: https://github.com/javierpa95/cgmpy
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2024-2026 Javier Peñate Arrieta. Released under the MIT License.
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search:
+      lang: en
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            merge_init_into_class: false
+            docstring_section_style: table
+            heading_level: 2
+            show_if_no_docstring: false
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/javierpa95/cgmpy
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/cgmpy/
+  generator: false
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+      - Data Formats: getting-started/data-formats.md
+  - User Guide:
+      - Loading Data: user-guide/loading-data.md
+      - Computing Metrics: user-guide/computing-metrics.md
+      - Visualization: user-guide/visualization.md
+      - Pregnancy Analysis: user-guide/pregnancy-analysis.md
+      - AGATA Integration: user-guide/agata-integration.md
+  - API Reference:
+      - Data: api/data.md
+      - Metrics: api/metrics.md
+      - Plotting: api/plotting.md
+      - AGATA: api/agata.md
+  - Development:
+      - Setup: development/setup.md
+      - Architecture: development/architecture.md
+      - Testing: development/testing.md
+      - Git Workflow: development/git-workflow.md
+      - Release Process: development/release-process.md
+      - Technical Debt: development/technical-debt.md
+  - Architecture:
+      - System Overview: architecture/system-overview.md
+      - Decisions: architecture/decisions/index.md
+  - Legal:
+      - Privacy: legal/privacy.md
+      - GDPR: legal/gdpr.md
+  - Project:
+      - Changelog: CHANGELOG.md
+      - Roadmap: ROADMAP.md
+      - Contributing: https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md
+      - Code of Conduct: https://github.com/javierpa95/cgmpy/blob/main/CODE_OF_CONDUCT.md
+      - Security: https://github.com/javierpa95/cgmpy/blob/main/SECURITY.md
+      - License: https://github.com/javierpa95/cgmpy/blob/main/LICENSE
