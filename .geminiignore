@@ -1,0 +1,67 @@
+# Gemini AI exclusion patterns
+# Files and directories that Gemini CLI should NOT read or process.
+# This is the CGMPy project root.
+
+# Build artifacts and caches
+.git/
+.github/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# IDE / editor
+.idea/
+.vscode/
+.cursorignore
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+.~lock.*#
+.~*
+
+# Logs
+*.log
+logs/
+
+# Generated data files
+*.csv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.xlsx
+*.xls
+
+# AI assistant own files (avoid recursion)
+.opencode/
+.gemini/
+.agents/
+AGENTS.md
+GEMINI.md
+
+# Historical / experimental
+prueba*.py
+pruebas.py
+simple_csv.py
+keepcgm.py
+script.py
+sed2025*
+percentil.py
+test vero.py
+test_agata.py
+ruff_report.txt
+
+# Lock files (generated)
+uv.lock
+package-lock.json
