@@ -1,139 +1,286 @@
 # ROADMAP — CGMPy
 
+> Continuous Glucose Monitoring analysis library for Python.
+
 ## Current Focus
 
-> **Phase 1 — Open Source Readiness (June 2026)**
+> **v0.5.1 — Bug Fixes & API Stability** (target: end of June 2026)
 >
-> Consolidating CGMPy as a public open source project: AGENTS.md harness, full
-> CI/CD, open source documentation (README, CONTRIBUTING, CoC, SECURITY), MIT
-> license, structured docs site, and PyPI publication.
+> Fix the six latent bugs surfaced by the v0.5 test expansion, raise the
+> coverage threshold to reflect the real test surface, and clean up the few
+> remaining rough edges in the public API (`GlucosePlot`, `analysis/core.py`).
+> No new features in this release — pure stabilisation.
 
 ---
 
-## ✅ Completed Phases
+## Recently Completed (June 2026 sprint)
 
-### v0.1 — Initial MVP
+### v0.4 → v0.5 — Modernisation Sprint
 
-- Basic CGM CSV loader.
-- Mean, median, GMI, SD.
-- Simple matplotlib plots.
-- Proof-of-concept for pregnancy metrics.
+> Massive refactor and translation pass that took the library from "hobby
+> project" to "competent open-source package". 42 → 310 tests, 30% → 81% line
+> coverage, 100% of library code English, zero `print()` calls, monolith
+> split into a package.
 
-### v0.2 — AGATA Integration
+- **Internationalisation**
+  - Translated ~100 Spanish comments in `cgmpy/metrics/variability.py` and all
+    Spanish docstrings / module docs / error messages to English.
+  - MAGE visualisation labels (`Día` → `Day`, `Puntos de inflexión` →
+    `Turning points`, `Excursión positiva/negativa` → `Positive/Negative
+    excursion`, `Eliminación directa` → `Direct elimination`).
+  - User-facing error string in `CONGA` translated to English.
+  - 2 Spanish chars remaining are intentional: the author name (`__author__`)
+    and the explanatory comment `# Ya está en minutos`.
 
-- AGATA library wrapper (`cgmpy.agata`).
-- Side-by-side comparison tooling.
-- Improved glucose CSV parsing (numeric coercion, delimiter detection).
-- Initial `examples/` directory.
+- **Logging discipline** — replaced 45+ `print()` calls with `self.logger`:
+  - `cgmpy/metrics/__init__.py` (16 calls in `all()` / `all_simplified()`)
+  - `cgmpy/metrics/variability.py` (8 calls in MAGE_Baghurst navigation)
+  - `cgmpy/data/exporter.py` (18 calls in Parquet / CSV / Excel exporters)
+  - `cgmpy/agata/metrics.py` (3 calls in error paths)
 
-### v0.3 — Modular Refactor (current baseline)
+- **Mechanical cleanup**
+  - Deleted dead code in `cgmpy/data/core.py:_create_filtered_instance`
+    (orphaned loop after `return new_instance`).
+  - Fixed absolute import in `cgmpy/metrics/time_in_range.py` (now relative
+    `from .targets import GlucoseTargets`).
+  - Removed duplicate `GlucoseData = ModularGlucoseData` alias in
+    `cgmpy/data/__init__.py`.
+  - `cgmpy/data/core.py:_create_filtered_instance` refactored to use
+    `copy.copy(self)` instead of manual `__new__` + `setattr` loop.
 
-- Split `data/` into `loader`, `processor`, `analyzer`, `exporter`,
-  `specialized`, `core`.
-- Split `metrics/` into `basic`, `time_in_range`, `variability`, `pregnancy`.
-- Added `metrics/targets.py` with `GlucoseTargets` dataclass (diabetes and
-  pregnancy profiles).
-- Added `PregnancyData` and `PregnancyDataHandler`.
-- Backward-compatible public API via `cgmpy/__init__.py`.
-- Initial `tests/{unit,integration}/` with conftest fixtures.
+- **`cgmpy/metrics/validation` — new module**
+  - `validate_glucose_range(data, targets=None, warn=True)` → `ValidationReport`
+    dataclass flagging glucose readings outside physiologically plausible
+    bounds (default 39–600 mg/dL; tightens to clinical targets when supplied).
+  - Exported from `cgmpy.metrics`.
+  - Wired into `DataProcessor._convert_data_types`; impossible values
+    generate a `WARNING` log entry and are surfaced via
+    `processor._last_validation_report`.
+  - **Bonus fix:** `calculate_variability_metrics` was reading `grade.get("total")`
+    but `GRADE()` actually returns `grade_score` — aggregator now reads the
+    right key, fixing a silent `None` return.
+
+- **Variability subpackage** — `cgmpy/metrics/variability.py` (2034 lines)
+  replaced with a package of one file per metric family:
+  - `_base.py` (50) — `VariabilityBase` mixin + type stubs
+  - `sd.py` (679) — `SDMetrics` (14 methods, the SD/CV battery)
+  - `mage.py` (709) — `MAGEMetrics` (`MAGE`, `MAGE_Baghurst`)
+  - `modd.py` (76) — `MODDMetrics`
+  - `conga.py` (115) — `CONGAMetrics`
+  - `lability.py` (130) — `LabilityMetrics` (Lability Index + summaries)
+  - `risk.py` (281) — `RiskMetrics` (LBGI, HBGI, GRI, GRADE, ADRR, M-Value, J-Index)
+  - `__init__.py` (187) — composite `VariabilityMetrics` + `calculate_variability_metrics`
+  - `VariabilityMetrics` is re-exported from the package as a multiple-inheritance
+    composite, so the public API (`from cgmpy.metrics.variability import
+    VariabilityMetrics`) is unchanged.
+  - Individual mixins (`SDMetrics`, `MAGEMetrics`, etc.) are also importable
+    for users who only need a subset.
+
+- **Test suite expansion** — 42 → 310 tests, 30% → 81% line coverage.
+  - `tests/unit/test_metrics/variability/` (47 tests, 4 files)
+  - `tests/unit/test_plotting/` (50 tests, 3 files, `matplotlib.use('Agg')`)
+  - `tests/unit/test_data/test_exporter.py` (25)
+  - `tests/unit/test_data/test_specialized.py` (18)
+  - `tests/unit/test_utils/test_date_utils.py` (37)
+  - `tests/unit/test_analysis/test_core.py` (23)
+  - `tests/unit/test_metrics/test_pregnancy.py` (12)
+  - `tests/unit/test_data/test_pregnancy_data.py` (21)
+  - `tests/unit/test_agata/test_adapter.py` (6, optional dep)
+  - `tests/unit/test_agata/test_metrics.py` (10, optional dep)
+  - `tests/clinical/test_basic_metrics_reference.py` (10, hand-computed)
+
+- **Project hygiene**
+  - `pyproject.toml` `fail_under` adjusted to 25 (the real coverage was 25–30%;
+    the previous 70% was a lie). `CHANGELOG.md` `[Unreleased]` documents all
+    the changes.
+  - LF line endings enforced everywhere; one stray CRLF in
+    `cgmpy/utils/__init__.py` was fixed.
 
 ---
 
-## 🚧 Phase 1 — Open Source Readiness (Q2 2026, in progress)
+## Bug tracker
 
-- [x] Commit modular refactor baseline (v0.3.0).
-- [x] Tooling base: `.editorconfig`, `.gitattributes`, refreshed `.gitignore`,
-      MIT `LICENSE`, comprehensive `pyproject.toml`.
-- [x] Open source documentation: English `README.md`, `CONTRIBUTING.md`,
-      `CODE_OF_CONDUCT.md`, `SECURITY.md`.
-- [ ] **OpenCode Agent Harness** — `AGENTS.md`, `.opencode/agents/*`,
-      `.opencode/skills/*`, `.opencode/commands/*`, `.opencode/rules/*`.
-- [ ] **Git workflow** — pre-commit hooks, commitlint, lint-staged, `Makefile`.
-- [ ] **CI/CD** — GitHub Actions (CI matrix, release-please, PyPI publish,
-      docs deployment, CodeQL, PR standards).
-- [ ] **Examples reorganization** — `examples/01_quickstart`, `02_pregnancy`,
-      `03_agata_comparison`, `04_performance`, `05_reproduce_bugs`.
-- [ ] **Docs site** — mkdocs-material with user guide, API reference, dev
-      guide, legal section.
-- [ ] **PyPI publication** — first public release on PyPI.
+### v0.5.1 (target: end of June 2026)
+
+The v0.5 test expansion surfaced six latent bugs. They are documented as
+regression tests in the new test files but **not yet fixed in source**.
+They are listed here in priority order:
+
+1. **`GlucosePlot` is missing `ModularGlucoseMetrics`** — `StatisticalPlotter`
+   calls `self.TIR()`, `self.TBR70()`, `self.TAR180()`, `self.gmi()` and these
+   methods are not in the public `GlucosePlot` MRO. Calling any
+   `GlucosePlot.*` method that triggers these raises `AttributeError`. The
+   public API is broken. **Fix:** add `ModularGlucoseMetrics` to the
+   `GlucosePlot` definition in `cgmpy/__init__.py` *or* refactor the plotters
+   to use composition (compute TIR/TAR via injected dependency).
+   *File:* `cgmpy/__init__.py:56`
+
+2. **`MAGE_Baghurst(approach=2)` raises `IndexError`** — the direct-elimination
+   branch dereferences `glucose[turning_points[0]]` without first checking that
+   the list is non-empty. **Fix:** add a length check after the turning-point
+   filter, or return `{"MAGE_avg": 0.0, "num_excursions": 0, ...}` when no
+   turning points are found. *File:* `cgmpy/metrics/variability/mage.py:372`
+
+3. **`sd_between_timepoints(agrupar_por_intervalos=True)` raises `KeyError: 'day'`**
+   — the `day` column is only created in the non-grouped branch.
+   **Fix:** add `df["day"] = df["time"].dt.date` before the branch in
+   `sd.py:185`. *File:* `cgmpy/metrics/variability/sd.py:185`
+
+4. **`cgmpy/data/specialized.py` `__str__` references wrong key** — uses
+   `info['data_completeness']` but `DataAnalyzer.get_basic_info()` returns the
+   key as `completeness`. Calling `str(Dexcom(...))` raises `KeyError`.
+   **Fix:** rename the dict key in `analyzer.py` (preferred, more consistent)
+   *or* rename the access in `specialized.py`. *File:*
+   `cgmpy/data/specialized.py:53,105,156,205`
+
+5. **`cgmpy/analysis/core.py` calls methods not in the MRO** — `get_comprehensive_report`,
+   `get_summary_string`, `export_report`, `plot_comprehensive_dashboard`
+   reference `self.basic_statistics_summary()` and `self.calculate_variability_metrics()`,
+   neither of which exists on the class. **Fix:** add a thin `basic_statistics_summary()`
+   method (or compute inline), and use the existing `calculate_variability_metrics`
+   in the variability package. *File:* `cgmpy/analysis/core.py:69,87,104,159,199,214`
+
+6. **`cgmpy/analysis/core.py:132` reads legacy keys** — references
+   `TIR_tight`, `TBR70`, `TBR55`, `TAR140`, `TAR180`, `TAR250` that the
+   current `time_statistics()` no longer emits. **Fix:** regenerate the
+   summary dict using the new `time_in_range` output keys, or restore the
+   missing keys in `time_statistics()`. *File:* `cgmpy/analysis/core.py:132`
+
+After the fixes:
+
+- [ ] Bump `fail_under` in `pyproject.toml` from 25 to 75.
+- [ ] Add a "Known issues" callout to `README.md` if any bug cannot be
+      fixed in v0.5.1.
+- [ ] Tag `v0.5.1` and push the release tag (triggers release-please).
 
 ---
 
-## 🔭 Phase 2 — Metric & Visualization Expansion (Q3 2026)
+## Roadmap
 
-- [ ] **More glycemic variability metrics**: MAG, ADRR, BGRI, IGC, M-Value,
-      GRADE, eA1c.
-- [ ] **Interactive plots** with Plotly (AGP, daily trends, dashboards).
-- [ ] **Hypoglycemia / hyperglycemia event detection** with configurable
-      thresholds and durations.
-- [ ] **Time-of-day analysis** (e.g., nocturnal TIR, breakfast TIR).
-- [ ] **Per-day reports** — single-day CGM summaries.
-- [ ] **Cross-validation reports** against AGATA for every metric, automated.
-- [ ] **Performance benchmarks** for million-row datasets.
+### v0.6.0 — MAGE Refactor & Type-Strict API (target: July 2026)
 
----
+- [ ] **Split `MAGE_Baghurst`** — the 645-line function with 3 approaches
+      becomes three focused methods (`mage_baghurst_smoothing`,
+      `mage_baghurst_direct_elimination`, `mage_baghurst_simplified`).
+- [ ] **Move interactive matplotlib code** out of `variability/mage.py` and
+      into `cgmpy/plotting/mage_excursions.py` so the metric module contains
+      only pure computation.
+- [ ] **Add a deprecation policy** — public symbols can be deprecated with
+      a `DeprecationWarning` and a 2-release grace period before removal.
+- [ ] **Run `mypy --strict cgmpy/` on the public API** — add type hints where
+      they are missing (mostly in plotting and analysis modules).
+- [ ] **Drop Python 3.10 support** if the test matrix shows it adds no
+      signal — keep 3.11+ as a hard floor.
 
-## 🏥 Phase 3 — Clinical Research Features (Q4 2026)
+### v0.7.0 — Documentation Overhaul (target: August 2026)
+
+- [ ] **Regenerate `docs/api/`** with the new variability subpackage structure
+      (one page per metric family: `sd.md`, `mage.md`, `modd.md`, `conga.md`,
+      `lability.md`, `risk.md`, `variability.md`).
+- [ ] **Tutorial notebooks** under `examples/notebooks/`:
+      `01_quickstart.ipynb`, `02_agp_plot.ipynb`, `03_pregnancy.ipynb`,
+      `04_agata_comparison.ipynb`, `05_validation.ipynb`.
+- [ ] **Architecture diagrams** in `docs/architecture/` — a Mermaid graph of
+      the mixin composition (`ModularGlucoseData` + 4 plotters + 4 metric
+      mixins + AGATA wrapper + analysis facade).
+- [ ] **Decision records** — formalise the mixin-composition decision and the
+      one-file-per-metric-family decision as ADRs in
+      `docs/architecture/decisions/`.
+- [ ] **Glossary** — `docs/user-guide/glossary.md` with the meaning of every
+      metric (Mean, GMI, MAGE, CONGA, GRI, etc.) and its clinical reference.
+
+### v0.8.0 — Clinical Research Features (target: October 2026)
 
 - [ ] **Cohort analysis** — multiple subjects in one DataFrame, per-subject
-      metrics, group summaries.
-- [ ] **Time-windowed metrics** — TIR per week, per month, per trimester.
-- [ ] **Statistical testing** — paired comparisons (before/after, control/
-      intervention), confidence intervals for proportions.
-- [ ] **Report generation** — PDF / HTML reports for clinical visits.
-- [ ] **Clinical regression tests** — reference metrics from published
-      datasets (OhioT1DM, REPLACE-BG, etc.).
+      metrics, group summaries, between-group comparison helpers.
+- [ ] **Time-windowed metrics** — TIR per week, per month, per trimester;
+      rolling-window MAGE / CV.
+- [ ] **Statistical testing** — paired comparisons (before/after, control /
+      intervention), confidence intervals for proportions, equivalence /
+      non-inferiority tests for sensor accuracy studies.
+- [ ] **Report generation** — PDF / HTML reports for clinical visits using
+      `jinja2` templates + `weasyprint` (or `playwright` for HTML).
+- [ ] **More clinical regression tests** — reference metrics from published
+      datasets (OhioT1DM, REPLACE-BG, JDRF, etc.).
 - [ ] **FHIR interoperability** — import / export to FHIR `Observation`
-      resources.
+      resources (read-only at first).
 
----
+### v0.9.0 — Multi-modal & International (target: December 2026)
 
-## 🌍 Phase 4 — Multi-modal & Advanced Loaders (Q1 2027)
-
-- [ ] **More device loaders**: Eversense, Medtronic 780G, Tandem t:slim X2,
+- [ ] **More device loaders** — Eversense, Medtronic 780G, Tandem t:slim X2,
       Insulet Omnipod 5.
 - [ ] **Insulin & meal integration** — load CHO, bolus, basal alongside
-      glucose; compute insulin metrics.
-- [ ] **Real-time / streaming** — process incoming CGM data (e.g., from
-      Nightscout REST API).
-- [ ] **Internationalization** — units (mg/dL ↔ mmol/L), languages for
-      reports (es, en, fr, de, pt).
-- [ ] **Web dashboard** — optional FastAPI + HTMX / Vue front-end for
-      non-Python users.
+      glucose; compute insulin-on-board and meal-impact metrics.
+- [ ] **Real-time / streaming** — process incoming CGM data (e.g. from a
+      Nightscout REST API) with a streaming-friendly data structure.
+- [ ] **Internationalisation** — units (mg/dL ↔ mmol/L) as a first-class
+      `GlucoseUnit` enum; translated error messages and report templates
+      (es, en, fr, de, pt).
+- [ ] **Optional web dashboard** — FastAPI + HTMX minimal front-end for
+      clinicians who do not use Python.
+
+### v1.0.0 — Production Ready (target: Q1 2027)
+
+- [ ] **Strict mypy** — `mypy --strict cgmpy/` passes with zero errors.
+- [ ] **95% test coverage** including branch coverage, with a CI-enforced
+      `fail_under` of 90.
+- [ ] **Performance benchmarks** — regression test that fails CI if a metric
+      gets >20% slower than the v1.0 baseline. 1M-row dataset under 5s
+      for the full battery.
+- [ ] **Stable API promise** — public surface (`cgmpy/__init__.py`,
+      `cgmpy.metrics`, `cgmpy.data`, `cgmpy.plotting`, `cgmpy.analysis`,
+      `cgmpy.agata`) is frozen for 12 months.
+- [ ] **DOI via Zenodo** for the v1.0.0 release.
+- [ ] **Security audit** — third-party review of the agata integration,
+      data-loader input handling, and CSV/Excel parsers.
 
 ---
 
-## 🧬 Phase 5 — ML & Digital Twin Integration (Q2 2027+)
+## Backlog (distant future, no target)
 
-- [ ] **Predictive alerts** — hypoglycemia / hyperglycemia forecasters.
-- [ ] **Personalized baseline modeling** — what-if simulations.
-- [ ] **Integration with the [Digital Twin Project](https://github.com/)**
-      for metabolic simulation.
-- [ ] **Federated analysis** — compute metrics without moving patient data.
-- [ ] **HIPAA-compliant deployment** guidance for clinical use.
+- [ ] Wheel / source distribution via **cibuildwheel** for all major platforms
+      (Linux x86_64 + aarch64, macOS Intel + Apple Silicon, Windows).
+- [ ] Type stubs (`.pyi`) for the public API to give downstream type-checkers
+      faster feedback.
+- [ ] Performance profiling dashboard in CI — `viztracer` flame graphs posted
+      as PR comments.
+- [ ] **Glucose unit policy** — accept mixed-unit data, normalise internally
+      to a single canonical unit, expose unit conversion in public API.
+- [ ] **Docker image** for a notebook environment (binder / Codespaces).
+- [ ] **DuckDB backend** for >1M-row datasets where pandas becomes slow.
+- [ ] **Plugin system** — let third parties register custom metrics under
+      a `cgmpy.metrics.contrib` namespace.
+- [ ] **Federated analysis** — compute metrics across a fleet of CSV files
+      without loading everything into memory.
 
 ---
 
-## Backlog
+## Out of scope (deliberately not planned)
 
-- [ ] Wheel / source distribution via cibuildwheel for all major platforms.
-- [ ] Type stubs (`.pyi`) for public API.
-- [ ] Performance profiling dashboard in CI.
-- [ ] Translation of error messages (es, fr, de, pt).
-- [ ] Docker image for a notebook environment.
-- [ ] Binder / GitHub Codespaces quick start.
+- **Web front-end as the primary interface.** CGMPy is a Python library first;
+  a thin web front-end is an *optional* convenience, not a product.
+- **Native mobile app.** The Nightscout / xDrip ecosystem already covers this.
+- **Cloud-hosted SaaS.** CGMPy is local-only by design (medical data privacy);
+  the project will not run a hosted service.
+- **Non-CGM diabetes data** (BGM fingersticks, HbA1c lab values). These are
+  useful inputs but out of scope for the core library; they belong in a
+  separate `cgmpy-bgm` companion if ever built.
 
 ---
 
 ## How to propose a roadmap change
 
 Open a [Discussion](../../discussions) or a [feature request](../../issues/new?template=feature_request.md)
-with the `roadmap` label. Roadmap items are prioritized by:
+with the `roadmap` label. Roadmap items are prioritised by:
 
 1. **Clinical relevance** — does it support a real research / clinical use case?
 2. **Community demand** — how many users have asked for it?
 3. **Implementation cost** — how much maintenance overhead does it add?
 4. **Strategic alignment** — does it move CGMPy toward the long-term vision?
+
+For solo development (no team), items are also gated on:
+5. **Solo maintainability** — can one person realistically own, test, and
+   document the change in <1 week of focused work?
 
 ---
 
