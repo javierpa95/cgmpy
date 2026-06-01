@@ -85,6 +85,9 @@ agata = [
 where = ["."]
 include = ["cgmpy*"]
 
+[tool.setuptools.package-data]
+cgmpy = ["py.typed"]
+
 # ==========================================
 # Ruff — lint + format
 # ==========================================

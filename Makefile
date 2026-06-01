@@ -11,8 +11,8 @@
         dev test test-fast test-unit test-integration test-clinical test-agata \
         lint lint-fix format format-check typecheck security secrets \
         docs-serve docs-build docs-deploy \
-        pre-commit pre-commit-all clean build dist-check publish-test \
-        release-dry-run hooks
+        pre-commit pre-commit-all clean build dist-check publish-test publish-prod \
+        check-sdist release-dry-run hooks
 
 # Default Python interpreter (override with `make PYTHON=python3.11 test`)
 PYTHON ?= python
@@ -62,6 +62,8 @@ help:
 	@echo "  build             Build sdist + wheel"
 	@echo "  dist-check        twine check dist/*"
 	@echo "  publish-test      Upload to test.pypi.org"
+	@echo "  publish-prod      Upload to production PyPI (with confirm)"
+	@echo "  check-sdist       Inspect sdist contents (tar -tzf)"
 	@echo "  release-dry-run   Show what release-please would do"
 
 # ==========================================
@@ -178,16 +180,39 @@ clean:
 # 📦 Build & Publish
 # ==========================================
 build:
-	$(PYTHON) -m pip install --upgrade build
-	$(PYTHON) -m build
+	@if command -v bash >/dev/null 2>&1 && [ -f scripts/build-dist.sh ]; then \
+		bash scripts/build-dist.sh; \
+	elif -not (Get-Command pwsh -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath 'scripts\build-dist.ps1'); then \
+		pwsh -File scripts/build-dist.ps1; \
+	else \
+		$(PYTHON) -m pip install --upgrade build; \
+		$(PYTHON) -m build; \
+	fi
 
 dist-check:
 	$(PYTHON) -m pip install --upgrade twine
 	$(PYTHON) -m twine check dist/*
 
+check-sdist:
+	@echo "📦 Contents of sdist:"
+	@ls -1 dist/*.tar.gz 2>/dev/null | head -1 | xargs -I {} tar -tzf {} | sort
+	@echo ""
+	@echo "📦 Contents of wheel:"
+	@ls -1 dist/*.whl 2>/dev/null | head -1 | xargs -I {} unzip -l {} | sort
+
 publish-test: build dist-check
-	@echo "🚀 Uploading to https://test.pypi.org ..."
-	$(PYTHON) -m twine upload --repository testpypi dist/*
+	@if [ -f scripts/publish-test.sh ]; then \
+		bash scripts/publish-test.sh; \
+	else \
+		$(PYTHON) -m twine upload --repository testpypi dist/*; \
+	fi
+
+publish-prod: build dist-check
+	@if [ -f scripts/publish-prod.sh ]; then \
+		bash scripts/publish-prod.sh; \
+	else \
+		@echo "Run scripts/publish-prod.ps1 (or .sh) to confirm and upload."; \
+	fi
 
 # ==========================================
 # 🚀 Release dry-run
