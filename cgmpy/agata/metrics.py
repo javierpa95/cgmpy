@@ -123,7 +123,7 @@ class AgataAnalysis(ModularGlucoseData):
         super().__init__(*args, **kwargs)
         self.glycemic_target = glycemic_target
 
-    def run(self, glycemic_target: str = None, summary: bool = False, **kwargs) -> dict:
+    def run(self, glycemic_target: str = "diabetes", summary: bool = False, **kwargs) -> dict:
         """
         Ejecuta el pipeline de análisis completo de py_agata sobre los datos cargados.
 

@@ -1,5 +1,5 @@
 """
-Módulo para exportación de datos de glucosa.
+Module for glucose data export.
 """
 
 import logging
@@ -11,14 +11,14 @@ import pandas as pd
 
 class DataExporter:
     """
-    Clase responsable de exportar datos de glucosa en diferentes formatos.
+    Class responsible for exporting glucose data in different formats.
     """
 
     def __init__(self, logger: logging.Logger = None):
         """
-        Inicializa el DataExporter.
+        Initializes the DataExporter.
 
-        :param logger: Logger para registrar operaciones
+        :param logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
 
@@ -30,35 +30,35 @@ class DataExporter:
         sort: bool = True,
     ):
         """
-        Guarda los datos en formato Parquet optimizado.
+        Saves data in optimized Parquet format.
 
-        :param data: DataFrame con los datos
-        :param file_path: Ruta donde guardar el archivo
-        :param compression: Algoritmo de compresión
-        :param sort: Si ordenar los datos antes de guardar
+        :param data: DataFrame with data
+        :param file_path: Path where to save the file
+        :param compression: Compression algorithm
+        :param sort: Whether to sort data before saving
         """
-        self.logger.info("Preparando datos para guardar en formato Parquet optimizado...")
+        self.logger.info("Preparing data to save in optimized Parquet format...")
 
-        # Preparar datos para guardar
+        # Prepare data for saving
         df_to_save = data.copy()
 
-        # Ordenar por tiempo si se solicita
+        # Sort by time if requested
         if sort and not df_to_save["time"].is_monotonic_increasing:
-            self.logger.info("  - Ordenando datos por timestamp...")
+            self.logger.info("  - Sorting data by timestamp...")
             df_to_save = df_to_save.sort_values("time", ignore_index=True)
 
-        # Optimizar tipos de datos
+        # Optimize data types
         df_to_save = self._optimize_data_types(df_to_save)
 
-        # Eliminar duplicados si existen
+        # Remove duplicates if they exist
         df_to_save = self._remove_duplicates(df_to_save)
 
-        # Guardar en formato Parquet
+        # Save in Parquet format
         t_start = time.time()
         df_to_save.to_parquet(file_path, compression=compression, index=False, engine="pyarrow")
         t_end = time.time()
 
-        # Información final
+        # Final information
         self._log_save_info(file_path, df_to_save, t_end - t_start)
 
     def append_to_parquet(
@@ -69,121 +69,121 @@ class DataExporter:
         handle_duplicates: str = "keep_new",
     ) -> int:
         """
-        Añade datos a un archivo Parquet existente.
+        Appends data to an existing Parquet file.
 
-        :param data: DataFrame con los nuevos datos
-        :param file_path: Ruta al archivo Parquet
-        :param compression: Algoritmo de compresión
-        :param handle_duplicates: Estrategia para manejar duplicados
-        :return: Número de registros añadidos
+        :param data: DataFrame with new data
+        :param file_path: Path to the Parquet file
+        :param compression: Compression algorithm
+        :param handle_duplicates: Strategy for handling duplicates
+        :return: Number of records added
         """
         if not os.path.exists(file_path):
-            self.logger.info(f"El archivo {file_path} no existe. Creando nuevo archivo...")
+            self.logger.info(f"File {file_path} does not exist. Creating new file...")
             self.to_parquet(data, file_path, compression=compression)
             return len(data)
 
-        self.logger.info(f"Añadiendo datos a archivo Parquet existente: {file_path}")
+        self.logger.info(f"Appending data to existing Parquet file: {file_path}")
 
-        # Cargar datos existentes
+        # Load existing data
         t_start = time.time()
         existing_data = pd.read_parquet(file_path)
         t_load = time.time()
-        self.logger.info(f"  - Archivo existente cargado en {t_load - t_start:.3f}s")
-        self.logger.info(f"  - Registros existentes: {len(existing_data):,}")
+        self.logger.info(f"  - Existing file loaded in {t_load - t_start:.3f}s")
+        self.logger.info(f"  - Existing records: {len(existing_data):,}")
 
-        # Preparar nuevos datos
+        # Prepare new data
         new_data = self._prepare_new_data(data)
 
-        # Manejar duplicados
+        # Handle duplicates
         existing_data, new_data = self._handle_duplicates(existing_data, new_data, handle_duplicates)
 
-        # Combinar y ordenar datos
+        # Combine and sort data
         t_combine = time.time()
         final_data = pd.concat([existing_data, new_data])
         final_data = final_data.sort_values("time", ignore_index=True)
         t_sort = time.time()
-        self.logger.info(f"  - Datos combinados y ordenados en {t_sort - t_combine:.3f}s")
+        self.logger.info(f"  - Data combined and sorted in {t_sort - t_combine:.3f}s")
 
-        # Guardar resultado
+        # Save result
         final_data.to_parquet(file_path, compression=compression, index=False, engine="pyarrow")
         t_save = time.time()
 
-        # Información final
+        # Final information
         records_added = len(final_data) - len(existing_data)
         file_size = os.path.getsize(file_path) / 1024 / 1024
-        print("Datos añadidos correctamente:")
-        print(f"  - Registros añadidos: {records_added:,}")
-        print(f"  - Total registros: {len(final_data):,}")
-        print(f"  - Tamaño del archivo: {file_size:.2f} MB")
-        print(f"  - Tiempo total: {t_save - t_start:.3f}s")
+        print("Data added successfully:")
+        print(f"  - Records added: {records_added:,}")
+        print(f"  - Total records: {len(final_data):,}")
+        print(f"  - File size: {file_size:.2f} MB")
+        print(f"  - Total time: {t_save - t_start:.3f}s")
 
         return records_added
 
     def _optimize_data_types(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Optimiza los tipos de datos para almacenamiento eficiente.
+        Optimizes data types for efficient storage.
 
-        :param data: DataFrame con los datos
-        :return: DataFrame con tipos optimizados
+        :param data: DataFrame with data
+        :return: DataFrame with optimized types
         """
         df_optimized = data.copy()
 
-        # Optimizar columna de glucosa
+        # Optimize glucose column
         if not pd.api.types.is_integer_dtype(df_optimized["glucose"]):
-            self.logger.info("  - Convirtiendo 'glucose' a formato numérico...")
+            self.logger.info("  - Converting 'glucose' to numeric format...")
             df_optimized["glucose"] = pd.to_numeric(df_optimized["glucose"], errors="coerce")
 
-        # Intentar convertir a int16 si es posible
+        # Try to convert to int16 if possible
         min_val = df_optimized["glucose"].min()
         max_val = df_optimized["glucose"].max()
 
         if pd.notna(min_val) and pd.notna(max_val) and min_val >= -32768 and max_val <= 32767:
-            self.logger.info(f"  - Optimizando 'glucose' a int16 (rango: {min_val} a {max_val})...")
+            self.logger.info(f"  - Optimizing 'glucose' to int16 (range: {min_val} to {max_val})...")
             df_optimized["glucose"] = df_optimized["glucose"].astype("int16")
         else:
             self.logger.warning(
-                f"  - Valores de glucosa fuera del rango de int16 ({min_val} a {max_val}). Usando int32."
+                f"  - Glucose values outside int16 range ({min_val} to {max_val}). Using int32."
             )
             df_optimized["glucose"] = df_optimized["glucose"].astype("int32")
 
-        # Verificar que time sea datetime
+        # Verify that time is datetime
         if not pd.api.types.is_datetime64_any_dtype(df_optimized["time"]):
-            self.logger.info("  - Convirtiendo 'time' a datetime...")
+            self.logger.info("  - Converting 'time' to datetime...")
             df_optimized["time"] = pd.to_datetime(df_optimized["time"], errors="coerce")
 
         return df_optimized
 
     def _remove_duplicates(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Elimina duplicados basados en la columna time.
+        Removes duplicates based on the time column.
 
-        :param data: DataFrame con los datos
-        :return: DataFrame sin duplicados
+        :param data: DataFrame with data
+        :return: DataFrame without duplicates
         """
         duplicados = data.duplicated(subset=["time"], keep="first")
         if duplicados.any():
             num_duplicados = duplicados.sum()
-            self.logger.info(f"  - Eliminando {num_duplicados} timestamps duplicados...")
+            self.logger.info(f"  - Removing {num_duplicados} duplicate timestamps...")
             return data.drop_duplicates(subset=["time"], keep="first")
         return data
 
     def _prepare_new_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Prepara los nuevos datos para la inserción.
+        Prepares new data for insertion.
 
-        :param data: DataFrame con los nuevos datos
-        :return: DataFrame preparado
+        :param data: DataFrame with new data
+        :return: Prepared DataFrame
         """
         new_data = data.copy()
 
-        # Asegurar tipos correctos
+        # Ensure correct types
         if not pd.api.types.is_datetime64_any_dtype(new_data["time"]):
             new_data["time"] = pd.to_datetime(new_data["time"], errors="coerce")
 
         if not pd.api.types.is_integer_dtype(new_data["glucose"]):
             new_data["glucose"] = pd.to_numeric(new_data["glucose"], errors="coerce")
 
-            # Convertir a int16 si es posible
+            # Convert to int16 if possible
             min_val = new_data["glucose"].min()
             max_val = new_data["glucose"].max()
             if pd.notna(min_val) and pd.notna(max_val) and min_val >= -32768 and max_val <= 32767:
@@ -193,23 +193,23 @@ class DataExporter:
 
     def _handle_duplicates(self, existing_data: pd.DataFrame, new_data: pd.DataFrame, strategy: str) -> tuple:
         """
-        Maneja duplicados entre datos existentes y nuevos.
+        Handles duplicates between existing and new data.
 
-        :param existing_data: DataFrame con datos existentes
-        :param new_data: DataFrame con datos nuevos
-        :param strategy: Estrategia para manejar duplicados
-        :return: Tupla con DataFrames procesados
+        :param existing_data: DataFrame with existing data
+        :param new_data: DataFrame with new data
+        :param strategy: Strategy for handling duplicates
+        :return: Tuple with processed DataFrames
         """
-        # Identificar duplicados
+        # Identify duplicates
         combined = pd.concat([existing_data, new_data])
         duplicated_times = combined["time"].duplicated(keep=False)
         num_duplicates = duplicated_times.sum() // 2
 
         if num_duplicates > 0:
-            self.logger.info(f"  - Encontrados {num_duplicates} timestamps duplicados")
+            self.logger.info(f"  - Found {num_duplicates} duplicate timestamps")
 
             if strategy == "keep_new":
-                self.logger.info("  - Estrategia: Mantener nuevos datos en caso de duplicados")
+                self.logger.info("  - Strategy: Keep new data in case of duplicates")
                 existing_times = set(existing_data["time"])
                 new_times = set(new_data["time"])
                 common_times = existing_times.intersection(new_times)
@@ -218,7 +218,7 @@ class DataExporter:
                     existing_data = existing_data[~existing_data["time"].isin(common_times)]
 
             elif strategy == "keep_old":
-                self.logger.info("  - Estrategia: Mantener datos existentes en caso de duplicados")
+                self.logger.info("  - Strategy: Keep existing data in case of duplicates")
                 existing_times = set(existing_data["time"])
                 new_data = new_data[~new_data["time"].isin(existing_times)]
 
@@ -226,19 +226,19 @@ class DataExporter:
 
     def _log_save_info(self, file_path: str, data: pd.DataFrame, save_time: float):
         """
-        Registra información sobre el guardado.
+        Logs information about the save operation.
 
-        :param file_path: Ruta del archivo guardado
-        :param data: DataFrame guardado
-        :param save_time: Tiempo de guardado
+        :param file_path: Path of the saved file
+        :param data: Saved DataFrame
+        :param save_time: Save time
         """
         file_size = os.path.getsize(file_path) / 1024 / 1024
-        print(f"Datos guardados en formato Parquet en: {file_path}")
-        print(f"  - Tamaño del archivo: {file_size:.2f} MB")
-        print(f"  - Tiempo de guardado: {save_time:.3f}s")
-        print(f"  - Registros guardados: {len(data):,}")
-        print(f"  - Rango de fechas: {data['time'].min()} a {data['time'].max()}")
-        print("  - Formato listo para carga rápida")
+        print(f"Data saved in Parquet format at: {file_path}")
+        print(f"  - File size: {file_size:.2f} MB")
+        print(f"  - Save time: {save_time:.3f}s")
+        print(f"  - Records saved: {len(data):,}")
+        print(f"  - Date range: {data['time'].min()} to {data['time'].max()}")
+        print("  - Format ready for fast loading")
 
     def to_csv(
         self,
@@ -248,41 +248,41 @@ class DataExporter:
         include_index: bool = False,
     ):
         """
-        Guarda los datos en formato CSV.
+        Saves data in CSV format.
 
-        :param data: DataFrame con los datos
-        :param file_path: Ruta donde guardar el archivo
-        :param separator: Separador de campos
-        :param include_index: Si incluir el índice
+        :param data: DataFrame with data
+        :param file_path: Path where to save the file
+        :param separator: Field separator
+        :param include_index: Whether to include the index
         """
-        self.logger.info(f"Guardando datos en formato CSV: {file_path}")
+        self.logger.info(f"Saving data in CSV format: {file_path}")
 
         t_start = time.time()
         data.to_csv(file_path, sep=separator, index=include_index)
         t_end = time.time()
 
         file_size = os.path.getsize(file_path) / 1024 / 1024
-        print(f"Datos guardados en formato CSV en: {file_path}")
-        print(f"  - Tamaño del archivo: {file_size:.2f} MB")
-        print(f"  - Tiempo de guardado: {t_end - t_start:.3f}s")
-        print(f"  - Registros guardados: {len(data):,}")
+        print(f"Data saved in CSV format at: {file_path}")
+        print(f"  - File size: {file_size:.2f} MB")
+        print(f"  - Save time: {t_end - t_start:.3f}s")
+        print(f"  - Records saved: {len(data):,}")
 
     def to_excel(self, data: pd.DataFrame, file_path: str, sheet_name: str = "glucose_data"):
         """
-        Guarda los datos en formato Excel.
+        Saves data in Excel format.
 
-        :param data: DataFrame con los datos
-        :param file_path: Ruta donde guardar el archivo
-        :param sheet_name: Nombre de la hoja
+        :param data: DataFrame with data
+        :param file_path: Path where to save the file
+        :param sheet_name: Sheet name
         """
-        self.logger.info(f"Guardando datos en formato Excel: {file_path}")
+        self.logger.info(f"Saving data in Excel format: {file_path}")
 
         t_start = time.time()
         data.to_excel(file_path, sheet_name=sheet_name, index=False)
         t_end = time.time()
 
         file_size = os.path.getsize(file_path) / 1024 / 1024
-        print(f"Datos guardados en formato Excel en: {file_path}")
-        print(f"  - Tamaño del archivo: {file_size:.2f} MB")
-        print(f"  - Tiempo de guardado: {t_end - t_start:.3f}s")
-        print(f"  - Registros guardados: {len(data):,}")
+        print(f"Data saved in Excel format at: {file_path}")
+        print(f"  - File size: {file_size:.2f} MB")
+        print(f"  - Save time: {t_end - t_start:.3f}s")
+        print(f"  - Records saved: {len(data):,}")

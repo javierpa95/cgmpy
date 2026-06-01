@@ -19,26 +19,26 @@ def test_pregnancy():
     print("Iniciando prueba de GestationalDiabetes...")
     df = generate_mock_data()
 
-    # Fecha de parto esperada (aprox 9 meses después de empezar los datos)
-    fecha_parto = "2023-10-10"
+    # Expected delivery date (approx 9 months after data start)
+    delivery_date = "2023-10-10"
 
     try:
-        # 38 semanas + 0 días
-        preg = GestationalDiabetes(data_source=df, fecha_parto=fecha_parto, week=38, day=0)
+        # 38 weeks + 0 days
+        preg = GestationalDiabetes(data_source=df, delivery_date=delivery_date, week=38, day=0)
         preg.info()
-        print("\n--- Resumen del objeto ---")
+        print("\n--- Object Summary ---")
         print(preg)
 
-        print("\n--- Calculando todas las métricas ---")
+        print("\n--- Calculating all metrics ---")
         metrics = preg.calculate_all_metrics()
 
-        # Verificar presencia de métricas clave
-        for t in ["primer_trimestre", "segundo_trimestre", "tercer_trimestre"]:
-            key = f"metricas_basicas_{t}"
+        # Check for key metrics presence
+        for t in ["first_trimester", "second_trimester", "third_trimester"]:
+            key = f"basic_metrics_{t}"
             if key in metrics:
-                print(f"Métricas OK para {t}: GMI={metrics[key]['GMI']}")
+                print(f"Metrics OK for {t}: GMI={metrics[key]['GMI']}")
             else:
-                print(f"ERROR: Falta {key}")
+                print(f"ERROR: Missing {key}")
 
         print("\nPrueba finalizada con éxito.")
 

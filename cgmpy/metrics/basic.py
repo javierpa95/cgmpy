@@ -1,11 +1,11 @@
 """
-Módulo de métricas básicas para datos de glucosa.
+Basic metrics module for glucose data.
 
-Este módulo contiene las métricas fundamentales para el análisis de datos de glucosa:
-- Estadísticas descriptivas básicas (media, mediana, percentiles)
-- Desviación estándar y coeficiente de variación
+This module contains fundamental metrics for glucose data analysis:
+- Basic descriptive statistics (mean, median, percentiles)
+- Standard deviation and coefficient of variation
 - Glucose Management Index (GMI)
-- Análisis de distribución
+- Distribution analysis
 """
 
 from typing import Any, Dict
@@ -13,68 +13,68 @@ from typing import Any, Dict
 
 class BasicMetrics:
     """
-    Clase base para métricas básicas de glucosa.
+    Base class for basic glucose metrics.
 
-    Esta clase debe ser utilizada como mixin con GlucoseData.
+    This class should be used as a mixin with GlucoseData.
     """
 
-    # Métricas descriptivas básicas
+    # Basic descriptive metrics
     def mean(self) -> float:
         """
-        Calcula la glucemia media.
+        Calculates mean glucose.
 
         Returns:
-            float: Media de glucosa en mg/dL
+            float: Mean glucose in mg/dL
         """
         return self.data["glucose"].mean()
 
     def median(self) -> float:
         """
-        Calcula la mediana de la glucemia.
+        Calculates median glucose.
 
         Returns:
-            float: Mediana de glucosa en mg/dL
+            float: Median glucose in mg/dL
         """
         return self.data["glucose"].median()
 
     def percentile(self, percentile: float) -> float:
         """
-        Calcula el percentil de la glucemia.
+        Calculates glucose percentile.
 
         Args:
-            percentile: Percentil a calcular (0-100)
+            percentile: Percentile to calculate (0-100)
 
         Returns:
-            float: Valor del percentil en mg/dL
+            float: Percentile value in mg/dL
         """
         return self.data["glucose"].quantile(percentile / 100)
 
     def sd(self) -> float:
         """
-        Calcula la desviación estándar de la glucemia.
+        Calculates glucose standard deviation.
 
         Returns:
-            float: Desviación estándar en mg/dL
+            float: Standard deviation in mg/dL
         """
         return self.data["glucose"].std()
 
     def cv(self) -> float:
         """
-        Calcula el coeficiente de variación.
+        Calculates coefficient of variation.
 
         Returns:
-            float: Coeficiente de variación en porcentaje
+            float: Coefficient of variation in percentage
         """
         return (self.sd() / self.mean()) * 100
 
     def gmi(self) -> float:
         """
-        Calcula el Glucose Management Index (GMI).
+        Calculates Glucose Management Index (GMI).
 
-        El GMI es una estimación de la HbA1c basada en los datos de CGM.
+        GMI is an HbA1c estimation based on CGM data.
 
         Returns:
-            float: GMI (estimación de HbA1c en %)
+            float: GMI (HbA1c estimation in %)
 
         Reference:
             DOI: 10.2337/dc18-1581
@@ -83,18 +83,18 @@ class BasicMetrics:
 
     def distribution_analysis(self) -> Dict[str, Any]:
         """
-        Analiza la distribución de los valores de glucosa.
+        Analyzes glucose value distribution.
 
         Returns:
-            dict: Diccionario con estadísticas de distribución
+            dict: Dictionary with distribution statistics
         """
         stats = {
-            "media": self.mean(),
-            "mediana": self.median(),
-            "desviacion_estandar": self.sd(),
-            "coef_variacion": self.cv(),
-            "asimetria": self.data["glucose"].skew(),
-            "curtosis": self.data["glucose"].kurtosis(),
+            "mean": self.mean(),
+            "median": self.median(),
+            "std": self.sd(),
+            "cv": self.cv(),
+            "skewness": self.data["glucose"].skew(),
+            "kurtosis": self.data["glucose"].kurtosis(),
             "percentiles": {
                 "p5": self.percentile(5),
                 "p25": self.percentile(25),
@@ -106,38 +106,38 @@ class BasicMetrics:
         }
         return stats
 
-    def calculate_all_metrics(self) -> Dict[str, Any]:
+    def calculate_all_metrics(self) -> Dict[str, float]:
         """
-        Resumen de estadísticas básicas.
+        Summary of basic statistics.
 
         Returns:
-            dict: Resumen completo de métricas básicas
+            dict: Complete summary of basic metrics
         """
         return {
             "GMI": self.gmi(),
-            "Media": self.mean(),
-            "Mediana": self.median(),
-            "Desviacion_estandar": self.sd(),
+            "Mean": self.mean(),
+            "Median": self.median(),
+            "Std": self.sd(),
             "CV": self.cv(),
             "P5": self.percentile(5),
             "P25": self.percentile(25),
             "P75": self.percentile(75),
             "P95": self.percentile(95),
-            "Asimetria": self.data["glucose"].skew(),
-            "Curtosis": self.data["glucose"].kurtosis(),
+            "Skewness": self.data["glucose"].skew(),
+            "Kurtosis": self.data["glucose"].kurtosis(),
         }
 
     def __str__(self) -> str:
         """
-        Representación en string de las métricas básicas en formato simple y legible.
+        String representation of basic metrics in a simple and readable format.
         """
-        stats = self.basic_statistics_summary()
+        stats = self.calculate_all_metrics()
 
-        # Formateo de valores con unidades apropiadas
+        # Formatting values with appropriate units
         gmi_str = f"{stats['GMI']:.1f}%"
-        media_str = f"{stats['Media']:.1f} mg/dL"
-        mediana_str = f"{stats['Mediana']:.1f} mg/dL"
-        sd_str = f"{stats['Desviacion_estandar']:.1f} mg/dL"
+        media_str = f"{stats['Mean']:.1f} mg/dL"
+        mediana_str = f"{stats['Median']:.1f} mg/dL"
+        sd_str = f"{stats['Std']:.1f} mg/dL"
         cv_str = f"{stats['CV']:.1f}%"
 
         # Percentiles
@@ -146,19 +146,19 @@ class BasicMetrics:
         p75_str = f"{stats['P75']:.1f} mg/dL"
         p95_str = f"{stats['P95']:.1f} mg/dL"
 
-        # Estadísticas de forma
-        asimetria_str = f"{stats['Asimetria']:.2f}"
-        curtosis_str = f"{stats['Curtosis']:.2f}"
+        # Shape statistics
+        asimetria_str = f"{stats['Skewness']:.2f}"
+        curtosis_str = f"{stats['Kurtosis']:.2f}"
 
         summary = (
-            "MÉTRICAS BÁSICAS DE GLUCOSA\n"
+            "BASIC GLUCOSE METRICS\n"
             "\n"
-            "ESTADÍSTICAS CENTRALES:\n"
-            f"  - GMI (HbA1c estimada):   {gmi_str:>8}\n"
-            f"  - Media:                 {media_str:>12}\n"
-            f"  - Mediana:               {mediana_str:>12}\n"
-            f"  - Desv. Estándar:        {sd_str:>12}\n"
-            f"  - Coef. Variación:       {cv_str:>12}\n"
+            "CENTRAL STATISTICS:\n"
+            f"  - GMI (HbA1c est.):       {gmi_str:>8}\n"
+            f"  - Mean:                  {media_str:>12}\n"
+            f"  - Median:                {mediana_str:>12}\n"
+            f"  - Std Dev:               {sd_str:>12}\n"
+            f"  - CV:                    {cv_str:>12}\n"
             "\n"
             "PERCENTILES:\n"
             f"  - P5:                    {p5_str:>12}\n"
@@ -166,8 +166,8 @@ class BasicMetrics:
             f"  - P75:                   {p75_str:>12}\n"
             f"  - P95:                   {p95_str:>12}\n"
             "\n"
-            "FORMA DE LA DISTRIBUCIÓN:\n"
-            f"  - Asimetría:             {asimetria_str:>8}\n"
-            f"  - Curtosis:              {curtosis_str:>8}\n"
+            "DISTRIBUTION SHAPE:\n"
+            f"  - Skewness:              {asimetria_str:>8}\n"
+            f"  - Kurtosis:              {curtosis_str:>8}\n"
         )
         return summary

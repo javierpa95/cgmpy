@@ -1,11 +1,7 @@
 """
-Módulo de métricas específicas para diabetes gestacional.
-
-Este módulo contiene las métricas y análisis específicos para el seguimiento
-de la diabetes durante el embarazo, incluyendo análisis por trimestres.
+Module for simplified gestational diabetes analysis.
 """
 
-import datetime
 from typing import Any, Dict, Union
 
 import pandas as pd
@@ -14,212 +10,98 @@ from ..data.pregnancy_data import PregnancyData
 from . import ModularGlucoseMetrics
 
 
-class PregnancyMetrics:
+class GestationalDiabetes(PregnancyData, ModularGlucoseMetrics):
     """
-    Mixin para métricas específicas de diabetes gestacional.
-
-    Esta clase debe ser utilizada como mixin con una clase que herede de PregnancyData.
+    Unified class for gestational diabetes analysis.
+    Inherits data processing from PregnancyData and calculation logic from ModularGlucoseMetrics.
     """
 
-    def _init_pregnancy_metrics(self):
-        """
-        Inicializa las métricas de embarazo delegando la gestión de datos a la clase de datos base.
-        """
-        # Importación local para evitar circulares
+    def __init__(self, data_source: Union[str, pd.DataFrame], delivery_date: str, week: int, day: int = 0, **kwargs):
+        # 1. Initialize data and trimesters via PregnancyData
+        # (Passes target_type="pregnancy" automatically from PregnancyData)
+        super().__init__(data_source=data_source, delivery_date=delivery_date, week=week, day=day, **kwargs)
+
+        # 2. Local import to avoid circular dependency
         from .. import GlucoseMetrics
 
-        # Crear instancias de análisis por trimestre
-        # Usamos los dataframes ya segregados en la clase de datos (PregnancyData)
-        self.primer_trimestre = self._create_trimester_metrics(self.trimesters["primer_trimestre"], GlucoseMetrics)
-        self.segundo_trimestre = self._create_trimester_metrics(self.trimesters["segundo_trimestre"], GlucoseMetrics)
-        self.tercer_trimestre = self._create_trimester_metrics(self.trimesters["tercer_trimestre"], GlucoseMetrics)
+        # 3. Create metric wrappers for each trimester
+        self.t1 = self._wrap_trimester(self.trimesters["first_trimester"], GlucoseMetrics)
+        self.t2 = self._wrap_trimester(self.trimesters["second_trimester"], GlucoseMetrics)
+        self.t3 = self._wrap_trimester(self.trimesters["third_trimester"], GlucoseMetrics)
 
-    def _create_trimester_metrics(self, df: pd.DataFrame, cls) -> Union[None, Any]:
-        """
-        Crea una instancia de la clase de métricas para un dataframe de trimestre.
-        """
-        if len(df) > 0:
-            return cls(
-                data_source=df,
-                date_col="time",
-                glucose_col="glucose",
-            )
-        return None
+    def _wrap_trimester(self, df: pd.DataFrame, cls) -> Union[None, Any]:
+        if len(df) == 0:
+            return None
+        return cls(data_source=df, target_type="pregnancy")
 
-    def info_gestational(self) -> Dict[str, Any]:
-        """
-        Obtiene información detallada por trimestre.
-        """
-        info = {}
-        periods = [
-            ("primer_trimestre", self.fecha_concepcion, self.primer_trimestre_fin, self.primer_trimestre),
-            ("segundo_trimestre", self.primer_trimestre_fin, self.segundo_trimestre_fin, self.segundo_trimestre),
-            ("tercer_trimestre", self.segundo_trimestre_fin, self.fecha_parto, self.tercer_trimestre),
-        ]
-
-        for name, start, end, obj in periods:
-            if obj:
-                trimester_info = obj.info()
-                intervalo = trimester_info["intervalo_tipico"]
-                dias = (end - start).days
-                esperados = int((60 / intervalo) * 24 * dias)
-
-                trimester_info.update(
-                    {
-                        "datos_esperados": esperados,
-                        "porcentaje_datos": (trimester_info["num_datos"] / esperados * 100) if esperados > 0 else 0,
-                    }
-                )
-                info[name] = trimester_info
-            else:
-                info[name] = "No hay datos disponibles"
-
-        return info
-
-    def time_statistics_trimestres(self) -> Dict[str, Any]:
-        """
-        Calcula estadísticas de tiempo en rango por trimestre.
-        """
-        stats = {}
-        for name, obj in [
-            ("primer_trimestre", self.primer_trimestre),
-            ("segundo_trimestre", self.segundo_trimestre),
-            ("tercer_trimestre", self.tercer_trimestre),
-        ]:
-            if obj:
-                stats[name] = {
-                    "TIR": obj.TIR(),
-                    "TIR_tight": obj.TIR_tight(),
-                    "TBR70": obj.TBR70(),
-                    "TBR55": obj.TBR55(),
-                    "TAR140": obj.TAR140(),
-                    "TAR180": obj.TAR180(),
-                    "TAR250": obj.TAR250(),
-                }
-        return stats
-
-    def calculate_all_metrics(self) -> Dict[str, Any]:
-        """
-        Calcula todas las métricas del embarazo.
-        """
-        semanas, dias = self.get_semanas_dias()
-
-        metrics = {
-            "informacion_gestacional": {
-                "semanas_gestacion": semanas,
-                "dias_gestacion": dias,
-                "fecha_parto": self.fecha_parto.strftime("%Y-%m-%d"),
-                "fecha_concepcion": self.fecha_concepcion.strftime("%Y-%m-%d"),
-            },
-            "info_por_trimestre": self.info_gestational(),
-            "estadisticas_tiempo_trimestres": self.time_statistics_trimestres(),
+    def summary_by_trimester(self) -> Dict[str, Any]:
+        """Simplified comparative summary."""
+        return {
+            "T1": self.t1.all_simplified() if self.t1 else None,
+            "T2": self.t2.all_simplified() if self.t2 else None,
+            "T3": self.t3.all_simplified() if self.t3 else None,
         }
 
-        for name, obj in [
-            ("primer_trimestre", self.primer_trimestre),
-            ("segundo_trimestre", self.segundo_trimestre),
-            ("tercer_trimestre", self.tercer_trimestre),
-        ]:
-            if obj:
-                metrics[f"metricas_basicas_{name}"] = {
-                    "GMI": obj.gmi(),
-                    "Media": obj.mean(),
-                    "Mediana": obj.median(),
-                    "Desviacion_estandar": obj.sd(),
-                    "CV": obj.cv(),
-                }
+    def calculate_all_metrics(self, flatten: bool = False) -> Dict[str, Any]:
+        """
+        Complete analysis summary.
+        
+        Args:
+            flatten (bool): If True, returns a flat dictionary with prefixes 
+                           (total_, t1_, t2_, t3_, gest_) suitable for CSV/DataFrames.
+        """
+        w, d = self.get_weeks_days()
+        results = {
+            "gestation": {
+                "weeks": w,
+                "days": d,
+                "conception": self.conception_date.isoformat(),
+                "delivery": self.delivery_date.isoformat(),
+            },
+            "overall": self.all_simplified(),
+            "trimesters": self.summary_by_trimester(),
+        }
 
-        return metrics
+        if not flatten:
+            return results
+
+        # Flattening logic
+        flat = {}
+        # Gestation
+        for k, v in results["gestation"].items():
+            flat[f"gest_{k}"] = v
+        # Overall
+        for k, v in results["overall"].items():
+            flat[f"total_{k}"] = v
+        # Trimesters
+        for t_key, t_metrics in results["trimesters"].items():
+            if t_metrics:
+                for k, v in t_metrics.items():
+                    flat[f"{t_key.lower()}_{k}"] = v
+            else:
+                # Fill with None if trimester is empty to keep consistent columns
+                # We can take keys from all_simplified template
+                template = self.all_simplified().keys()
+                for k in template:
+                    flat[f"{t_key.lower()}_{k}"] = None
+
+        return flat
 
     def __str__(self) -> str:
-        """
-        Representación en string del objeto mostrando las semanas de gestación.
-        """
-        semanas, dias = self.get_semanas_dias()
-        info_gest = self.info_gestational()
+        w, d = self.get_weeks_days()
+        output = [
+            f"=== GESTATIONAL DIABETES REPORT ({w}+{d} weeks) ===",
+            f"Overall GMI: {self.gmi():.1f}% | TIR (63-140): {self.TIR():.1f}%",
+            "\nTrimester Breakdown:",
+        ]
 
-        output = [f"Gestión: {semanas}+{dias} semanas\n"]
-
-        num_datos_total = len(self.data)
-        info_total = self.info()
-        intervalo_tipico = info_total["intervalo_tipico"]
-        duracion_embarazo = (self.fecha_parto - self.fecha_concepcion).total_seconds() / 60
-        datos_teoricos_embarazo = int(duracion_embarazo / intervalo_tipico)
-        disponibilidad_real = (num_datos_total / datos_teoricos_embarazo) * 100
-
-        output.append(f"GMI del embarazo: {self.gmi():.1f}%")
-        output.append("Información básica del CGM:")
-        output.append(f"  - Número de datos: {num_datos_total:,}")
-        output.append(
-            f"  - Período teórico completo: {self.fecha_concepcion.strftime('%d/%m/%Y')} - {self.fecha_parto.strftime('%d/%m/%Y')}"
-        )
-        output.append(
-            f"  - Período real con datos: {info_total['fecha_inicio'].strftime('%d/%m/%Y')} - {info_total['fecha_fin'].strftime('%d/%m/%Y')}"
-        )
-        output.append(f"  - Intervalo típico: {intervalo_tipico:.1f} minutos")
-        output.append(f"  - Datos esperados (embarazo completo): {datos_teoricos_embarazo:,}")
-        output.append(f"  - Disponibilidad real: {disponibilidad_real:.1f}%")
-        output.append(f"  - Desconexiones: {info_total['num_desconexiones'].split(' ')[0]}")
-        output.append(f"  - Tiempo total sin datos: {info_total['tiempo_total_desconexion']:.1f} horas\n")
-
-        for trimestre, datos in info_gest.items():
-            output.append(f"\n=== {trimestre.upper().replace('_', ' ')} ===")
-            if isinstance(datos, dict):
-                output.append(f"Número de datos: {datos.get('num_datos', 'No disponible'):,}")
-                output.append(f"Datos esperados: {datos.get('datos_esperados', 'No disponible'):,}")
-                output.append(f"Porcentaje de datos: {datos.get('porcentaje_datos', 'No disponible'):.1f}%")
-                output.append(f"Intervalo típico: {datos.get('intervalo_tipico', 'No disponible')} minutos")
-
-                if trimestre == "primer_trimestre":
-                    periodo_inicio, periodo_fin = self.fecha_concepcion, self.primer_trimestre_fin
-                elif trimestre == "segundo_trimestre":
-                    periodo_inicio, periodo_fin = self.primer_trimestre_fin, self.segundo_trimestre_fin
-                else:
-                    periodo_inicio, periodo_fin = self.segundo_trimestre_fin, self.fecha_parto
-
-                output.append(f"Período: {periodo_inicio.strftime('%d/%m/%Y')} - {periodo_fin.strftime('%d/%m/%Y')}")
+        summary = self.summary_by_trimester()
+        for t_label, metrics in summary.items():
+            if metrics:
+                output.append(
+                    f"  {t_label}: GMI {metrics['GMI']:.1f}% | TIR {metrics['TIR']:.1f}% | CV {metrics['CV']:.1f}%"
+                )
             else:
-                output.append(str(datos))
-            output.append("-" * 50)
+                output.append(f"  {t_label}: (No data available)")
 
         return "\n".join(output)
-
-
-class GestationalDiabetes(PregnancyMetrics, PregnancyData, ModularGlucoseMetrics):
-    """
-    Clase principal para análisis de diabetes gestacional.
-    Combina la lógica de datos de PregnancyData con las métricas de PregnancyMetrics.
-    """
-
-    def __init__(
-        self,
-        data_source: Union[str, pd.DataFrame],
-        fecha_parto: str,
-        week: int,
-        day: int = 0,
-        date_col: str = "time",
-        glucose_col: str = "glucose",
-        delimiter: Union[str, None] = None,
-        header: int = 0,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
-        log: bool = False,
-    ):
-        # Inicializar PregnancyData (que a su vez inicializa ModularGlucoseData y gestiona trimestres)
-        super().__init__(
-            data_source=data_source,
-            fecha_parto=fecha_parto,
-            week=week,
-            day=day,
-            date_col=date_col,
-            glucose_col=glucose_col,
-            delimiter=delimiter,
-            header=header,
-            start_date=start_date,
-            end_date=end_date,
-            log=log,
-        )
-
-        # Inicializar PregnancyMetrics (mixin) para configurar los objetos de métricas por trimestre
-        # Estos objetos usarán los dataframes ya creados por el constructor de PregnancyData
-        self._init_pregnancy_metrics()

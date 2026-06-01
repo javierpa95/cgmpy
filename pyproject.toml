@@ -22,6 +22,8 @@ dependencies = [
     "pandas",
     "matplotlib",
     "seaborn",
+    "pyarrow",
+    "openpyxl",
 ]
 
 [project.urls]

@@ -1,5 +1,5 @@
 """
-Módulo para procesamiento y validación de datos de glucosa.
+Module for glucose data processing and validation.
 """
 
 import logging
@@ -12,14 +12,14 @@ import pandas as pd
 
 class DataProcessor:
     """
-    Clase responsable del procesamiento, validación y limpieza de datos de glucosa.
+    Class responsible for glucose data processing, validation, and cleaning.
     """
 
     def __init__(self, logger: logging.Logger = None):
         """
-        Inicializa el DataProcessor.
+        Initializes the DataProcessor.
 
-        :param logger: Logger para registrar operaciones
+        :param logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
 
@@ -31,23 +31,23 @@ class DataProcessor:
         log_performance: bool = False,
     ) -> Tuple[pd.DataFrame, pd.Series]:
         """
-        Procesa los datos de glucosa de forma optimizada.
+        Processes glucose data in an optimized way.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :param log_performance: Si True, registra métricas de rendimiento
-        :return: Tupla con DataFrame procesado y Series de diferencias de tiempo
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :param log_performance: If True, records performance metrics
+        :return: Tuple with processed DataFrame and time differences Series
         """
         t_start = time.time()
 
         if log_performance:
-            self.logger.debug("\n--- ANÁLISIS DETALLADO DE RENDIMIENTO ---")
+            self.logger.debug("\n--- DETAILED PERFORMANCE ANALYSIS ---")
 
-        # Validar columnas
+        # Validate columns
         self._validate_columns(data, date_col, glucose_col)
 
-        # Determinar si los datos vienen de Parquet optimizado
+        # Determine if data comes from optimized Parquet
         from_parquet = self._is_optimized_parquet(data, date_col, glucose_col)
 
         if from_parquet:
@@ -55,42 +55,42 @@ class DataProcessor:
         else:
             processed_data, time_diffs = self._process_standard(data, date_col, glucose_col, log_performance)
 
-        # Validación final
+        # Final validation
         if not pd.api.types.is_datetime64_any_dtype(processed_data[date_col]):
-            raise ValueError("Error en conversión de fechas")
+            raise ValueError("Error in date conversion")
 
         if log_performance:
             t_end = time.time()
             memoria_bytes = processed_data.memory_usage(deep=True).sum()
             memoria_mb = memoria_bytes / (1024 * 1024)
-            self.logger.debug(f"Uso de memoria del DataFrame: {memoria_mb:.2f} MB")
-            self.logger.debug(f"Tiempo total de procesamiento: {t_end - t_start:.3f}s")
-            self.logger.debug("--- FIN DEL ANÁLISIS ---\n")
+            self.logger.debug(f"DataFrame memory usage: {memoria_mb:.2f} MB")
+            self.logger.debug(f"Total processing time: {t_end - t_start:.3f}s")
+            self.logger.debug("--- END OF ANALYSIS ---\n")
 
         return processed_data, time_diffs
 
     def _validate_columns(self, data: pd.DataFrame, date_col: str, glucose_col: str):
         """
-        Valida que las columnas especificadas existan en el DataFrame.
+        Validates that the specified columns exist in the DataFrame.
 
-        :param data: DataFrame a validar
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
+        :param data: DataFrame to validate
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
         """
         if date_col not in data.columns or glucose_col not in data.columns:
             raise ValueError(
-                f"Las columnas '{date_col}' o '{glucose_col}' no se encuentran en el DataFrame. "
-                f"Columnas disponibles: {data.columns.tolist()}."
+                f"Columns '{date_col}' or '{glucose_col}' not found in the DataFrame. "
+                f"Available columns: {data.columns.tolist()}."
             )
 
     def _is_optimized_parquet(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> bool:
         """
-        Determina si los datos vienen de un archivo Parquet optimizado.
+        Determines if the data comes from an optimized Parquet file.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :return: True si es Parquet optimizado
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :return: True if it is optimized Parquet
         """
         return pd.api.types.is_datetime64_any_dtype(data[date_col]) and data[glucose_col].dtype == "int16"
 
@@ -102,42 +102,42 @@ class DataProcessor:
         log_performance: bool = False,
     ) -> Tuple[pd.DataFrame, pd.Series]:
         """
-        Procesa datos optimizados de Parquet con ruta rápida.
+        Processes optimized Parquet data with a fast path.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :param log_performance: Si True, registra métricas de rendimiento
-        :return: Tupla con DataFrame procesado y Series de diferencias de tiempo
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :param log_performance: If True, records performance metrics
+        :return: Tuple with processed DataFrame and time differences Series
         """
         if log_performance:
-            self.logger.debug("Detectados datos de origen Parquet con tipos optimizados.")
-            self.logger.debug("Aplicando ruta rápida para datos Parquet...")
+            self.logger.debug("Detected Parquet source data with optimized types.")
+            self.logger.debug("Applying fast path for Parquet data...")
 
         processed_data = data.copy()
 
-        # Verificar y eliminar nulos
+        # Check and remove nulls
         t_nulos = time.time()
         if processed_data.isna().any().any():
             processed_data = processed_data.dropna(subset=[date_col, glucose_col])
             if log_performance:
-                self.logger.debug(f"  - Eliminados valores nulos: {time.time() - t_nulos:.3f}s")
+                self.logger.debug(f"  - Removed null values: {time.time() - t_nulos:.3f}s")
         elif log_performance:
-            self.logger.debug(f"  - No hay valores nulos: {time.time() - t_nulos:.3f}s")
+            self.logger.debug(f"  - No null values found: {time.time() - t_nulos:.3f}s")
 
-        # Verificar y ordenar
+        # Check and sort
         t_orden = time.time()
         if not processed_data[date_col].is_monotonic_increasing:
             if log_performance:
-                self.logger.debug("  - Ordenando datos...")
+                self.logger.debug("  - Sorting data...")
             processed_data = processed_data.sort_values(date_col, ignore_index=True)
         elif log_performance:
-            self.logger.debug("  - Datos ya ordenados")
+            self.logger.debug("  - Data already sorted")
 
         if log_performance:
-            self.logger.debug(f"  - Verificación de orden: {time.time() - t_orden:.3f}s")
+            self.logger.debug(f"  - Order verification: {time.time() - t_orden:.3f}s")
 
-        # Cálculo optimizado de diferencias de tiempo
+        # Optimized calculation of time differences
         t_diff = time.time()
         time_values = processed_data[date_col].values
         time_diffs_ns = np.diff(time_values.astype("datetime64[ns]"))
@@ -145,7 +145,7 @@ class DataProcessor:
         time_diffs = pd.Series(pd.TimedeltaIndex(time_diffs_ns), index=processed_data.index)
 
         if log_performance:
-            self.logger.debug(f"  - Cálculo optimizado de diferencias: {time.time() - t_diff:.3f}s")
+            self.logger.debug(f"  - Optimized difference calculation: {time.time() - t_diff:.3f}s")
 
         return processed_data, time_diffs
 
@@ -157,104 +157,115 @@ class DataProcessor:
         log_performance: bool = False,
     ) -> Tuple[pd.DataFrame, pd.Series]:
         """
-        Procesa datos con validaciones completas para CSV y otros formatos.
+        Processes data with full validations for CSV and other formats.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :param log_performance: Si True, registra métricas de rendimiento
-        :return: Tupla con DataFrame procesado y Series de diferencias de tiempo
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :param log_performance: If True, records performance metrics
+        :return: Tuple with processed DataFrame and time differences Series
         """
         if log_performance:
-            self.logger.debug("Procesando datos con conversión de tipos y validaciones completas.")
+            self.logger.debug("Processing data with type conversion and full validations.")
 
         processed_data = data.copy()
 
-        # Manejo de nulos
+        # Handle nulls
         t_nulos = time.time()
         processed_data = self._handle_nulls(processed_data, date_col, glucose_col)
         if log_performance:
-            self.logger.debug(f"2. Eliminación de nulos: {time.time() - t_nulos:.3f}s")
+            self.logger.debug(f"2. Null removal: {time.time() - t_nulos:.3f}s")
 
-        # Conversión de tipos
+        # Type conversion
         t_tipos = time.time()
         processed_data = self._convert_data_types(processed_data, date_col, glucose_col)
         if log_performance:
-            self.logger.debug(f"3. Conversión de tipos: {time.time() - t_tipos:.3f}s")
+            self.logger.debug(f"3. Type conversion: {time.time() - t_tipos:.3f}s")
 
-        # Manejo de duplicados
+        # Handle duplicates
         t_dups = time.time()
         processed_data = self._handle_duplicates(processed_data, date_col, glucose_col)
         if log_performance:
-            self.logger.debug(f"4. Procesamiento de duplicados: {time.time() - t_dups:.3f}s")
+            self.logger.debug(f"4. Duplicate processing: {time.time() - t_dups:.3f}s")
 
-        # Ordenación
+        # Sorting
         t_orden = time.time()
         processed_data = self._sort_data(processed_data, date_col)
         if log_performance:
-            self.logger.debug(f"5. Ordenación: {time.time() - t_orden:.3f}s")
+            self.logger.debug(f"5. Sorting: {time.time() - t_orden:.3f}s")
 
-        # Cálculo de diferencias
+        # Calculate differences
         t_diff = time.time()
         time_diffs = processed_data[date_col].diff()
         if log_performance:
-            self.logger.debug(f"6. Cálculo de diferencias: {time.time() - t_diff:.3f}s")
+            self.logger.debug(f"6. Difference calculation: {time.time() - t_diff:.3f}s")
 
         return processed_data, time_diffs
 
     def _handle_nulls(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> pd.DataFrame:
         """
-        Elimina filas con valores nulos en columnas clave.
+        Removes rows with null values in key columns.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :return: DataFrame sin nulos
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :return: DataFrame without nulls
         """
         filas_antes = len(data)
         data_cleaned = data.dropna(subset=[date_col, glucose_col])
         filas_despues = len(data_cleaned)
 
         if filas_antes > filas_despues:
-            self.logger.debug(f"  - Eliminadas {filas_antes - filas_despues} filas con valores nulos.")
+            self.logger.debug(f"  - Removed {filas_antes - filas_despues} rows with null values.")
 
         return data_cleaned
 
     def _convert_data_types(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> pd.DataFrame:
         """
-        Convierte las columnas de fecha y glucosa a los tipos correctos.
+        Convert date and glucose columns to correct types.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :return: DataFrame con tipos correctos
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :return: DataFrame with correct types
         """
         data_converted = data.copy()
 
-        # Convertir columna de fecha
+        # Convert date column
         if not pd.api.types.is_datetime64_any_dtype(data_converted[date_col]):
-            self.logger.debug(f"  - Convirtiendo columna '{date_col}' a datetime...")
+            self.logger.debug(f"  - Converting column '{date_col}' to datetime...")
             if pd.api.types.is_numeric_dtype(data_converted[date_col]):
                 unit = "ms" if data_converted[date_col].iloc[0] > 1e10 else "s"
                 data_converted[date_col] = pd.to_datetime(data_converted[date_col], unit=unit)
             else:
                 data_converted[date_col] = pd.to_datetime(data_converted[date_col], errors="coerce", format="mixed")
 
-        # Convertir columna de glucosa
+        # Convert glucose column
         if not pd.api.types.is_numeric_dtype(data_converted[glucose_col]):
-            self.logger.debug(f"  - Convirtiendo columna '{glucose_col}' a numérica...")
+            self.logger.debug(f"  - Converting column '{glucose_col}' to numeric...")
+
+            # Si es tipo objeto (string), manejamos posibles comas decimales
+            if data_converted[glucose_col].dtype == "object":
+                # Reemplazamos comas por puntos para soportar formatos europeos
+                data_converted[glucose_col] = data_converted[glucose_col].astype(str).str.replace(",", ".", regex=False)
+
             data_converted[glucose_col] = pd.to_numeric(data_converted[glucose_col], errors="coerce")
             data_converted = data_converted.dropna(subset=[glucose_col])
 
-        # Optimizar tipo de glucosa a int16 si es posible
+        # Optimize glucose type to int16 if possible
         if data_converted[glucose_col].dtype != "int16":
-            self.logger.debug(f"  - Optimizando columna '{glucose_col}'...")
+            self.logger.debug(f"  - Optimizing column '{glucose_col}'...")
             min_val, max_val = (
                 data_converted[glucose_col].min(),
                 data_converted[glucose_col].max(),
             )
             if pd.notna(min_val) and pd.notna(max_val) and min_val >= -32768 and max_val <= 32767:
-                data_converted[glucose_col] = data_converted[glucose_col].astype("int16")
+                # Only convert to int16 if values are already integers to avoid precision loss
+                is_integer = np.all(np.mod(data_converted[glucose_col].dropna(), 1) == 0)
+                if is_integer:
+                    data_converted[glucose_col] = data_converted[glucose_col].astype("int16")
+                else:
+                    data_converted[glucose_col] = data_converted[glucose_col].astype("float32")
             else:
                 data_converted[glucose_col] = pd.to_numeric(
                     data_converted[glucose_col], errors="coerce", downcast="float"
@@ -264,18 +275,18 @@ class DataProcessor:
 
     def _handle_duplicates(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> pd.DataFrame:
         """
-        Encuentra y resuelve duplicados en la columna de fecha.
+        Finds and resolves duplicates in the date column.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :param glucose_col: Nombre de la columna de glucosa
-        :return: DataFrame sin duplicados
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :param glucose_col: Name of the glucose column
+        :return: DataFrame without duplicates
         """
         mask_duplicados = data.duplicated(subset=[date_col], keep=False)
         num_duplicados = mask_duplicados.sum()
 
         if num_duplicados > 0:
-            self.logger.debug(f"  - Encontrados {num_duplicados // 2} timestamps duplicados. Resolviendo...")
+            self.logger.debug(f"  - Found {num_duplicados // 2} duplicate timestamps. Resolving...")
 
             df_dups = data[mask_duplicados].copy()
             df_dups["diff"] = df_dups.groupby(date_col)[glucose_col].transform(lambda x: (x - x.mean()).abs())
@@ -288,27 +299,27 @@ class DataProcessor:
 
     def _sort_data(self, data: pd.DataFrame, date_col: str) -> pd.DataFrame:
         """
-        Ordena el DataFrame por la columna de fecha si no está ya ordenado.
+        Sorts the DataFrame by the date column if it is not already sorted.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre de la columna de fecha
-        :return: DataFrame ordenado
+        :param data: DataFrame with data
+        :param date_col: Name of the date column
+        :return: Sorted DataFrame
         """
         if not data[date_col].is_monotonic_increasing:
-            self.logger.debug("  - Ordenando datos por timestamp...")
+            self.logger.debug("  - Sorting data by timestamp...")
             return data.sort_values(date_col, ignore_index=True)
 
-        self.logger.debug("  - Datos ya ordenados, omitiendo ordenación.")
+        self.logger.debug("  - Data already sorted, skipping sorting.")
         return data
 
     def rename_columns(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> pd.DataFrame:
         """
-        Renombra las columnas a nombres estándar.
+        Renames columns to standard names.
 
-        :param data: DataFrame con los datos
-        :param date_col: Nombre actual de la columna de fecha
-        :param glucose_col: Nombre actual de la columna de glucosa
-        :return: DataFrame con columnas renombradas
+        :param data: DataFrame with data
+        :param date_col: Current name of the date column
+        :param glucose_col: Current name of the glucose column
+        :return: DataFrame with renamed columns
         """
         renamed_data = data.copy()
 
@@ -327,13 +338,13 @@ class DataProcessor:
         date_col: str = "time",
     ) -> pd.DataFrame:
         """
-        Filtra los datos por rango de fechas.
+        Filters data by date range.
 
-        :param data: DataFrame con los datos
-        :param start_date: Fecha de inicio
-        :param end_date: Fecha de fin
-        :param date_col: Nombre de la columna de fecha
-        :return: DataFrame filtrado
+        :param data: DataFrame with data
+        :param start_date: Start date
+        :param end_date: End date
+        :param date_col: Name of the date column
+        :return: Filtered DataFrame
         """
         filtered_data = data.copy()
 
@@ -348,6 +359,67 @@ class DataProcessor:
             filtered_data = filtered_data[filtered_data[date_col] <= end_date]
 
         if len(filtered_data) == 0:
-            raise ValueError("No hay datos disponibles en el rango de fechas especificado.")
+            raise ValueError("No data available in the specified date range.")
 
         return filtered_data
+
+    def regularize(
+        self,
+        data: pd.DataFrame,
+        interval_mins: int = 5,
+        max_gap_mins: int = 30,
+        date_col: str = "time",
+        glucose_col: str = "glucose",
+    ) -> pd.DataFrame:
+        """
+        Regularizes glucose data to a constant sampling frequency.
+
+        This method is critical when combining data from sensors with different
+        frequencies (e.g., 1 min vs 15 min) to avoid statistical bias.
+
+        Args:
+            data: The original glucose DataFrame.
+            interval_mins: Target interval in minutes (default 5).
+            max_gap_mins: Maximum gap to interpolate (default 30).
+                          Gaps larger than this are kept as NaNs to mark disconnections.
+            date_col: Name of the time column.
+            glucose_col: Name of the glucose column.
+
+        Returns:
+            pd.DataFrame: A new DataFrame with uniform frequency.
+        """
+        if len(data) < 2:
+            return data.copy()
+
+        # 1. Create a copy and set the index to the time column for resampling
+        df = data.copy()
+        df = df.set_index(date_col).sort_index()
+
+        # 2. Resample to the target frequency
+        freq = f"{interval_mins}min"
+        # We use mean() for points that collapse into the same bin (if any)
+        resampled = df[glucose_col].resample(freq).mean()
+
+        # 3. Calculate the interpolation limit
+        # If interval is 5min and max_gap is 30min, we can interpolate up to 6 points (30/5)
+        limit = max_gap_mins // interval_mins
+
+        # 4. Interpolate with limit
+        # This fills small gaps but keeps large ones as NaN (disconnections)
+        regularized_glucose = resampled.interpolate(method="linear", limit=limit, limit_area="inside")
+
+        # 5. Reconstruct the DataFrame
+        regularized_df = pd.DataFrame({date_col: regularized_glucose.index, glucose_col: regularized_glucose.values})
+
+        # 6. Drop NaNs created by resampling that weren't interpolated
+        # (These are the actual long disconnections)
+        regularized_df = regularized_df.dropna(subset=[glucose_col])
+
+        # 7. Ensure correct types (glucose as int16 if appropriate)
+        regularized_df = self._convert_data_types(regularized_df, date_col, glucose_col)
+
+        self.logger.info(
+            f"Data regularized to {interval_mins}min. Rows changed from {len(data)} to {len(regularized_df)}."
+        )
+
+        return regularized_df

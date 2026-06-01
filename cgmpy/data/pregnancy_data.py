@@ -1,5 +1,5 @@
 """
-Módulo para el manejo de datos específicos de embarazo.
+Module for handling pregnancy-specific data.
 """
 
 import datetime
@@ -12,15 +12,15 @@ from .core import ModularGlucoseData
 
 class PregnancyData(ModularGlucoseData):
     """
-    Clase para la gestión de datos y fechas específicas de embarazo.
-    Hereda de ModularGlucoseData para integrar la carga y procesamiento base,
-    añadiendo la segmentación por trimestres.
+    Class for managing pregnancy-specific data and dates.
+    Inherits from ModularGlucoseData to integrate base loading and processing,
+    adding trimester segmentation.
     """
 
     def __init__(
         self,
         data_source: Union[str, pd.DataFrame],
-        fecha_parto: str,
+        delivery_date: str,
         week: int,
         day: int = 0,
         date_col: str = "time",
@@ -30,9 +30,13 @@ class PregnancyData(ModularGlucoseData):
         start_date: Union[str, datetime.datetime, None] = None,
         end_date: Union[str, datetime.datetime, None] = None,
         log: bool = False,
+        target_type: str = "pregnancy",
+        regularize: bool = False,
+        regularize_interval: int = 5,
+        regularize_max_gap: int = 30,
     ):
         """
-        Inicializa los datos de embarazo.
+        Initializes pregnancy data.
         """
         # Inicialización base de ModularGlucoseData
         super().__init__(
@@ -44,79 +48,139 @@ class PregnancyData(ModularGlucoseData):
             start_date=start_date,
             end_date=end_date,
             log=log,
+            target_type=target_type,
+            regularize=regularize,
+            regularize_interval=regularize_interval,
+            regularize_max_gap=regularize_max_gap,
         )
 
-        # Configuración específica de embarazo
-        self.gestational_info = self.calculate_dates(fecha_parto, week, day)
+        # Specific pregnancy configuration
+        self.gestational_info = self.calculate_dates(delivery_date, week, day)
 
-        # Mapeo de atributos para fácil acceso
-        self.fecha_parto = self.gestational_info["fecha_parto"]
-        self.fecha_concepcion = self.gestational_info["fecha_concepcion"]
-        self.semana_gestacion = self.gestational_info["semana_gestacion_decimal"]
-        self.primer_trimestre_fin = self.gestational_info["primer_trimestre_fin"]
-        self.segundo_trimestre_fin = self.gestational_info["segundo_trimestre_fin"]
+        # 1. Attribute mapping for easy access
+        self.delivery_date = self.gestational_info["delivery_date"]
+        self.conception_date = self.gestational_info["conception_date"]
+        self.gestation_week = self.gestational_info["gestation_week_decimal"]
+        self.first_trimester_end = self.gestational_info["first_trimester_end"]
+        self.second_trimester_end = self.gestational_info["second_trimester_end"]
 
-        # Creación de los dataframes por trimestre
-        # Esto permite que si el usuario quiere usar otro framework para analizar
-        # los trimestres, ya los tiene disponibles como dataframes.
+        # 2. Filter the main dataframe to ensure "Overall" metrics only cover the pregnancy period
+        mask = (self.data["time"] >= self.conception_date) & (self.data["time"] <= self.delivery_date)
+        self.data = self.data[mask].copy()
+
+        # 3. Recalculate time differences and typical interval after filtering
+        self.time_diffs = self.data["time"].diff()
+        self.typical_interval = self.analyzer.calculate_typical_interval(self.time_diffs)
+
+        # 4. Creation of dataframes by trimester
         self.trimesters = self._split_trimesters()
 
     @staticmethod
-    def calculate_dates(fecha_parto: str, week: int, day: int = 0) -> dict:
+    def calculate_dates(delivery_date: str, week: int, day: int = 0) -> dict:
         """
-        Calcula las fechas clave del embarazo.
+        Calculates key pregnancy dates.
         """
-        fecha_parto_dt = pd.to_datetime(fecha_parto)
-        if pd.isna(fecha_parto_dt):
-            raise ValueError("Fecha de parto inválida")
+        delivery_date_dt = pd.to_datetime(delivery_date)
+        if pd.isna(delivery_date_dt):
+            raise ValueError("Invalid delivery date")
 
-        semana_gestacion = week + (day / 7)
-        fecha_concepcion = fecha_parto_dt - pd.Timedelta(weeks=semana_gestacion)
+        gestation_week = week + (day / 7)
+        conception_date = delivery_date_dt - pd.Timedelta(weeks=gestation_week)
 
-        if pd.isna(fecha_concepcion):
-            raise ValueError("Fecha de concepción inválida")
+        if pd.isna(conception_date):
+            raise ValueError("Invalid conception date")
 
-        primer_trimestre_fin = fecha_concepcion + pd.Timedelta(weeks=13, days=6)
-        segundo_trimestre_fin = fecha_concepcion + pd.Timedelta(weeks=27, days=6)
+        first_trimester_end = conception_date + pd.Timedelta(weeks=13, days=6)
+        second_trimester_end = conception_date + pd.Timedelta(weeks=27, days=6)
 
         return {
-            "fecha_parto": fecha_parto_dt,
-            "fecha_concepcion": fecha_concepcion,
-            "primer_trimestre_fin": primer_trimestre_fin,
-            "segundo_trimestre_fin": segundo_trimestre_fin,
-            "semana_gestacion_decimal": semana_gestacion,
+            "delivery_date": delivery_date_dt,
+            "conception_date": conception_date,
+            "first_trimester_end": first_trimester_end,
+            "second_trimester_end": second_trimester_end,
+            "gestation_week_decimal": gestation_week,
         }
 
     def _split_trimesters(self) -> Dict[str, pd.DataFrame]:
         """
-        Divide el dataframe principal en tres dataframes, uno por trimestre.
+        Splits the main dataframe into three dataframes, one per trimester.
         """
         return {
-            "primer_trimestre": self.get_trimester_data(self.fecha_concepcion, self.primer_trimestre_fin),
-            "segundo_trimestre": self.get_trimester_data(self.primer_trimestre_fin, self.segundo_trimestre_fin),
-            "tercer_trimestre": self.get_trimester_data(self.segundo_trimestre_fin, self.fecha_parto),
+            "first_trimester": self.get_trimester_data(self.conception_date, self.first_trimester_end),
+            "second_trimester": self.get_trimester_data(self.first_trimester_end, self.second_trimester_end),
+            "third_trimester": self.get_trimester_data(self.second_trimester_end, self.delivery_date),
         }
 
     def get_trimester_data(self, start_date: pd.Timestamp, end_date: pd.Timestamp) -> pd.DataFrame:
         """
-        Filtra el DataFrame para un rango de fechas.
+        Filters the DataFrame for a date range.
         """
         return self.data[(self.data["time"] >= start_date) & (self.data["time"] < end_date)].copy()
 
     @staticmethod
-    def decimal_to_weeks_days(semanas_decimal: float) -> Tuple[int, int]:
+    def decimal_to_weeks_days(weeks_decimal: float) -> Tuple[int, int]:
         """
-        Convierte semanas decimales a (semanas, días).
+        Converts decimal weeks to (weeks, days).
         """
-        semanas = int(semanas_decimal)
-        dias = round((semanas_decimal - semanas) * 7)
-        return semanas, dias
+        weeks = int(weeks_decimal)
+        days = round((weeks_decimal - weeks) * 7)
+        return weeks, days
 
-    def get_semanas_dias(self) -> Tuple[int, int]:
+    def get_weeks_days(self) -> Tuple[int, int]:
         """
-        Retorna las semanas y días de gestación en formato tradicional.
+        Returns gestation weeks and days in traditional format.
         """
-        return self.decimal_to_weeks_days(self.semana_gestacion)
+        return self.decimal_to_weeks_days(self.gestation_week)
+
+    def __str__(self) -> str:
+        """
+        Overwrites the string representation to include pregnancy-specific information.
+        """
+        weeks, days = self.get_weeks_days()
+
+        # Trimester definitions for calculation
+        periods = [
+            ("First Trimester", self.conception_date, self.first_trimester_end, "first_trimester"),
+            ("Second Trimester", self.first_trimester_end, self.second_trimester_end, "second_trimester"),
+            ("Third Trimester", self.second_trimester_end, self.delivery_date, "third_trimester"),
+        ]
+
+        trimester_details = []
+        for label, start, end, key in periods:
+            count = len(self.trimesters[key])
+
+            # Calculate expected records
+            duration_mins = (end - start).total_seconds() / 60
+            
+            if pd.isna(duration_mins) or self.typical_interval <= 0:
+                expected = 0
+            else:
+                expected = int(duration_mins / self.typical_interval)
+
+
+            coverage = (count / expected * 100) if expected > 0 else 0
+
+            trimester_details.append(f"  * {label}: {count} records ({coverage:.1f}% coverage)")
+
+        # Base summary from ModularGlucoseData
+        base_summary = super().__str__()
+
+        summary = [
+            "Pregnancy Data Summary",
+            "=====================",
+            f"Gestation: {weeks} weeks and {days} days",
+            f"Conception Date: {self.conception_date.strftime('%Y-%m-%d')}",
+            f"Estimated Delivery: {self.delivery_date.strftime('%Y-%m-%d')}",
+            "",
+            "Records by Trimester:",
+            *trimester_details,
+            "",
+            "General Data Info:",
+            "-----------------",
+            base_summary,
+        ]
+
+        return "\n".join(summary)
 
 
 # Alias para mantener compatibilidad si fuera necesario (opcional)

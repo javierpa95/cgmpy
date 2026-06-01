@@ -1,49 +1,75 @@
 """
-Módulo de métricas de variabilidad para datos de glucosa.
+Variability metrics module for glucose data.
 
-Este módulo contiene las métricas relacionadas con la variabilidad glucémica:
+This module contains metrics related to glycemic variability:
 - MAGE (Mean Amplitude of Glycemic Excursions)
 - MODD (Mean Of Daily Differences)
 - CONGA (Continuous Overlapping Net Glycemic Action)
 - Lability Index
-- Métricas de desviación estándar especializadas
+- Specialized standard deviation metrics
 """
 
 import math
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 import numpy as np
 import pandas as pd
 
+if TYPE_CHECKING:
+    pass
+
 
 class VariabilityMetrics:
     """
-    Clase para métricas de variabilidad de glucosa.
+    Class for glucose variability metrics.
 
-    Esta clase debe ser utilizada como mixin con GlucoseData.
+    This class should be used as a mixin with GlucoseData.
     """
+
+    if TYPE_CHECKING:
+        data: pd.DataFrame
+        typical_interval: float
+
+        def sd(self) -> float: ...
+        def mean(self) -> float: ...
+        def median(self) -> float: ...
+        def cv(self) -> float: ...
+        def gmi(self) -> float: ...
+        def data_completeness(self) -> float: ...
+        def TBR(self, threshold: float) -> float: ...
+        def TAR(self, threshold: float) -> float: ...
+        def calculate_time_in_range(self, low: float, high: float) -> float: ...
+        def TIR(self) -> float: ...
+        def TIR_tight(self) -> float: ...
+        def TIR_pregnancy(self) -> float: ...
+        def TAR180(self) -> float: ...
+        def TAR250(self) -> float: ...
+        def TAR140(self) -> float: ...
+        def TBR70(self) -> float: ...
+        def TBR63(self) -> float: ...
+        def TBR55(self) -> float: ...
 
     # MEDIDAS DE DESVIACIÓN
 
     def sd_total(self) -> dict:
         """
-        Calcula la desviación estándar total (SDT) y media global.
-        Devuelve: {'sd': float, 'mean': float}
+        Calculates total standard deviation (SDT) and global mean.
+        Returns: {'sd': float, 'mean': float}
         """
         return {"sd": self.sd(), "mean": self.mean()}
 
     def sd_within_day(self, min_count_threshold: float = 0.5) -> dict:
         """
-        Calcula la desviación estándar dentro del día (SDw).
+        Calculates within-day standard deviation (SDw).
 
-        Esta métrica refleja la variabilidad dentro de cada día, promediada
-        entre todos los días disponibles.
+        This metric reflects variability within each day, averaged across
+        all available days.
 
-        Versión optimizada para grandes conjuntos de datos.
+        Optimized version for large datasets.
 
-        :param min_count_threshold: Umbral para considerar un día como válido
-                               (proporción de la mediana de conteos).
-        :return: Diccionario con el valor de SDw y estadísticas relacionadas.
+        :param min_count_threshold: Threshold to consider a day valid
+                               (proportion of count median).
+        :return: Dictionary with SDw value and related statistics.
         """
         # Crear copia eficiente con solo las columnas necesarias
         df = self.data[["time", "glucose"]].copy()
@@ -104,28 +130,28 @@ class VariabilityMetrics:
 
     def sdw(self, min_count_threshold: float = 0.5) -> float:
         """
-        Calcula la desviación estándar dentro del día (SDw).
-        Este es un método simplificado que devuelve solo el valor de SD.
+        Calculates within-day standard deviation (SDw).
+        This is a simplified method returning only the SD value.
 
-        :param min_count_threshold: Umbral para considerar un día como válido
-                                   (proporción de la mediana de conteos). Por defecto 0.5 (50%).
-        :return: Valor de SDw (float)
+        :param min_count_threshold: Threshold to consider a day valid
+                                   (proportion of count median). Default 0.5 (50%).
+        :return: SDw value (float)
         """
         return self.sd_within_day(min_count_threshold)["sd"]
 
-    def sd_within_day_segment(self, start_time: str, duration_hours: int) -> dict:
+    def sd_within_day_segment(self, start_time: str, duration_hours: int) -> Dict[str, float]:
         """
-        Calcula la desviación estándar within-day para un segmento específico del día.
-        Para cada día, calcula la SD del segmento horario especificado y luego
-        promedia estas SD diarias.
+        Calculates within-day standard deviation for a specific day segment.
+        For each day, calculates the SD of the specified time segment and then
+        averages these daily SDs.
 
-        :param start_time: Hora de inicio en formato "HH:MM"
-        :param duration_hours: Duración del segmento en horas
-        :return: Promedio de las SD del segmento de cada día y promedio de las medias diarias
+        :param start_time: Start time in "HH:MM" format
+        :param duration_hours: Duration of the segment in hours
+        :return: Average of segment SDs for each day and average of daily means
 
-        Ejemplo:
-            sd_within_day_segment("00:00", 8)  # SD promedio del segmento nocturno (00:00-08:00)
-            sd_within_day_segment("08:00", 8)  # SD promedio del segmento diurno (08:00-16:00)
+        Example:
+            sd_within_day_segment("00:00", 8)  # Average SD of night segment (00:00-08:00)
+            sd_within_day_segment("08:00", 8)  # Average SD of day segment (08:00-16:00)
         """
         # Obtener los datos del segmento
         segment_data = self._get_segment_data(start_time, duration_hours)
@@ -147,21 +173,21 @@ class VariabilityMetrics:
         filter_outliers: bool = True,
         agrupar_por_intervalos: bool = False,
         intervalo_minutos: int = 5,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """
-        Calcula la desviación estándar entre puntos temporales (SDhh:mm).
-        Calcula la media de una marca temporal y luego la desviación estándar de esas medias.
+        Calculates standard deviation between timepoints (SDhh:mm).
+        Calculates the mean of a timestamp and then the standard deviation of those means.
 
-        Esta métrica mide la variabilidad del patrón de glucosa a lo largo del día.
+        This metric measures the variability of the glucose pattern throughout the day.
 
-        Versión optimizada para grandes conjuntos de datos.
+        Optimized version for large datasets.
 
-        :param min_count_threshold: Umbral para considerar una marca temporal como válida
-                               (proporción de la mediana de conteos). Por defecto 0.5 (50%).
-        :param filter_outliers: Si es True, filtra las marcas temporales con pocos datos.
-        :param agrupar_por_intervalos: Si es True, agrupa los datos en intervalos regulares de tiempo.
-        :param intervalo_minutos: Tamaño del intervalo en minutos para la agrupación (por defecto 5 min).
-        :return: Diccionario con el valor de SDhh:mm y estadísticas relacionadas.
+        :param min_count_threshold: Threshold to consider a timestamp valid
+                               (proportion of count median). Default 0.5 (50%).
+        :param filter_outliers: If True, filters timestamps with few data points.
+        :param agrupar_por_intervalos: If True, groups data into regular time intervals.
+        :param intervalo_minutos: Interval size in minutes for grouping (default 5 min).
+        :return: Dictionary with SDhh:mm value and related statistics.
         """
         # Crear una copia de los datos con solo las columnas necesarias
         df = self.data[["time", "glucose"]].copy()
@@ -235,11 +261,11 @@ class VariabilityMetrics:
 
     def sd_between_timepoints_segment(self, start_time: str, duration_hours: int) -> dict:
         """
-        Calcula SDhh:mm para un segmento específico del día.
+        Calculates SDhh:mm for a specific day segment.
 
-        :param start_time: Hora de inicio en formato "HH:MM"
-        :param duration_hours: Duración del segmento en horas
-        :return: SD del patrón promedio por tiempo del día en el segmento
+        :param start_time: Start time in "HH:MM" format
+        :param duration_hours: Duration of the segment in hours
+        :return: SD of the average pattern by time of day in the segment
         """
         # Filtrar el segmento primero
         segment_data = self._get_segment_data(start_time, duration_hours)
@@ -253,15 +279,15 @@ class VariabilityMetrics:
 
     def sd_within_series(self, hours: int = 1) -> dict:
         """
-        Calcula SDws y media de las series temporales.
+        Calculates SDws and mean of time series.
 
-        A menor número de horas, más pequeño es el valor de SDws porque
-        da menos tiempo para que la glucosa varíe.
+        The fewer hours, the smaller the SDws value because
+        it gives less time for glucose to vary.
 
-        Versión optimizada para grandes conjuntos de datos.
+        Optimized version for large datasets.
 
-        :param hours: Tamaño de la ventana en horas
-        :return: Diccionario con SD y media promedio de las series temporales
+        :param hours: Window size in hours
+        :return: Dictionary with average SD and mean of time series
         """
         # Crear copia eficiente con solo las columnas necesarias
         df = self.data[["time", "glucose"]].copy()
@@ -303,15 +329,15 @@ class VariabilityMetrics:
 
     def sd_daily_mean(self, min_count_threshold: float = 0.5) -> dict:
         """
-        Calcula la desviación estándar de las medias diarias (SDdm).
+        Calculates standard deviation of daily means (SDdm).
 
-        Esta métrica refleja la variabilidad entre diferentes días.
+        This metric reflects variability between different days.
 
-        Versión optimizada para grandes conjuntos de datos.
+        Optimized version for large datasets.
 
-        :param min_count_threshold: Umbral para considerar un día como válido
-                               (proporción de la mediana de conteos).
-        :return: Diccionario con el valor de SDdm y estadísticas relacionadas.
+        :param min_count_threshold: Threshold to consider a day valid
+                               (proportion of count median).
+        :return: Dictionary with SDdm value and related statistics.
         """
         # Crear copia eficiente con solo las columnas necesarias
         df = self.data[["time", "glucose"]].copy()
@@ -356,19 +382,19 @@ class VariabilityMetrics:
         intervalo_minutos: int = 5,
     ) -> dict:
         """
-        Calcula la desviación estándar entre días para cada punto temporal (SDbhh:mm).
+        Calculates between-day standard deviation for each timepoint (SDbhh:mm).
 
-        Esta función mide la variabilidad de la glucosa para cada punto temporal específico
-        a lo largo de diferentes días, lo que refleja la consistencia día a día.
+        This function measures glucose variability for each specific timepoint
+        across different days, reflecting day-to-day consistency.
 
-        Versión optimizada para grandes conjuntos de datos.
+        Optimized version for large datasets.
 
-        :param min_count_threshold: Umbral para considerar una marca temporal como válida
-                               (proporción de la mediana de conteos).
-        :param filter_outliers: Si es True, filtra las marcas temporales con pocos datos.
-        :param agrupar_por_intervalos: Si es True, agrupa los datos en intervalos regulares.
-        :param intervalo_minutos: Tamaño del intervalo en minutos (por defecto 5 min).
-        :return: Diccionario con el valor de SDbhh:mm y estadísticas relacionadas.
+        :param min_count_threshold: Threshold to consider a timestamp valid
+                               (proportion of count median).
+        :param filter_outliers: If True, filters timestamps with few data points.
+        :param agrupar_por_intervalos: If True, groups data into regular intervals.
+        :param intervalo_minutos: Interval size in minutes (default 5 min).
+        :return: Dictionary with SDbhh:mm value and related statistics.
         """
         # Crear copia eficiente con solo las columnas necesarias
         df = self.data[["time", "glucose"]].copy()
@@ -444,15 +470,15 @@ class VariabilityMetrics:
 
     def sd_same_timepoint_adjusted(self) -> dict:
         """
-        Calcula la SD entre días para cada punto temporal, después de corregir por cambios en las medias diarias.
+        Calculates between-day SD for each timepoint, adjusted for changes in daily means.
 
-        El proceso es:
-        1. Ajustar los valores de glucosa: Glucosa_ajustada = Glucosa - Media_diaria + Media_total
-        2. Calcular la SD entre días para cada punto temporal usando los valores ajustados
-        3. Promediar las SD resultantes
+        The process is:
+        1. Adjust glucose values: Adjusted_Glucose = Glucose - Daily_Mean + Total_Mean
+        2. Calculate between-day SD for each timepoint using adjusted values
+        3. Average the resulting SDs
 
         Returns:
-            dict: SD entre días ajustada por medias diarias
+            dict: Between-day SD adjusted for daily means
         """
         # Calcular la media total (Grand Mean)
         grand_mean = self.data["glucose"].mean()
@@ -481,14 +507,14 @@ class VariabilityMetrics:
 
     def sd_interaction(self) -> dict:
         """
-        Calcula la desviación estándar de interacción (SDI).
+        Calculates standard deviation of interaction (SDI).
 
-        SDI cuantifica la variabilidad diaria en el patrón glucémico,
-        considerando las interacciones entre la hora del día y el día específico.
+        SDI quantifies daily variability in the glycemic pattern,
+        considering interactions between time of day and specific day.
 
-        Versión optimizada para grandes conjuntos de datos.
+        Optimized version for large datasets.
 
-        :return: Diccionario con el valor de SDI y estadísticas relacionadas.
+        :return: Dictionary with SDI value and related statistics.
         """
         # Crear copia eficiente con solo las columnas necesarias
         df = self.data[["time", "glucose"]].copy()
@@ -538,13 +564,13 @@ class VariabilityMetrics:
 
     def sd_segment(self, start_time: str, duration_hours: int) -> dict:
         """
-        Calcula la desviación estándar dentro de un segmento específico (SDws).
+        Calculates standard deviation within a specific segment (SDws).
 
-        Puede estar bien para analizar tramos como noche, día, tarde, etc.
+        Useful for analyzing segments like night, day, afternoon, etc.
 
-        :param start_time: Hora de inicio en formato "HH:MM".
-        :param duration_hours: Duración del segmento en horas.
-        :return: Desviación estándar de las lecturas dentro del segmento.
+        :param start_time: Start time in "HH:MM".
+        :param duration_hours: Duration of the segment in hours.
+        :return: Standard deviation of readings within the segment.
         """
         from datetime import datetime, time, timedelta
 
@@ -570,7 +596,7 @@ class VariabilityMetrics:
 
     def calculate_all_sd_metrics(self) -> dict:
         """
-        Calcula todas las métricas de desviación estándar disponibles.
+        Calculates all available standard deviation metrics.
         """
         return {
             "SDT": self.sd_total()["sd"],
@@ -590,8 +616,8 @@ class VariabilityMetrics:
 
     def calculate_all_cv_metrics(self) -> dict:
         """
-        Calcula todas las métricas de coeficiente de variación disponibles.
-        Falta revisar sobre todo las medias si están bien.
+        Calculates all available coefficient of variation metrics.
+        Todo: Check if means are correct.
         """
         return {
             "CVT": self.sd_total()["sd"] / self.sd_total()["mean"] * 100,
@@ -609,27 +635,25 @@ class VariabilityMetrics:
             "CVSDI": self.sd_interaction()["sd"] / self.sd_interaction()["mean"] * 100,
         }
 
-    ## MEDIDAS AVANZADAS DE VARIABILIDAD
-
     def MAGE_Baghurst(self, threshold_sd: int = 1, approach: int = 1, plot: bool = False) -> dict:
         """
-        Calcula el MAGE según el algoritmo de Baghurst.
+        Calculates MAGE using the specific algorithm from Baghurst.
 
-        Cambios principales:
-        1. Manejo correcto de bordes en el suavizado
-        2. Búsqueda de turning points en datos originales entre mínimos/máximos del perfil suavizado
-        3. Proceso iterativo de eliminación de puntos no válidos
-        4. Manejo de excursiones al inicio/final del dataset
+        Main changes:
+        1. Correct handling of edges in smoothing
+        2. Search for turning points in original data between minima/maxima of smoothed profile
+        3. Iterative process of eliminating invalid points
+        4. Handling of excursions at the beginning/end of the dataset
 
-        :param threshold_sd: Número de desviaciones estándar para el umbral
-        :param approach: 1 para usar suavizado según Baghurst original,
-                        2 para eliminación directa, 3 para suavizado mejorado
-        :param plot: Si es True, genera una visualización de los picos y valles identificados
-        :return: Diccionario con MAGE+, MAGE- y métricas relacionadas
+        :param threshold_sd: Number of standard deviations for the threshold
+        :param approach: 1 to use smoothing per original Baghurst,
+                        2 for direct elimination, 3 for improved smoothing
+        :param plot: If True, generates a visualization of identified peaks and valleys
+        :return: Dictionary with MAGE+, MAGE- and related metrics
 
-        Approach 1: Algoritmo original de Baghurst con suavizado y proceso iterativo de eliminación
-        Approach 2: Eliminación directa de puntos intermedios en secuencias monótonas
-        Approach 3: Suavizado mejorado con filtrado adicional de turning points
+        Approach 1: Original Baghurst algorithm with smoothing and iterative elimination process
+        Approach 2: Direct elimination of intermediate points in monotonic sequences
+        Approach 3: Improved smoothing with additional turning point filtering
         """
         glucose = self.data["glucose"].values
         times = self.data["time"].values
@@ -643,16 +667,15 @@ class VariabilityMetrics:
         if approach == 1 or plot:
             # PASO 1: Aplicar filtro de suavizado e identificar turning points en datos suavizados
             weights = np.array([1, 2, 4, 8, 16, 8, 4, 2, 1]) / 46
-            smoothed = np.zeros_like(glucose)
+            
+            # Usar np.convolve para suavizado central (mucho más rápido)
+            smoothed = np.convolve(glucose, weights, mode='same')
 
-            # Suavizado central
-            for i in range(4, len(glucose) - 4):
-                smoothed[i] = np.dot(weights, glucose[i - 4 : i + 5])
-
-            # Manejo de bordes con media simple
-            for i in range(4):
+            # Ajustar bordes que np.convolve no maneja como el algoritmo original de Baghurst
+            for i in range(min(4, len(glucose))):
                 smoothed[i] = glucose[: i + 5].mean()
-                smoothed[-(i + 1)] = glucose[-(i + 5) :].mean()
+                if len(glucose) > i + 5:
+                    smoothed[-(i + 1)] = glucose[-(i + 5) :].mean()
 
             # Identificar turning points en datos suavizados mediante primeras diferencias
             delta = np.diff(smoothed)
@@ -722,7 +745,7 @@ class VariabilityMetrics:
 
                 for i in range(1, len(delta_turning)):
                     # Si las diferencias tienen el mismo signo, no es un turning point
-                    if delta_turning[i - 1] * delta_turning[i] > 0:
+                    if np.sign(delta_turning[i - 1]) == np.sign(delta_turning[i]):
                         false_turning.append(i)
 
                 # Eliminar puntos falsos
@@ -758,7 +781,7 @@ class VariabilityMetrics:
                 false_turning = []
 
                 for i in range(1, len(delta_turning)):
-                    if delta_turning[i - 1] * delta_turning[i] > 0:
+                    if np.sign(delta_turning[i - 1]) == np.sign(delta_turning[i]):
                         false_turning.append(i)
 
                 for idx in sorted(false_turning, reverse=True):
@@ -1211,8 +1234,8 @@ class VariabilityMetrics:
 
     def MAGE(self) -> float:
         """
-        Calcula el MAGE (Mean Amplitude of Glycemic Excursions).
-        :return: Valor de MAGE.
+        Calculates MAGE (Mean Amplitude of Glycemic Excursions).
+        :return: MAGE value.
         """
         sd = self.sd()
         peaks_and_nadirs = self.data[
@@ -1221,6 +1244,9 @@ class VariabilityMetrics:
             | (self.data["glucose"].shift(1) > self.data["glucose"])
             & (self.data["glucose"] < self.data["glucose"].shift(-1))
         ].reset_index(drop=True)
+
+        if len(peaks_and_nadirs) < 2:
+            return 0.0
 
         excursions = []
         starts_with_peak = peaks_and_nadirs["glucose"][0] > peaks_and_nadirs["glucose"][1]
@@ -1239,46 +1265,56 @@ class VariabilityMetrics:
             if abs(peak - nadir) > sd:
                 excursions.append(abs(peak - nadir))
 
-        return sum(excursions) / len(excursions) if excursions else 0
+        return float(np.mean(excursions)) if excursions else 0.0
 
     def MODD(self, days: int = 1) -> dict:
         """
-        Calcula el MODD (Mean Of Daily Differences) para un intervalo específico de días.
+        Calculates MODD (Mean Of Daily Differences) for a specific day interval.
+        Optimized vectorized version.
 
-        :param days: Número de días para calcular diferencias (1-6)
-        :return: Diccionario con el valor MODD y estadísticas relacionadas
+        :param days: Number of days to calculate differences (1-6).
+        :return: Dictionary with MODD value and related statistics.
         """
         if not 1 <= days <= 6:
-            raise ValueError("El número de días debe estar entre 1 y 6")
+            raise ValueError("The number of days must be between 1 and 6")
 
-        # Crear copia de datos con información de tiempo
-        data_copy = self.data.copy()
-        data_copy["date"] = data_copy["time"].dt.date
-        data_copy["time_of_day"] = data_copy["time"].dt.strftime("%H:%M:%S")
+        df = self.data[["time", "glucose"]].copy()
+        target_delta = pd.Timedelta(days=days)
 
-        # Agrupar por hora del día
-        grouped = data_copy.groupby("time_of_day")
+        # Use time as index for alignment
+        df_indexed = df.set_index("time")
 
-        abs_diffs = []
-        day_pairs = []
+        # Shift back to compare with 'days' ago
+        try:
+            # We use a frequency-based shift to align exactly by time of day
+            df_shifted = df_indexed.shift(1, freq=target_delta)
 
-        for _, group in grouped:
-            # Ordenar por fecha para cada hora del día
-            sorted_group = group.sort_values("date")
+            # Join to align values at the same time of day
+            merged = df_indexed.join(df_shifted, lsuffix="_current", rsuffix="_past", how="inner")
 
-            # Crear pares de días separados por el número específico de días
-            for i in range(len(sorted_group) - days):
-                if (sorted_group.iloc[i + days]["date"] - sorted_group.iloc[i]["date"]).days == days:
-                    abs_diff = abs(sorted_group.iloc[i + days]["glucose"] - sorted_group.iloc[i]["glucose"])
-                    abs_diffs.append(abs_diff)
-                    day_pairs.append(
-                        (
-                            sorted_group.iloc[i]["glucose"],
-                            sorted_group.iloc[i + days]["glucose"],
-                        )
-                    )
+            if merged.empty:
+                return {
+                    "value": None,
+                    "n_observations": 0,
+                    "std": None,
+                    "correlation": None,
+                }
 
-        if not abs_diffs:
+            abs_diffs = (merged["glucose_current"] - merged["glucose_past"]).abs()
+
+            modd_value = float(abs_diffs.mean())
+            std_value = float(abs_diffs.std()) if len(abs_diffs) > 1 else 0.0
+            correlation = float(merged["glucose_current"].corr(merged["glucose_past"]))
+
+            return {
+                "value": modd_value,
+                "n_observations": len(abs_diffs),
+                "std": std_value,
+                "correlation": correlation,
+            }
+        except Exception as e:
+            if getattr(self, "log", False):
+                print(f"Error in vectorized MODD: {e}")
             return {
                 "value": None,
                 "n_observations": 0,
@@ -1286,35 +1322,17 @@ class VariabilityMetrics:
                 "correlation": None,
             }
 
-        # Calcular estadísticas
-        modd_value = np.mean(abs_diffs)
-        std_value = np.std(abs_diffs) if len(abs_diffs) > 1 else 0
-
-        # Calcular correlación entre días
-        correlation = None
-        if len(day_pairs) > 1:
-            day1_values, day2_values = zip(*day_pairs)
-            correlation = np.corrcoef(day1_values, day2_values)[0, 1]
-
-        return {
-            "value": modd_value,
-            "n_observations": len(abs_diffs),
-            "std": std_value,
-            "correlation": correlation,
-        }
-
     def CONGA(self, hours: int = 4, max_gap_minutes: float = None) -> dict:
         """
-        Calcula CONGA (Continuous Overlapping Net Glycemic Action).
+        Calculates CONGA (Continuous Overlapping Net Glycemic Action).
 
-        CONGA mide la variabilidad intradiaria de la glucemia calculando la desviación
-        estándar de las diferencias entre valores actuales y valores de 'n' horas antes.
+        CONGA measures intraday glycemic variability by calculating the standard deviation
+        of differences between current values and values 'n' hours earlier.
 
-        :param hours: Número de horas para el intervalo de tiempo (n)
-        :param max_gap_minutes: Brecha máxima permitida en minutos entre mediciones para
-                           considerar válida una comparación. Si es None, se usa 2 veces
-                           el intervalo típico.
-        :return: Diccionario con valor CONGA y estadísticas relacionadas
+        :param hours: Number of hours for the time interval (n).
+        :param max_gap_minutes: Maximum allowed gap in minutes between measurements to
+                           consider a comparison valid. If None, uses 2 times the typical interval.
+        :return: Dictionary with CONGA value and related statistics.
         :reference: McDonnell CM, et al. Diabetes Technol Ther. 2005;7(2):243-9.
                    DOI: 10.1089/dia.2005.7.243
         """
@@ -1394,11 +1412,11 @@ class VariabilityMetrics:
 
     def Lability_index(self, interval: int = 1, period: str = "week") -> dict:
         """
-        Calcula el índice de variabilidad (LI) para un intervalo de tiempo específico.
+        Calculates Lability Index (LI) for a specific time interval.
 
-        :param interval: Número de horas entre mediciones consecutivas
-        :param period: Período de tiempo para calcular el LI ('week' o 'month')
-        :return: Diccionario con valores LI y estadísticas
+        :param interval: Number of hours between consecutive measurements.
+        :param period: Time period to calculate LI ('week' or 'month').
+        :return: Dictionary with LI values and statistics.
 
         DOI: 10.2337/diabetes.53.4.955
         """
@@ -1438,8 +1456,8 @@ class VariabilityMetrics:
 
     def Variability(self) -> str:
         """
-        Calcula todas las métricas de variabilidad.
-        :return: Un string JSON con todas las métricas de variabilidad.
+        Calculates all variability metrics.
+        :return: A JSON string with all variability metrics.
         """
         variability_metrics = {
             "CONGA1": self.CONGA(hours=1),
@@ -1459,10 +1477,10 @@ class VariabilityMetrics:
 
     def variability_summary(self) -> Dict[str, Any]:
         """
-        Resumen completo de todas las métricas de variabilidad.
+        Complete summary of all variability metrics.
 
         Returns:
-            dict: Resumen completo de métricas de variabilidad
+            dict: Complete summary of variability metrics
         """
         return {
             "basic_variability": {"sd_total": self.sd_total(), "cv": self.cv()},
@@ -1481,26 +1499,26 @@ class VariabilityMetrics:
             "lability": {"lability_index": self.Lability_index()},
         }
 
-    ## MEDIDAS DE LA CALIDAD DE GLUCEMIA
+    # GLYCEMIC QUALITY MEASURES
 
     def M_Value(self, reference_glucose: int = 90) -> dict:
         """
-        Calcula el M-Value según la definición de Schlichtkrull y consideración de Service
+        Calculates M-Value according to Schlichtkrull's definition and Service's consideration.
 
-        M-Value es un híbrido entre:
-        1. Desviación de la glucemia media
-        2. Variabilidad glucémica
+        M-Value is a hybrid between:
+        1. Mean blood glucose deviation
+        2. Glycemic variability
 
-        Características especiales:
-        - Da mayor peso a la hipoglucemia que a la hiperglucemia
-        - Usa 90 mg/dL como valor de referencia histórico. Artículo original usaban 120 mg/dL
-        - Combina desviación media y amplitud de fluctuación
+        Special features:
+        - Gives more weight to hypoglycemia than hyperglycemia
+        - Uses 90 mg/dL as historical reference value. Original paper used 120 mg/dL
+        - Combines mean deviation and fluctuation amplitude
 
-        Fórmula: M = (1/n)∑|10 * log10(BG/120)|³ + W/20
-        (El factor de corrección se puede obviar cuando hay mas de 24 datos)
+        Formula: M = (1/n)∑|10 * log10(BG/120)|³ + W/20
+        (The correction factor can be omitted when there are more than 24 data points)
 
-        :param reference_glucose: Valor de referencia (default 120 mg/dL)
-        :return: Diccionario con M-Value y componentes
+        :param reference_glucose: Reference value (default 90 mg/dL - updated from docstring default)
+        :return: Dictionary with M-Value and components
         :reference: 10.1111/j.0954-6820.1965.tb01810.x
         :reference: 10.2337/db12-1396
         """
@@ -1513,15 +1531,15 @@ class VariabilityMetrics:
         return round(M_BS_mean, 2)
 
     def j_index(self) -> float:
-        """Calcula el J-index.
+        """Calculates J-index.
         DOI: 10.1055/s-2007-979906
         """
         return 0.001 * (self.mean() + self.sd()) ** 2
 
     def GRADE(self, unit: str = "mg/dL") -> dict:
         """
-        Calcula el GRADE.
-        :return: Valor de GRADE.
+        Calculates GRADE.
+        :return: GRADE value.
         :reference: DOI: 10.1111/j.1464-5491.2007.02119.x
         """
         # Crear copia de los datos para no modificar los originales
@@ -1595,8 +1613,8 @@ class VariabilityMetrics:
 
     def LBGI(self) -> float:
         """
-        Calcula el Low Blood Glucose Index (LBGI).
-        :return: Valor de LBGI.
+        Calculates Low Blood Glucose Index (LBGI).
+        :return: LBGI value.
         :reference: DOI: 10.2337/db12-1396
         """
         # Usar copia para no modificar los datos originales
@@ -1611,14 +1629,14 @@ class VariabilityMetrics:
 
     def HBGI(self) -> float:
         """
-        Calcula el High Blood Glucose Index (HBGI).
-        :return: Valor de HBGI.
+        Calculates High Blood Glucose Index (HBGI).
+        :return: HBGI value.
         :reference: DOI: 10.2337/db12-1396
         """
-        # Usar copia para no modificar los datos originales
+        # Use copy to avoid modifying original data
         glucose_values = self.data["glucose"].values
 
-        # Cálculos vectorizados
+        # Vectorized calculations
         f_bg = 1.509 * ((np.log(glucose_values)) ** 1.084 - 5.381)
         r_bg = 10 * f_bg**2
         rh_bg = np.where(f_bg > 0, r_bg, 0)
@@ -1627,53 +1645,64 @@ class VariabilityMetrics:
 
     def GRI(self, pregnancy: bool = False) -> dict:
         """
-        Calcula el Glucose Risk Index (GRI).
+        Calculates Glucose Risk Index (GRI).
 
-        GRI combina los tiempos en diferentes rangos de glucosa, dando diferentes pesos
-        a la hipoglucemia y la hiperglucemia.
+        GRI combines time in different glucose ranges, giving different weights
+        to hypoglycemia and hyperglycemia.
 
         GRI = (3.0 × VLow) + (2.4 × Low) + (1.6 × VHigh) + (0.8 × High)
 
-        Rangos estándar:
+        Standard ranges:
         - VLow: <54 mg/dL
         - Low: 54-70 mg/dL
         - VHigh: >250 mg/dL
         - High: 180-250 mg/dL
 
-        Rangos embarazo:
-        - VLow: <54 mg/dL
-        - Low: 54-63 mg/dL
+        Pregnancy ranges (Experimental, not clinically validated):
+        - VLow: <55 mg/dL
+        - Low: 55-63 mg/dL
         - VHigh: >250 mg/dL
         - High: 140-250 mg/dL
 
-        :param pregnancy: Si True, usa rangos específicos para embarazo
-        :return: Diccionario con el GRI y sus componentes
-        :reference: DOI: 10.1016/j.diabres.2013.03.006
+        :param pregnancy: If True, uses specific ranges for pregnancy.
+        :return: Dictionary with GRI and its components.
+        :reference: DOI: 10.1016/j.diabres.2013.03.006 (Standard)
         """
-        # Definir rangos según si es embarazo o no
-        vlow_threshold = 54  # Igual en ambos casos
-        low_range = (54, 63) if pregnancy else (54, 70)
-        high_range = (140, 250) if pregnancy else (180, 250)
-        vhigh_threshold = 250  # Igual en ambos casos
+        # NOTE: GRI was originally validated for non-pregnant adults.
+        # The use of pregnancy-specific targets here is experimental and NOT clinically validated.
 
-        # Calcular los porcentajes de tiempo en cada rango
-        vlow = self.TBR(vlow_threshold)  # <54 mg/dL
+        # Define ranges based on pregnancy status
+        if pregnancy:
+            vlow_threshold = 55
+            low_range = (55, 63)
+            high_range = (140, 250)
+            vhigh_threshold = 250
+        else:
+            vlow_threshold = 54
+            low_range = (54, 70)
+            high_range = (180, 250)
+            vhigh_threshold = 250
+
+        # Calculate percentage of time in each range
+        vlow = self.TBR(vlow_threshold)  # < threshold
         low = self.calculate_time_in_range(*low_range)
-        vhigh = self.TAR(vhigh_threshold)  # >250 mg/dL
+        vhigh = self.TAR(vhigh_threshold)  # > threshold
         high = self.calculate_time_in_range(*high_range)
 
-        # Calcular los componentes del GRI
+        # Calculate GRI
+        gri = (3.0 * vlow) + (2.4 * low) + (1.6 * vhigh) + (0.8 * high)
+
+        # Calculate components for derived metrics
         hypo_component = vlow + (0.8 * low)
         hyper_component = vhigh + (0.5 * high)
 
-        # Calcular el GRI
-        gri = (3.0 * vlow) + (2.4 * low) + (1.6 * vhigh) + (0.8 * high)
-
-        # Calcular el TIR (tiempo en rango)
+        # Calculate TIR (Time In Range) relative to the used GRI thresholds
         tir = 100 - (vlow + low + vhigh + high)
 
         return {
             "GRI": round(gri, 2),
+            "is_pregnancy": pregnancy,
+            "validated": not pregnancy,
             "components": {
                 "VLow": round(vlow, 2),
                 "Low": round(low, 2),
@@ -1689,57 +1718,57 @@ class VariabilityMetrics:
 
     def ADRR(self) -> dict:
         """
-        Calcula el Average Daily Risk Range (ADRR).
+        Calculates Average Daily Risk Range (ADRR).
 
-        El ADRR es una medida de variabilidad que:
-        1. Es igualmente sensible a hipo e hiperglucemia
-        2. Usa transformación logarítmica para normalizar la escala
+        ADRR is a variability measure that:
+        1. Is equally sensitive to hypoglycemia and hyperglycemia.
+        2. Uses logarithmic transformation to normalize the scale.
 
-        :return: Diccionario con ADRR y estadísticas relacionadas
+        :return: Dictionary with ADRR and related statistics.
 
         :reference: DOI: 10.1177/193229681300700529
         """
-        # Agrupar datos por día
+        # Group data by day
         daily_readings = self.data.groupby(self.data["time"].dt.date)
 
-        # Función de transformación de glucosa
+        # Glucose transformation function
         def transform_bg(bg_values):
             # f(BG) = 1.509 * (ln(BG)**1.084 - 5.381)
             return 1.509 * ((np.log(bg_values)) ** 1.084 - 5.381)
 
-        # Calcular riesgos diarios
+        # Calculate daily risks
         daily_risks = []
-        daily_hypo_risks = []  # Lista separada para riesgos de hipoglucemia
-        daily_hyper_risks = []  # Lista separada para riesgos de hiperglucemia
+        daily_hypo_risks = []  # Separate list for hypoglycemia risks
+        daily_hyper_risks = []  # Separate list for hyperglycemia risks
 
         for _date, day_data in daily_readings:
-            # Transformar valores de glucosa
+            # Transform glucose values
             bg_values = day_data["glucose"].values
             transformed = transform_bg(bg_values)
 
-            # Separar riesgos de hipo e hiperglucemia
-            rl = np.where(transformed < 0, 10 * transformed**2, 0)  # Riesgo hipoglucemia
-            rh = np.where(transformed > 0, 10 * transformed**2, 0)  # Riesgo hiperglucemia
-            # Obtener máximos riesgos diarios
-            lr = np.max(rl) if len(rl) > 0 else 0  # Máximo riesgo hipo
-            hr = np.max(rh) if len(rh) > 0 else 0  # Máximo riesgo hiper
+            # Separate hypo and hyper risks
+            rl = np.where(transformed < 0, 10 * transformed**2, 0)  # Hypoglycemia risk
+            rh = np.where(transformed > 0, 10 * transformed**2, 0)  # Hyperglycemia risk
+            # Get max daily risks
+            lr = np.max(rl) if len(rl) > 0 else 0  # Max hypo risk
+            hr = np.max(rh) if len(rh) > 0 else 0  # Max hyper risk
 
-            daily_risks.append(lr + hr)  # Suma total de riesgos
-            daily_hypo_risks.append(lr)  # Guardar riesgo de hipoglucemia
-            daily_hyper_risks.append(hr)  # Guardar riesgo de hiperglucemia
+            daily_risks.append(lr + hr)  # Total risk sum
+            daily_hypo_risks.append(lr)  # Save hypo risk
+            daily_hyper_risks.append(hr)  # Save hyper risk
 
-        # Calcular ADRR como promedio de riesgos diarios
+        # Calculate ADRR as average of daily risks
         adrr = np.mean(daily_risks)
 
-        # Determinar categoría de riesgo
+        # Determine risk category
         if adrr < 20:
-            risk_category = "Bajo"
+            risk_category = "Low"
         elif adrr < 40:
-            risk_category = "Moderado"
+            risk_category = "Moderate"
         else:
-            risk_category = "Alto"
+            risk_category = "High"
 
-        # Calcular estadísticas adicionales
+        # Calculate additional statistics
         hypo_risk = np.mean(daily_hypo_risks)
         hyper_risk = np.mean(daily_hyper_risks)
 
@@ -1752,50 +1781,51 @@ class VariabilityMetrics:
             },
         }
 
-    def calculate_all_metrics(self) -> dict:
+    def calculate_variability_metrics(self) -> dict:
         try:
-            # Métricas básicas
+            # Basic metrics
             metrics = {
-                "completitud": self.data_completeness(),
-                "media": self.mean(),
-                "mediana": self.median(),
-                "desviacion_estandar": self.sd(),
-                "cv": self.cv(),
-                "gmi": self.gmi(),
-                # Tiempo en rango
-                "tir": self.TIR(),
-                "tir_tight": self.TIR_tight(),
-                "tir_pregnancy": self.TIR_pregnancy(),
-                "tar180": self.TAR180(),
-                "tar250": self.TAR250(),
-                "tar140": self.TAR140(),
-                "tbr70": self.TBR70(),
-                "tbr63": self.TBR63(),
-                "tbr55": self.TBR55(),
-                # Estadísticas de distribución
-                "asimetria": float(self.data["glucose"].skew()),
-                "curtosis": float(self.data["glucose"].kurtosis()),
+                "data_completeness": self.data_completeness(),
+                "Mean": self.mean(),
+                "Median": self.median(),
+                "Std": self.sd(),
+                "CV": self.cv(),
+                "GMI": self.gmi(),
+                # Time in Range
+                "TIR": self.TIR(),
+                "TIR_tight": self.TIR_tight(),
+                "TIR_pregnancy": self.TIR_pregnancy(),
+                "TAR180": self.TAR180(),
+                "TAR250": self.TAR250(),
+                "TAR140": self.TAR140(),
+                "TBR70": self.TBR70(),
+                "TBR63": self.TBR63(),
+                "TBR55": self.TBR55(),
+                # Distribution statistics
+                "Skewness": float(self.data["glucose"].skew()),
+                "Kurtosis": float(self.data["glucose"].kurtosis()),
             }
 
-            # Métricas de variabilidad SD - estas retornan diccionarios
+            # SD Variability metrics - these return dictionaries
+            # SD Variability metrics - these return dictionaries
             sd_metrics = {
-                "sdt": self.sd_total().get("sd"),
-                "sdw": self.sd_within_day().get("sd"),
-                "sd_timepoints": self.sd_between_timepoints().get("sd"),
-                "sd_noche": self.sd_segment("00:00", 8).get("sd"),
-                "sd_dia": self.sd_segment("08:00", 8).get("sd"),
-                "sd_tarde": self.sd_segment("16:00", 8).get("sd"),
-                "sd_1h": self.sd_within_series(hours=1).get("sd"),
-                "sd_6h": self.sd_within_series(hours=6).get("sd"),
-                "sd_24h": self.sd_within_series(hours=24).get("sd"),
-                "sd_daily_mean": self.sd_daily_mean().get("sd"),
-                "sd_same_timepoint": self.sd_same_timepoint().get("sd"),
-                "sd_same_timepoint_adj": self.sd_same_timepoint_adjusted().get("sd"),
-                "sd_interaction": self.sd_interaction().get("sd"),
+                "SDT": self.sd_total().get("sd"),
+                "SDW": self.sd_within_day().get("sd"),
+                "SD_timepoints": self.sd_between_timepoints().get("sd"),
+                "SD_night": self.sd_segment("00:00", 8).get("sd"),
+                "SD_day": self.sd_segment("08:00", 8).get("sd"),
+                "SD_evening": self.sd_segment("16:00", 8).get("sd"),
+                "SD_1h": self.sd_within_series(hours=1).get("sd"),
+                "SD_6h": self.sd_within_series(hours=6).get("sd"),
+                "SD_24h": self.sd_within_series(hours=24).get("sd"),
+                "SD_daily_mean": self.sd_daily_mean().get("sd"),
+                "SD_same_timepoint": self.sd_same_timepoint().get("sd"),
+                "SD_same_timepoint_adj": self.sd_same_timepoint_adjusted().get("sd"),
+                "SD_interaction": self.sd_interaction().get("sd"),
             }
             metrics.update(sd_metrics)
 
-            # CONGA - retorna diccionario
+            # CONGA - returns dictionary
             conga_metrics = {
                 "CONGA1": self.CONGA(hours=1).get("value"),
                 "CONGA2": self.CONGA(hours=2).get("value"),
@@ -1805,7 +1835,7 @@ class VariabilityMetrics:
             }
             metrics.update(conga_metrics)
 
-            # MAGE - retorna diccionario
+            # MAGE - returns dictionary
             try:
                 mage_results = self.MAGE_Baghurst()
                 metrics.update(
@@ -1820,9 +1850,9 @@ class VariabilityMetrics:
                 )
             except Exception as e:
                 if self.log:
-                    print(f"Error calculando MAGE: {str(e)}")
+                    print(f"Error calculating MAGE: {str(e)}")
 
-            # MODD - retorna diccionario
+            # MODD - returns dictionary
             try:
                 modd_result = self.MODD()
                 metrics.update(
@@ -1833,9 +1863,9 @@ class VariabilityMetrics:
                 )
             except Exception as e:
                 if self.log:
-                    print(f"Error calculando MODD: {str(e)}")
+                    print(f"Error calculating MODD: {str(e)}")
 
-            # Índices de riesgo y otros
+            # Risk indices and others
             try:
                 lgbi = self.LBGI()
                 hbgi = self.HBGI()
@@ -1846,23 +1876,23 @@ class VariabilityMetrics:
                 m_value = self.M_Value()
                 j_index = self.j_index()
 
-                # Crear diccionario con los resultados, verificando el tipo de cada valor
+                # Create dictionary with results, verifying the type of each value
                 risk_metrics = {
-                    "lbgi": lgbi,
-                    "hbgi": hbgi,
-                    "adrr": adrr.get("adrr") if isinstance(adrr, dict) else adrr,
-                    "gri": gri.get("GRI") if isinstance(gri, dict) else gri,
-                    "gri_high": gri.get("derived_metrics", {}).get("hyper_component", 0),
-                    "gri_low": gri.get("derived_metrics", {}).get("hypo_component", 0),
-                    "gri_pregnancy": gri_pregnancy.get("GRI") if isinstance(gri_pregnancy, dict) else gri_pregnancy,
-                    "gri_pregnancy_high": gri_pregnancy.get("derived_metrics", {}).get("hyper_component", 0),
-                    "gri_pregnancy_low": gri_pregnancy.get("derived_metrics", {}).get("hypo_component", 0),
-                    "grade": grade.get("total") if isinstance(grade, dict) else grade,
-                    "m_value": m_value if not isinstance(m_value, dict) else m_value.get("M_Value"),
-                    "j_index": j_index,
+                    "LBGI": lgbi,
+                    "HBGI": hbgi,
+                    "ADRR": adrr.get("adrr") if isinstance(adrr, dict) else adrr,
+                    "GRI": gri.get("GRI") if isinstance(gri, dict) else gri,
+                    "GRI_high": gri.get("derived_metrics", {}).get("hyper_component", 0),
+                    "GRI_low": gri.get("derived_metrics", {}).get("hypo_component", 0),
+                    "GRI_pregnancy": gri_pregnancy.get("GRI") if isinstance(gri_pregnancy, dict) else gri_pregnancy,
+                    "GRI_pregnancy_high": gri_pregnancy.get("derived_metrics", {}).get("hyper_component", 0),
+                    "GRI_pregnancy_low": gri_pregnancy.get("derived_metrics", {}).get("hypo_component", 0),
+                    "GRADE": grade.get("total") if isinstance(grade, dict) else grade,
+                    "M_Value": m_value if not isinstance(m_value, dict) else m_value.get("M_Value"),
+                    "J_Index": j_index,
                 }
 
-                # Actualizar el diccionario metrics
+                # Update the metrics dictionary
                 metrics.update(risk_metrics)
 
             except Exception as e:
@@ -1874,3 +1904,41 @@ class VariabilityMetrics:
             return metrics
         except Exception as e:
             return {"error": str(e), "mensaje": "Error al calcular métricas"}
+
+    def _get_segment_data(self, start_time: str, duration_hours: int) -> pd.DataFrame:
+        """
+        Helper method to get data for a specific time segment.
+
+        :param start_time: Start time in "HH:MM" format
+        :param duration_hours: Duration of the segment in hours
+        :return: DataFrame with data within the specified segment
+        """
+        from datetime import datetime, time, timedelta
+
+        # Convert start_time to time object
+        start_hour, start_minute = map(int, start_time.split(":"))
+        start = time(hour=start_hour, minute=start_minute)
+
+        # Calculate end time (handling midnight crossing)
+        base = datetime(2000, 1, 1, start.hour, start.minute)
+        end_dt = base + timedelta(hours=duration_hours)
+        end = end_dt.time()
+
+        # Optimize filtering using vectorized integer comparisons
+        # Object-based time comparisons (dt.time) are slow in pandas
+        times = self.data["time"]
+        minutes_from_midnight = times.dt.hour * 60 + times.dt.minute
+
+        start_min = start.hour * 60 + start.minute
+        # Handling end time that might be 24:00 (represented as 00:00 next day)
+        end_min = end.hour * 60 + end.minute
+        if end_min == 0 and duration_hours > 0:
+            end_min = 1440
+
+        if start_min < end_min:
+            mask = (minutes_from_midnight >= start_min) & (minutes_from_midnight < end_min)
+        else:
+            # Crosses midnight (e.g. 22:00 to 06:00)
+            mask = (minutes_from_midnight >= start_min) | (minutes_from_midnight < end_min)
+
+        return self.data[mask].copy()

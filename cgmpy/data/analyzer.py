@@ -91,77 +91,83 @@ class DataAnalyzer:
 
         # Datos teóricos esperados
         tiempo_total = (data["time"].max() - data["time"].min()).total_seconds() / 60
-        datos_teoricos = int(tiempo_total / typical_interval)
-        porcentaje_disponibilidad = (num_datos / datos_teoricos) * 100
+        
+        # Evitar errores si tiempo_total o typical_interval son inválidos
+        if pd.isna(tiempo_total) or typical_interval <= 0:
+            datos_teoricos = 0
+        else:
+            datos_teoricos = int(tiempo_total / typical_interval)
+            
+        porcentaje_disponibilidad = (num_datos / datos_teoricos * 100) if datos_teoricos > 0 else 0.0
 
-        # Crear diccionario de resumen
-        resumen = {
-            "num_datos": num_datos,
-            "fecha_inicio": fecha_inicio,
-            "fecha_fin": fecha_fin,
-            "intervalo_tipico": typical_interval,
-            "datos_teoricos": datos_teoricos,
-            "porcentaje_disponibilidad": porcentaje_disponibilidad,
-            "num_desconexiones": (
-                f"{num_desconexiones} desconexiones (Para más información, "
-                "use el método info(include_disconnections=True))"
+        # Create summary dictionary
+        summary = {
+            "n_records": num_datos,
+            "start_date": fecha_inicio,
+            "end_date": fecha_fin,
+            "typical_interval": typical_interval,
+            "expected_data": datos_teoricos,
+            "completeness": porcentaje_disponibilidad,
+            "n_disconnections": (
+                f"{num_desconexiones} disconnections (For more info, "
+                "use info(include_disconnections=True))"
             ),
-            "tiempo_total_desconexion": horas_desconexion,
-            "uso_memoria_mb": memoria_mb,
+            "total_disconnection_time": horas_desconexion,
+            "memory_usage_mb": memoria_mb,
         }
 
         if include_disconnections:
-            resumen["lista_desconexiones"] = self._get_disconnection_details(data, desconexiones)
+            summary["disconnection_list"] = self._get_disconnection_details(data, desconexiones)
 
-        return resumen
+        return summary
 
-    def _get_disconnection_details(self, data: pd.DataFrame, desconexiones: pd.Series) -> list:
+    def _get_disconnection_details(self, data: pd.DataFrame, disconnections: pd.Series) -> list:
         """
-        Obtiene detalles de las desconexiones.
+        Gets details of disconnections.
 
-        :param data: DataFrame con los datos
-        :param desconexiones: Series con las desconexiones
-        :return: Lista con detalles de desconexiones
+        :param data: DataFrame with data
+        :param disconnections: Series with disconnections
+        :return: List with disconnection details
         """
-        lista_desconexiones = []
+        disconnection_list = []
 
-        if len(desconexiones) > 0:
-            for idx, indice in enumerate(desconexiones.index, 1):
+        if len(disconnections) > 0:
+            for idx, index in enumerate(disconnections.index, 1):
                 try:
-                    posicion_actual = data.index.get_loc(indice)
-                    if posicion_actual > 0:
-                        fecha_fin_desconexion = data.iloc[posicion_actual]["time"]
-                        fecha_inicio_desconexion = data.iloc[posicion_actual - 1]["time"]
-                        duracion_minutos = (fecha_fin_desconexion - fecha_inicio_desconexion).total_seconds() / 60
-                        horas = int(duracion_minutos // 60)
-                        minutos = int(duracion_minutos % 60)
-                        lista_desconexiones.append(
+                    current_pos = data.index.get_loc(index)
+                    if current_pos > 0:
+                        disconnection_end = data.iloc[current_pos]["time"]
+                        disconnection_start = data.iloc[current_pos - 1]["time"]
+                        duration_minutes = (disconnection_end - disconnection_start).total_seconds() / 60
+                        hours = int(duration_minutes // 60)
+                        minutes = int(duration_minutes % 60)
+                        disconnection_list.append(
                             {
-                                "inicio": fecha_inicio_desconexion.strftime("%d/%m/%Y %H:%M"),
-                                "fin": fecha_fin_desconexion.strftime("%d/%m/%Y %H:%M"),
-                                "duracion": f"{horas:02d} horas y {minutos:02d} minutos",
+                                "start": disconnection_start.strftime("%d/%m/%Y %H:%M"),
+                                "end": disconnection_end.strftime("%d/%m/%Y %H:%M"),
+                                "duration": f"{hours:02d} hours and {minutes:02d} minutes",
                             }
                         )
                 except Exception as e:
-                    self.logger.warning(f"Error procesando desconexión {idx}: {e}")
+                    self.logger.warning(f"Error processing disconnection {idx}: {e}")
 
-        return lista_desconexiones
+        return disconnection_list
 
     def get_summary_string(self, info: Dict[str, Any]) -> str:
         """
-        Genera una representación en string de la información básica.
+        Generates a string representation of basic information.
 
-        :param info: Diccionario con información básica
-        :return: String con resumen
+        :param info: Dictionary with basic information
+        :return: String with summary
         """
         return (
-            f"El archivo contiene {info['num_datos']} datos entre {info['fecha_inicio']} y {info['fecha_fin']}.\n"
-            f"Intervalo típico entre mediciones: {info['intervalo_tipico']:.1f} minutos.\n"
-            f"Datos teóricos esperados: {info['datos_teoricos']}\n"
-            f"Porcentaje de datos disponibles: {info['porcentaje_disponibilidad']:.1f}%\n"
-            f"Se detectaron {info['num_desconexiones']} desconexiones.\n"
-            f"Tiempo total de desconexión: {info['tiempo_total_desconexion']:.1f} horas.\n"
-            f"Uso de memoria del DataFrame: {info['uso_memoria_mb']:.2f} MB"
+            f"File contains {info['n_records']} records between {info['start_date']} and {info['end_date']}.\n"
+            f"Typical interval between measurements: {info['typical_interval']:.1f} minutes.\n"
+            f"Expected theoretical data: {info['expected_data']}\n"
+            f"Data availability percentage: {info['completeness']:.1f}%\n"
+            f"Detected {info['n_disconnections']}\n"
+            f"Total disconnection time: {info['total_disconnection_time']:.1f} hours.\n"
+            f"DataFrame memory usage: {info['memory_usage_mb']:.2f} MB"
         )
 
     def get_data_quality_metrics(
