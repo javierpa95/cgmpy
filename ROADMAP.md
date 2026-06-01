@@ -4,16 +4,56 @@
 
 ## Current Focus
 
-> **v0.5.1 — Bug Fixes & API Stability** (target: end of June 2026)
+> **v0.6.0 — MAGE Refactor & Type-Strict API** (target: July 2026)
 >
-> Fix the six latent bugs surfaced by the v0.5 test expansion, raise the
-> coverage threshold to reflect the real test surface, and clean up the few
-> remaining rough edges in the public API (`GlucosePlot`, `analysis/core.py`).
-> No new features in this release — pure stabilisation.
+> Split the 645-line `MAGE_Baghurst` into three focused methods, move
+> interactive matplotlib out of the metric module, define a deprecation
+> policy, and run `mypy --strict` on the public API. No new clinical
+> features in this release — internal cleanup only.
 
 ---
 
-## Recently Completed (June 2026 sprint)
+## Recently Completed (June 2026)
+
+### v0.5.1 — Bug Fixes & API Stability
+
+All six latent bugs surfaced by the v0.5 test expansion are fixed and
+covered by regression tests in `tests/unit/test_v051_regressions.py`.
+
+- **`GlucosePlot` facade** — now mixes in `BasicMetrics` and
+  `TimeInRangeMetrics` so `StatisticalPlotter` works through the public
+  facade. (`cgmpy/__init__.py:56`)
+- **`MAGE_Baghurst` small/constant datasets** — top-level guard returns
+  a well-formed zeroed dict when `len(glucose) < 9` or `sd == 0`.
+  (`cgmpy/metrics/variability/mage.py`)
+- **`sd_between_timepoints(agrupar_por_intervalos=True)`** — added
+  `df["day"] = df["time"].dt.date` before the `groupby`. (`sd.py:185`)
+- **`specialized.py.__str__` key mismatch** — `Dexcom`, `Libreview`,
+  `MedtronicCarelink`, `TandemDiabetes` now read `info['completeness']`
+  (the actual key). (`cgmpy/data/specialized.py`)
+- **`GlucoseAnalysis` MRO** — now mixes in `BasicMetrics`; the report
+  methods call `calculate_all_metrics()` and `calculate_variability_metrics()`
+  (the names that actually exist).
+- **`GlucoseAnalysis.get_summary_string` time-in-range keys** — the
+  section now calls the individual methods instead of reading legacy
+  keys.
+
+Other:
+
+- `pyproject.toml` `fail_under` raised from 25 (placeholder) to **80**
+  (real coverage is 81.66%).
+- 17 new regression tests in `tests/unit/test_v051_regressions.py`.
+  Three pre-existing tests that documented the bugs as "expected
+  failure" were inverted to assert the fixed behaviour.
+- Auto-fixed 13 pre-existing UP038 isinstance lint warnings.
+- Tests: 310 → 329 passing. Coverage: 81.18% → 81.66%.
+
+### v0.4 → v0.5 — Modernisation Sprint
+
+> Massive refactor and translation pass that took the library from "hobby
+> project" to "competent open-source package". 42 → 310 tests, 30% → 81% line
+> coverage, 100% of library code English, zero `print()` calls, monolith
+> split into a package.
 
 ### v0.4 → v0.5 — Modernisation Sprint
 
@@ -95,63 +135,6 @@
     the changes.
   - LF line endings enforced everywhere; one stray CRLF in
     `cgmpy/utils/__init__.py` was fixed.
-
----
-
-## Bug tracker
-
-### v0.5.1 (target: end of June 2026)
-
-The v0.5 test expansion surfaced six latent bugs. They are documented as
-regression tests in the new test files but **not yet fixed in source**.
-They are listed here in priority order:
-
-1. **`GlucosePlot` is missing `ModularGlucoseMetrics`** — `StatisticalPlotter`
-   calls `self.TIR()`, `self.TBR70()`, `self.TAR180()`, `self.gmi()` and these
-   methods are not in the public `GlucosePlot` MRO. Calling any
-   `GlucosePlot.*` method that triggers these raises `AttributeError`. The
-   public API is broken. **Fix:** add `ModularGlucoseMetrics` to the
-   `GlucosePlot` definition in `cgmpy/__init__.py` *or* refactor the plotters
-   to use composition (compute TIR/TAR via injected dependency).
-   *File:* `cgmpy/__init__.py:56`
-
-2. **`MAGE_Baghurst(approach=2)` raises `IndexError`** — the direct-elimination
-   branch dereferences `glucose[turning_points[0]]` without first checking that
-   the list is non-empty. **Fix:** add a length check after the turning-point
-   filter, or return `{"MAGE_avg": 0.0, "num_excursions": 0, ...}` when no
-   turning points are found. *File:* `cgmpy/metrics/variability/mage.py:372`
-
-3. **`sd_between_timepoints(agrupar_por_intervalos=True)` raises `KeyError: 'day'`**
-   — the `day` column is only created in the non-grouped branch.
-   **Fix:** add `df["day"] = df["time"].dt.date` before the branch in
-   `sd.py:185`. *File:* `cgmpy/metrics/variability/sd.py:185`
-
-4. **`cgmpy/data/specialized.py` `__str__` references wrong key** — uses
-   `info['data_completeness']` but `DataAnalyzer.get_basic_info()` returns the
-   key as `completeness`. Calling `str(Dexcom(...))` raises `KeyError`.
-   **Fix:** rename the dict key in `analyzer.py` (preferred, more consistent)
-   *or* rename the access in `specialized.py`. *File:*
-   `cgmpy/data/specialized.py:53,105,156,205`
-
-5. **`cgmpy/analysis/core.py` calls methods not in the MRO** — `get_comprehensive_report`,
-   `get_summary_string`, `export_report`, `plot_comprehensive_dashboard`
-   reference `self.basic_statistics_summary()` and `self.calculate_variability_metrics()`,
-   neither of which exists on the class. **Fix:** add a thin `basic_statistics_summary()`
-   method (or compute inline), and use the existing `calculate_variability_metrics`
-   in the variability package. *File:* `cgmpy/analysis/core.py:69,87,104,159,199,214`
-
-6. **`cgmpy/analysis/core.py:132` reads legacy keys** — references
-   `TIR_tight`, `TBR70`, `TBR55`, `TAR140`, `TAR180`, `TAR250` that the
-   current `time_statistics()` no longer emits. **Fix:** regenerate the
-   summary dict using the new `time_in_range` output keys, or restore the
-   missing keys in `time_statistics()`. *File:* `cgmpy/analysis/core.py:132`
-
-After the fixes:
-
-- [ ] Bump `fail_under` in `pyproject.toml` from 25 to 75.
-- [ ] Add a "Known issues" callout to `README.md` if any bug cannot be
-      fixed in v0.5.1.
-- [ ] Tag `v0.5.1` and push the release tag (triggers release-please).
 
 ---
 

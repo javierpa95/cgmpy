@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: >-
+  If you use CGMPy in academic work, please cite it using the metadata
+  from this file. A DOI will be minted at the v1.0.0 release via Zenodo.
+title: "CGMPy"
+type: software
+date-released: 2024-01-01
+version: 0.5.1
+license: MIT
+authors:
+  - family-names: Peñate Arrieta
+    given-names: Javier
+    email: javierpenatearrieta@gmail.com
+    orcid: https://orcid.org/0000-0000-0000-0000
+repository-code: "https://github.com/javierpa95/cgmpy"
+repository: "https://github.com/javierpa95/cgmpy"
+keywords:
+  - cgm
+  - glucose
+  - diabetes
+  - monitoring
+  - metrics
+  - tir
+  - gmi
+  - mage
+  - pregnancy
+  - health
+abstract: >-
+  CGMPy is a modular Python library for Continuous Glucose Monitoring (CGM)
+  data analysis. It loads CGM exports from common devices (Dexcom, Libreview,
+  Medtronic, Tandem), validates and processes the time-series, computes the
+  full battery of clinical glucose metrics (mean, GMI, TIR/TAR/TBR, SD, CV,
+  MAGE, MODD, CONGA, LBGI/HBGI, GRI, GRADE, ADRR, M-Value, J-Index) and
+  renders standard visualisations (AGP, daily traces, statistical
+  distributions, dashboards). It ships a pregnancy-specific facade with
+  trimester breakdowns and the 63-140 mg/dL gestational cutoffs.

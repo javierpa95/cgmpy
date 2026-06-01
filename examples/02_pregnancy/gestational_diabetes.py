@@ -1,9 +1,10 @@
 """Pregnancy-specific glucose analysis with gestational diabetes cutoffs.
 
 Demonstrates:
-- Loading pregnancy-trimester data.
-- Using `GlucoseTargets.pregnancy()` (TIR 63-140 mg/dL).
-- Computing `GestationalDiabetes`-specific metrics.
+- Loading pregnancy-trimester data with `PregnancyData`.
+- Using `GestationalDiabetes` to compute trimester-by-trimester metrics
+  with the pregnancy TIR cutoffs (63-140 mg/dL, Battelino et al. 2019).
+- Rendering a per-trimester summary via `calculate_all_metrics(flatten=True)`.
 
 Run from the project root:
 
@@ -14,33 +15,46 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cgmpy import GestationalDiabetes, PregnancyData, PregnancyDataHandler
-from cgmpy.metrics.targets import get_targets
+from cgmpy import GestationalDiabetes
 
 FIXTURE = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "data" / "pregnancy.csv"
 
+# The bundled fixture is a 2.5-year trace (Jul 2022 → Jan 2025). The
+# pregnancy portion is roughly 2022-07-24 → 2024-04-15 (a full-term delivery
+# at 38 weeks). Adjust these to your own data.
+DELIVERY_DATE = "2024-04-15"
+GESTATION_WEEK_AT_DELIVERY = 38
+
 
 def main() -> None:
-    # 1. Load and filter the pregnancy window
-    raw = PregnancyData(str(FIXTURE))
-    handler = PregnancyDataHandler(raw)
-    trimmed = handler.trim_to_pregnancy_window()
+    # 1. GestationalDiabetes inherits from PregnancyData, so it expects the
+    #    same `delivery_date` and `week` arguments. It automatically:
+    #      - filters the DataFrame to the conception → delivery window
+    #      - splits the data into first / second / third trimester frames
+    #      - wraps each trimester in a `GlucoseMetrics` instance for
+    #        per-trimester analysis.
+    gdm = GestationalDiabetes(
+        data_source=str(FIXTURE),
+        delivery_date=DELIVERY_DATE,
+        week=GESTATION_WEEK_AT_DELIVERY,
+    )
 
-    # 2. Pregnancy-specific cutoffs (Battelino et al. 2019)
-    targets = get_targets("pregnancy")
+    # 2. Human-readable per-trimester summary.
+    print(gdm)
+    print()
 
-    # 3. Compute gestational diabetes metrics
-    gdm = GestationalDiabetes(data=trimmed, targets=targets)
-    metrics = gdm.compute_all()
+    # 3. Structured per-trimester metrics (nested dict).
+    nested = gdm.calculate_all_metrics(flatten=False)
+    print("Overall GMI:", f"{nested['overall']['GMI']:.2f} %")
+    print("Overall TIR (pregnancy cutoffs):", f"{nested['overall']['TIR']:.2f} %")
+    print()
 
-    print("=== Gestational Diabetes Metrics ===")
-    for name, value in metrics.items():
-        print(f"  {name:30s} = {value:.2f}")
-
-    # 4. Time-in-range breakdown per meal (optional)
-    per_meal = gdm.time_in_range_per_meal()
-    print("\n=== Time in Range per Meal ===")
-    print(per_meal.to_string(index=False))
+    # 4. Flat dict with `total_`, `t1_`, `t2_`, `t3_`, `gest_` prefixes —
+    #    handy for writing straight to a CSV / DataFrame.
+    flat = gdm.calculate_all_metrics(flatten=True)
+    print("Flattened (first 10 keys):")
+    for key in list(flat.keys())[:10]:
+        print(f"  {key:30s} = {flat[key]}")
 
 
 if __name__ == "__main__":

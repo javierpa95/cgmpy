@@ -13,9 +13,6 @@ from .agp import AGPPlotter
 from .daily_plots import DailyPlotter
 from .statistical_plots import StatisticalPlotter
 
-# Imports that will be available when implemented
-# from .dashboard import DashboardPlotter
-
 
 # Combined class that integrates all modular plotters
 class ModularGlucosePlot(AGPPlotter, DailyPlotter, StatisticalPlotter):

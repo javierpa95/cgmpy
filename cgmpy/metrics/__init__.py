@@ -20,9 +20,6 @@ from .time_in_range import TimeInRangeMetrics
 from .validation import ValidationReport, validate_glucose_range
 from .variability import VariabilityMetrics
 
-# Imports that will be available when implemented
-# from .advanced import AdvancedMetrics
-
 
 # Combined class that integrates all modular metrics
 class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics):

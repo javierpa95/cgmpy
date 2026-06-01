@@ -9,6 +9,11 @@ Run from the project root:
 
 Reports timings to stdout. Useful for spotting regressions when you change
 the implementation of a metric.
+
+The mixin design of CGMPy means a metric method is called directly on the
+data class (e.g. ``gd.mean()``), not on a sub-namespace. We use
+``GlucoseMetrics`` which combines ``ModularGlucoseData`` with
+``ModularGlucoseMetrics`` so every metric is reachable as a flat method.
 """
 
 from __future__ import annotations
@@ -19,8 +24,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from cgmpy import ModularGlucoseData
-from cgmpy.metrics import ModularGlucoseMetrics
+from cgmpy import GlucoseMetrics
 
 
 def _make_synthetic(n_days: int = 30, sample_minutes: int = 5) -> pd.DataFrame:
@@ -30,7 +34,6 @@ def _make_synthetic(n_days: int = 30, sample_minutes: int = 5) -> pd.DataFrame:
     times = [start + timedelta(minutes=sample_minutes * i) for i in range(n)]
     rng = np.random.default_rng(42)
     base = 110.0
-    # Add three meal spikes per day at 8, 13, 20h
     glucose = np.full(n, base, dtype=float)
     for day in range(n_days):
         for hour, peak in ((8, 60), (13, 70), (20, 50)):
@@ -54,19 +57,25 @@ def main() -> None:
     df = _make_synthetic()
     print(f"  {len(df):,} samples\n")
 
-    data = ModularGlucoseData(df)
-    metrics = ModularGlucoseMetrics(data)
+    gm = GlucoseMetrics(df)
 
     print("Timing each metric:")
-    _time_it("basic.mean", lambda: metrics.basic().mean())
-    _time_it("basic.median", lambda: metrics.basic().median())
-    _time_it("basic.gmi", lambda: metrics.basic().gmi())
-    _time_it("basic.std", lambda: metrics.basic().std())
-    _time_it("time_in_range.tir", lambda: metrics.time_in_range().tir())
-    _time_it("variability.cv", lambda: metrics.variability().cv())
-    _time_it("variability.mage", lambda: metrics.variability().mage())
-    _time_it("variability.modd", lambda: metrics.variability().modd())
-    _time_it("variability.lbgi_hbgi", lambda: metrics.variability().lbgi_hbgi())
+    _time_it("basic.mean", lambda: gm.mean())
+    _time_it("basic.median", lambda: gm.median())
+    _time_it("basic.gmi", lambda: gm.gmi())
+    _time_it("basic.std", lambda: gm.sd())
+    _time_it("basic.cv", lambda: gm.cv())
+    _time_it("time_in_range.tir", lambda: gm.TIR())
+    _time_it("time_in_range.tir_tight", lambda: gm.TIR_tight())
+    _time_it("variability.sd_total", lambda: gm.sd_total())
+    _time_it("variability.sd_within_day", lambda: gm.sd_within_day())
+    _time_it("variability.mage", lambda: gm.MAGE())
+    _time_it("variability.mage_baghurst", lambda: gm.MAGE_Baghurst())
+    _time_it("variability.modd", lambda: gm.MODD())
+    _time_it("variability.conga_4h", lambda: gm.CONGA(hours=4))
+    _time_it("risk.lbgi", lambda: gm.LBGI())
+    _time_it("risk.hbgi", lambda: gm.HBGI())
+    _time_it("risk.grade", lambda: gm.GRADE())
 
 
 if __name__ == "__main__":

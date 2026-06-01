@@ -8,18 +8,6 @@ This module contains helper functions and classes for:
 - General helper functions
 """
 
-# Imports that will be available when implemented
-# from .date_utils import parse_date
-# from .validators import DataValidator
-# from .config import GlucoseConfig
+from .date_utils import parse_date, validate_date_range
 
-
-# For now, we import from the current location to maintain backward compatibility
-# We avoid circular imports by using a lazy import
-def parse_date(*args, **kwargs):
-    from ..utils import parse_date as _parse_date
-
-    return _parse_date(*args, **kwargs)
-
-
-__all__ = ["parse_date"]
+__all__ = ["parse_date", "validate_date_range"]

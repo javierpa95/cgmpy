@@ -46,7 +46,7 @@ def analyze_one_arm(
 
         return results
 
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -73,7 +73,7 @@ def analyze_with_agata(
 
         return results
 
-    except Exception as e:
+    except Exception:
         raise
 
 

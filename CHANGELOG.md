@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No changes yet. The next release will be **v0.6.0** (MAGE deep refactor + deprecation policy + mypy on public API), per `ROADMAP.md`.
+
+---
+
+## [0.5.1] — 2026-06-01
+
+Bug-fix sweep over the 6 latent bugs surfaced by the v0.5.0 test expansion.
+No public API changes. Coverage: 81.18% → 81.66%. Tests: 310 → 329.
+
 ### Added
 - **`cgmpy.metrics.validation`**: new `validate_glucose_range()` function and `ValidationReport` dataclass to flag glucose readings outside physiologically plausible ranges (default band 39-600 mg/dL; tightens to clinical targets when a `GlucoseTargets` is supplied). Exported from `cgmpy.metrics`.
 - **Clinical reference tests** in `tests/clinical/test_basic_metrics_reference.py`: hand-computed expected values for mean, median, SD, CV, GMI, TIR, TAR, TBR, and data-completeness on a synthetic 24h dataset.
@@ -28,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **User-facing error message in `variability.py`**: `"El intervalo de {hours} horas es demasiado pequeño para los datos disponibles"` → `"The interval of {hours} hours is too small for the available data"`.
 - **Navigation hint for the MAGE interactive plot**: now logged in English via `self.logger.info`.
 - **`_create_filtered_instance` in `cgmpy/data/core.py`**: replaced manual `__new__` + `setattr` loop with `copy.copy(self)` (a single line), reducing the method from ~40 lines to ~14 while keeping identical behaviour.
-- **`pyproject.toml` `fail_under`**: bumped from 25% (placeholder) to **80%** (real coverage is 81.72%).
+- **`pyproject.toml` `fail_under`**: bumped from 25% (placeholder) to **80%** (real coverage is 81.66%).
 
 ### Removed
 - **Dead code in `cgmpy/data/core.py`**: an orphaned `for attr in [...]` block after `return new_instance` in `_create_filtered_instance`.
@@ -45,15 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`GlucoseAnalysis` MRO**: now mixes in `BasicMetrics` so `self.calculate_all_metrics()` resolves. Without this, every `get_comprehensive_report()` / `get_summary_string()` call raised `AttributeError`.
 - **`GlucoseAnalysis.get_comprehensive_report`**: now calls `self.calculate_all_metrics()` and `self.calculate_variability_metrics()` (the methods that actually exist). Pre-fix: called `self.basic_statistics_summary()` and `self.calculate_all_variability_metrics()` (both `AttributeError`).
 - **`GlucoseAnalysis.get_summary_string`**: the TIME IN RANGE section now calls the individual methods (`self.TIR()`, `self.TIR_tight()`, `self.TBR70()`, `self.TBR55()`, `self.TAR140()`, `self.TAR180()`, `self.TAR250()`) directly instead of reading legacy keys (`TIR_tight`, `TBR70`, `TBR55`, `TAR140`, `TAR180`, `TAR250`) that `time_statistics()` no longer emits. Pre-fix: `KeyError` on every call.
-
----
-
-## [0.5.1] — 2026-06-01
-
-### Summary
-
-Bug-fix sweep over the 6 latent bugs surfaced by the v0.5.0 test expansion.
-No public API changes. Coverage: 81.18% → 81.72%. Tests: 310 → 329.
 
 ---
 

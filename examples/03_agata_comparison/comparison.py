@@ -46,19 +46,23 @@ def main() -> None:
         print(f"GlucoseMetrics failed: {exc}")
         cgm_results = {}
 
-    # 3. Side-by-side table
+    # 3. Side-by-side table.
+    # CGMPy uses the same dict structure as `GlucoseMetrics.all()` (see
+    # `cgmpy/metrics/__init__.py`); AGATA nests everything under
+    # `time_in_ranges` (plural). The cgm-side keys are the actual ones
+    # emitted by CGMPy.
     metric_map = [
-        ("Mean glucose (mg/dL)", ("variability", "mean_glucose"), ("basic", "mean")),
-        ("Median glucose (mg/dL)", ("variability", "median_glucose"), ("basic", "median")),
-        ("Standard deviation", ("variability", "std_glucose"), ("basic", "std")),
-        ("CV (%)", ("variability", "cv_glucose"), ("basic", "cv")),
-        ("GMI (%)", ("variability", "gmi"), ("basic", "gmi")),
-        ("Time in target", ("time_in_ranges", "time_in_target"), ("basic", "tir")),
-        ("TAR1 (>180)", ("time_in_ranges", "time_in_l1_hyperglycemia"), ("basic", "tar180")),
-        ("TBR1 (<70)", ("time_in_ranges", "time_in_l1_hypoglycemia"), ("basic", "tbr70")),
-        ("LBGI", ("risk", "lbgi"), ("basic", "lbgi")),
-        ("HBGI", ("risk", "hbgi"), ("basic", "hbgi")),
-        ("GRI", ("risk", "gri"), ("basic", "gri")),
+        ("Mean glucose (mg/dL)", ("variability", "mean_glucose"), ("basic", "Mean")),
+        ("Median glucose (mg/dL)", ("variability", "median_glucose"), ("basic", "Median")),
+        ("Standard deviation", ("variability", "std_glucose"), ("basic", "Std")),
+        ("CV (%)", ("variability", "cv_glucose"), ("basic", "CV")),
+        ("GMI (%)", ("variability", "gmi"), ("basic", "GMI")),
+        ("Time in target", ("time_in_ranges", "time_in_target"), ("time_in_range", "current_targets", "TIR")),
+        ("TAR1 (>180)", ("time_in_ranges", "time_in_l1_hyperglycemia"), ("time_in_range", "standard_ranges", "TAR180")),
+        ("TBR1 (<70)", ("time_in_ranges", "time_in_l1_hypoglycemia"), ("time_in_range", "standard_ranges", "TBR70")),
+        ("LBGI", ("risk", "lbgi"), ("variability", "quality_metrics", "lbgi")),
+        ("HBGI", ("risk", "hbgi"), ("variability", "quality_metrics", "hbgi")),
+        ("GRI", ("risk", "gri"), ("variability", "quality_metrics", "gri")),
     ]
 
     rows = []
@@ -87,7 +91,7 @@ def main() -> None:
 
     df = pd.DataFrame(rows)
     print("=== CGMPy vs. AGATA — metric parity ===")
-    print(df.to_string(index=False, float_format="%.3f"))
+    print(df.to_string(index=False, float_format=lambda v: f"{v:.3f}"))
 
 
 def _nested(d: dict, path: tuple) -> object:

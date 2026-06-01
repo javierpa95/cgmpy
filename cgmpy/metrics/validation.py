@@ -75,7 +75,7 @@ class ValidationReport:
 
 
 def _resolve_thresholds(
-    targets: "GlucoseTargets | None",
+    targets: GlucoseTargets | None,
 ) -> tuple[float, float]:
     """Derive (low, high) thresholds from targets, or fall back to absolutes."""
     if targets is None:
@@ -94,7 +94,7 @@ def _resolve_thresholds(
 
 def validate_glucose_range(
     data: pd.DataFrame,
-    targets: "GlucoseTargets | None" = None,
+    targets: GlucoseTargets | None = None,
     warn: bool = True,
 ) -> ValidationReport:
     """Validate that all glucose readings are inside a plausible range.
