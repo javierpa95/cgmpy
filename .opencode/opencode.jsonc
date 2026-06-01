@@ -1,0 +1,65 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "cgmpy-architect",
+  "permission": {
+    "read": "allow",
+    "write": {
+      "cgmpy/": "allow",
+      "tests/": "allow",
+      "docs/": "allow",
+      "examples/": "allow",
+      "scripts/": "allow",
+      "*.md": "allow",
+      "*.toml": "allow",
+      "*.yml": "allow",
+      "*.yaml": "allow",
+      "*.json": "allow",
+      "*.pyproject.toml": "allow",
+      ".editorconfig": "allow",
+      ".gitignore": "allow",
+      ".gitattributes": "allow",
+      "AGENTS.md": "allow"
+    },
+    "edit": {
+      "*.md": "allow",
+      "*.py": "allow",
+      "*.toml": "allow",
+      "*.yml": "allow",
+      "*.yaml": "allow",
+      "*.json": "allow"
+    },
+    "bash": {
+      "git status": "allow",
+      "git diff": "allow",
+      "git log": "allow",
+      "git branch": "allow",
+      "git add": "allow",
+      "git commit": "allow",
+      "git checkout": "allow",
+      "git switch": "allow",
+      "git fetch": "allow",
+      "git pull": "allow",
+      "pytest": "allow",
+      "ruff check": "allow",
+      "ruff format": "allow",
+      "pre-commit run": "allow",
+      "python -m pytest": "allow",
+      "python -m ruff": "allow",
+      "python -c": "allow"
+    }
+  },
+  "skills": [
+    "git-advisor",
+    "docs-maintainer",
+    "security-guard",
+    "post-coding-check",
+    "python-lib"
+  ],
+  "rules": [
+    "library-structure.md",
+    "development.md",
+    "security.md",
+    "testing.md",
+    "documentation.md"
+  ]
+}
