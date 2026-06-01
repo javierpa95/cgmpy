@@ -53,12 +53,21 @@ class GlucoseMetrics(ModularGlucoseData, ModularGlucoseMetrics):
     """
 
 
-class GlucosePlot(ModularGlucoseData, AGPPlotter, DailyPlotter, StatisticalPlotter):
+class GlucosePlot(
+    ModularGlucoseData,
+    BasicMetrics,
+    TimeInRangeMetrics,
+    AGPPlotter,
+    DailyPlotter,
+    StatisticalPlotter,
+):
     """
     Main class for glucose visualization.
 
     This class combines:
     - Data handling (GlucoseData)
+    - Basic metrics (mean, GMI, CV, ...)
+    - Time in range metrics (TIR, TAR, TBR)
     - Ambulatory glucose profile (AGP) plots
     - Daily plots and variations
     - Statistical plots and analysis
@@ -103,6 +112,6 @@ __all__ = [
 
 
 # Package info
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __author__ = "Javier Peñate Arrieta"
 __description__ = "Modular package for continuous glucose monitoring (CGM) data analysis"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cgmpy"
-version = "0.5.0"
+version = "0.5.1"
 description = "Modular Python library for Continuous Glucose Monitoring (CGM) data analysis"
 readme = "README.md"
 authors = [
@@ -193,8 +193,8 @@ exclude_lines = [
 ]
 show_missing = true
 precision = 2
-# TODO: raise this as test coverage grows (currently ~25-30%)
-fail_under = 25
+# TODO: raise this as test coverage grows (currently ~80%)
+fail_under = 80
 
 # ==========================================
 # MyPy

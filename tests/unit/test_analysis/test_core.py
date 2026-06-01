@@ -245,15 +245,27 @@ class TestReportBuilders:
     def test_get_summary_string_contains_key_metrics(self, stable_glucose_df: pd.DataFrame) -> None:
         """`get_summary_string()` renders the report header for the populated sections.
 
-        The full string composition currently expects legacy key names from
-        `time_statistics()` (e.g. ``TIR_tight``, ``TBR70``) that the modular
-        ``time_in_range`` module does not emit. We assert the failure mode so a
-        future refactor that aligns the keys causes this test to flip green.
+        Bug fixed in v0.5.1: the function used to read legacy keys
+        (``TIR_tight``, ``TBR70`` ...) from `time_statistics()` and raise
+        ``KeyError``. It now calls the individual time-in-range methods
+        directly. The helper that patches in basic_statistics_summary /
+        calculate_all_variability_metrics is no longer required, but we keep
+        the fixture for stability.
         """
         ga = GlucoseAnalysis(data_source=stable_glucose_df)
         self._patch_missing_helpers(ga)
-        with pytest.raises(KeyError):
-            ga.get_summary_string()
+        text = ga.get_summary_string()
+        # Header lines from the four sections must be present.
+        assert "DATA:" in text
+        assert "BASIC METRICS:" in text
+        assert "TIME IN RANGE:" in text
+        assert "VARIABILITY:" in text
+        # The legacy keys are now rendered as labels, not as dict lookups.
+        assert "TIR tight" in text
+        assert "TBR70" in text
+        assert "TBR55" in text
+        assert "TAR180" in text
+        assert "TAR250" in text
 
     def test_export_report_json(self, stable_glucose_df: pd.DataFrame, tmp_path) -> None:
         """`export_report(format='json')` writes a valid JSON file."""

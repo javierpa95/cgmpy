@@ -14,6 +14,7 @@ from typing import Any
 import pandas as pd
 
 from ..data.core import ModularGlucoseData
+from ..metrics.basic import BasicMetrics
 from ..metrics.time_in_range import TimeInRangeMetrics
 from ..metrics.variability import VariabilityMetrics
 from ..plotting.agp import AGPPlotter
@@ -23,6 +24,7 @@ from ..plotting.statistical_plots import StatisticalPlotter
 
 class GlucoseAnalysis(
     ModularGlucoseData,
+    BasicMetrics,
     TimeInRangeMetrics,
     VariabilityMetrics,
     AGPPlotter,
@@ -34,6 +36,7 @@ class GlucoseAnalysis(
 
     Inherits from:
     - ModularGlucoseData: Data handling
+    - BasicMetrics: Descriptive statistics (Mean, GMI, CV, ...)
     - TimeInRangeMetrics: Time in range metrics (TIR, TAR, TBR)
     - VariabilityMetrics: Variability metrics (MAGE, MODD, CONGA, etc.)
     - AGPPlotter: Ambulatory profile plots
@@ -86,9 +89,9 @@ class GlucoseAnalysis(
         """
         report = {
             "basic_info": self.info(),
-            "basic_metrics": self.basic_statistics_summary(),
+            "basic_metrics": self.calculate_all_metrics(),
             "time_statistics": self.time_statistics(),
-            "variability_metrics": self.calculate_all_variability_metrics(),
+            "variability_metrics": self.calculate_variability_metrics(),
             "data_quality": self.get_data_quality_metrics(),
         }
 
@@ -116,7 +119,7 @@ class GlucoseAnalysis(
         summary.append("")
 
         # Basic metrics
-        basic = self.basic_statistics_summary()
+        basic = self.calculate_all_metrics()
         summary.append("BASIC METRICS:")
         summary.append(f"  - GMI: {basic['GMI']:.1f}%")
         summary.append(f"  - Mean: {basic['Mean']:.1f} mg/dL")
@@ -125,20 +128,20 @@ class GlucoseAnalysis(
         summary.append(f"  - CV: {basic['CV']:.1f}%")
         summary.append("")
 
-        # Time in range
-        time_stats = self.time_statistics()
+        # Time in range (call individual methods; time_statistics() returns
+        # only a subset of these keys).
         summary.append("TIME IN RANGE:")
-        summary.append(f"  - TIR (70-180): {time_stats['TIR']:.1f}%")
-        summary.append(f"  - TIR tight (70-140): {time_stats['TIR_tight']:.1f}%")
-        summary.append(f"  - TBR70 (55-70): {time_stats['TBR70']:.1f}%")
-        summary.append(f"  - TBR55 (<55): {time_stats['TBR55']:.1f}%")
-        summary.append(f"  - TAR140 (140-250): {time_stats['TAR140']:.1f}%")
-        summary.append(f"  - TAR180 (180-250): {time_stats['TAR180']:.1f}%")
-        summary.append(f"  - TAR250 (>250): {time_stats['TAR250']:.1f}%")
+        summary.append(f"  - TIR (70-180): {self.TIR():.1f}%")
+        summary.append(f"  - TIR tight (70-140): {self.TIR_tight():.1f}%")
+        summary.append(f"  - TBR70 (54-70): {self.TBR70():.1f}%")
+        summary.append(f"  - TBR55 (<55): {self.TBR55():.1f}%")
+        summary.append(f"  - TAR140 (>140): {self.TAR140():.1f}%")
+        summary.append(f"  - TAR180 (181-250): {self.TAR180():.1f}%")
+        summary.append(f"  - TAR250 (>250): {self.TAR250():.1f}%")
         summary.append("")
 
         # Variability
-        variability = self.calculate_all_variability_metrics()
+        variability = self.calculate_variability_metrics()
         summary.append("VARIABILITY:")
         summary.append(f"  - MAGE: {variability.get('MAGE', 'N/A')}")
         summary.append(f"  - MODD: {variability.get('MODD', 'N/A')}")

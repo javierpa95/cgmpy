@@ -53,6 +53,22 @@ class MAGEMetrics(VariabilityBase):
         sd = self.sd()
         threshold = threshold_sd * sd
 
+        # Guard: MAGE_Baghurst's smoothing uses a 9-point window centred on
+        # each point (Baghurst 2007). With less than 9 points the convolution
+        # produces edge artifacts and the algorithm is undefined. Return a
+        # zeroed result rather than crash.
+        # Also short-circuit constant data (sd == 0 → threshold == 0 → every
+        # pair of equal points is a false excursion of magnitude 0).
+        if len(glucose) < 9 or sd == 0:
+            return {
+                "MAGE+": 0.0,
+                "MAGE-": 0.0,
+                "MAGE_avg": 0.0,
+                "SD_used": round(float(sd), 2),
+                "threshold": round(float(threshold), 2),
+                "num_excursions": 0,
+            }
+
         # Store turning points for each approach if plot=True
         turning_points_approaches = {}
 
@@ -369,6 +385,19 @@ class MAGEMetrics(VariabilityBase):
 
         # 3. Calculate valid excursions
         excursions = []
+
+        # Guard: if no turning points survived (too few points or all excursions
+        # were below threshold), return a zeroed result with the same shape.
+        if turning_points is None or len(turning_points) == 0:
+            return {
+                "MAGE+": 0.0,
+                "MAGE-": 0.0,
+                "MAGE_avg": 0.0,
+                "SD_used": round(sd, 2),
+                "threshold": round(threshold, 2),
+                "num_excursions": 0,
+            }
+
         last_val = glucose[turning_points[0]]
         last_point = turning_points[0]
 

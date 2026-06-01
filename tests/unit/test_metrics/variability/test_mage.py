@@ -37,17 +37,55 @@ def test_mage_baghurst_approach_1(variable_glucose_df):
     assert result["threshold"] == pytest.approx(result["SD_used"], abs=0.5)
 
 
-def test_mage_baghurst_approach_2_known_bug(variable_glucose_df):
-    """MAGE_Baghurst(approach=2) crashes with ``IndexError`` on many inputs.
+def test_mage_baghurst_approach_2_no_indexerror(variable_glucose_df):
+    """MAGE_Baghurst(approach=2) must not raise IndexError on real CGM data.
 
-    The implementation indexes ``glucose[turning_points[0]]`` without
-    checking that ``turning_points`` is non-empty, which can happen for
-    monotonically-tending data. The test documents the bug rather than
-    asserting on a numeric result so the regression is detected when fixed.
+    Bug fixed in v0.5.1: the implementation indexed
+    ``glucose[turning_points[0]]`` without checking that ``turning_points``
+    was non-empty, which could happen for monotonically-tending data.
+    The function now returns a well-formed dict in every case.
     """
     gm = GlucoseMetrics(data_source=variable_glucose_df)
-    with pytest.raises(IndexError):
-        gm.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
+    result = gm.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
+    assert isinstance(result, dict)
+    assert "MAGE_avg" in result
+    assert "num_excursions" in result
+
+
+def test_mage_baghurst_handles_tiny_dataset():
+    """Bug fixed in v0.5.1: MAGE_Baghurst raised IndexError / ValueError
+    on datasets smaller than the smoothing window (9 points)."""
+    from datetime import datetime, timedelta
+
+    df = pd.DataFrame(
+        {
+            "time": [datetime(2024, 1, 1) + timedelta(minutes=5 * i) for i in range(4)],
+            "glucose": [100, 100, 100, 100],
+        }
+    )
+    gm = GlucoseMetrics(data_source=df)
+    result = gm.MAGE_Baghurst(threshold_sd=1, approach=1, plot=False)
+    assert isinstance(result, dict)
+    assert result["num_excursions"] == 0
+    assert result["MAGE_avg"] == 0.0
+
+
+def test_mage_baghurst_handles_constant_data():
+    """Bug fixed in v0.5.1: with SD=0 (constant glucose) the threshold
+    is 0 and the algorithm would register a fake excursion of magnitude 0.
+    The function now short-circuits to a zeroed result."""
+    from datetime import datetime, timedelta
+
+    df = pd.DataFrame(
+        {
+            "time": [datetime(2024, 1, 1) + timedelta(minutes=5 * i) for i in range(288)],
+            "glucose": [120] * 288,
+        }
+    )
+    gm = GlucoseMetrics(data_source=df)
+    result = gm.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
+    assert result["num_excursions"] == 0
+    assert result["MAGE_avg"] == 0.0
 
 
 def test_mage_baghurst_approach_3(variable_glucose_df):

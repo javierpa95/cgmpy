@@ -181,6 +181,7 @@ class SDMetrics(VariabilityBase):
         if agrupar_por_intervalos:
             # Group by time intervals to reduce the number of time points
             df["interval"] = (df["hour_min"] // intervalo_minutos) * intervalo_minutos
+            df["day"] = df["time"].dt.date
             # Use groupby with transform, more efficient than apply for large datasets
             grouped = df.groupby(["day", "interval"])
             df_agg = grouped.agg({"glucose": "mean"}).reset_index()

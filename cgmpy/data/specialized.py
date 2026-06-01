@@ -50,7 +50,7 @@ class Dexcom(ModularGlucoseData):
             f"Dexcom Data: {info['n_records']} readings between "
             f"{info['start_date']} and {info['end_date']}.\n"
             f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['data_completeness']:.1f}%\n"
+            f"Availability: {info['completeness']:.1f}%\n"
             f"Disconnections detected: {info['n_disconnections']}\n"
             f"Memory usage: {info['memory_usage_mb']:.2f} MB"
         )
@@ -102,7 +102,7 @@ class Libreview(ModularGlucoseData):
             f"Libreview Data: {info['n_records']} readings between "
             f"{info['start_date']} and {info['end_date']}.\n"
             f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['data_completeness']:.1f}%\n"
+            f"Availability: {info['completeness']:.1f}%\n"
             f"Disconnections detected: {info['n_disconnections']}\n"
             f"Memory usage: {info['memory_usage_mb']:.2f} MB"
         )
@@ -151,7 +151,7 @@ class MedtronicCarelink(ModularGlucoseData):
             f"Medtronic CareLink Data: {info['n_records']} readings between "
             f"{info['start_date']} and {info['end_date']}.\n"
             f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['data_completeness']:.1f}%\n"
+            f"Availability: {info['completeness']:.1f}%\n"
             f"Disconnections detected: {info['n_disconnections']}\n"
             f"Memory usage: {info['memory_usage_mb']:.2f} MB"
         )
@@ -200,7 +200,7 @@ class TandemDiabetes(ModularGlucoseData):
             f"Tandem Diabetes Data: {info['n_records']} readings between "
             f"{info['start_date']} and {info['end_date']}.\n"
             f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['data_completeness']:.1f}%\n"
+            f"Availability: {info['completeness']:.1f}%\n"
             f"Disconnections detected: {info['n_disconnections']}\n"
             f"Memory usage: {info['memory_usage_mb']:.2f} MB"
         )
