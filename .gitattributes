@@ -1,0 +1,70 @@
+# GitAttributes — Line Ending & Diff Governance
+# https://git-scm.com/docs/gitattributes
+#
+# CGMPy enforces LF for all text files to ensure consistent
+# cross-platform behavior in CI/CD, packaging, and tooling.
+
+# ------------------------------------------------------------------
+# Default: auto-detect text, force LF
+# ------------------------------------------------------------------
+* text=auto eol=lf
+
+# ------------------------------------------------------------------
+# Source code — explicit text declaration
+# ------------------------------------------------------------------
+*.py       text eol=lf
+*.toml     text eol=lf
+*.json     text eol=lf
+*.jsonc    text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.md       text eol=lf
+*.rst      text eol=lf
+*.txt      text eol=lf
+*.cfg      text eol=lf
+*.ini      text eol=lf
+
+# Windows scripts — LF enforced for cross-platform CI/Docker
+# (PowerShell and modern cmd.exe handle LF correctly)
+*.bat      text eol=lf
+*.cmd      text eol=lf
+*.ps1      text eol=lf
+
+# ------------------------------------------------------------------
+# Binary assets — do not modify, do not diff as text
+# ------------------------------------------------------------------
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.icns     binary
+*.svg      text eol=lf
+*.woff     binary
+*.woff2    binary
+*.ttf      binary
+*.eot      binary
+*.pdf      binary
+*.pkl      binary
+*.db       binary
+*.parquet  binary
+*.h5       binary
+*.hdf5     binary
+*.feather  binary
+*.zip      binary
+*.tar      binary
+*.gz       binary
+*.7z       binary
+*.whl      binary
+*.egg      binary
+*.exe      binary
+*.dll      binary
+*.so       binary
+*.dylib    binary
+
+# ------------------------------------------------------------------
+# Lock files — generated, minimize diff noise on GitHub
+# ------------------------------------------------------------------
+uv.lock            linguist-generated=true
+poetry.lock        linguist-generated=true
+package-lock.json  linguist-generated=true

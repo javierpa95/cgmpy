@@ -1,0 +1,56 @@
+root = true
+
+# Universal defaults for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python source code
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# Python config files
+[{pyproject.toml,setup.cfg,tox.ini}]
+indent_style = space
+indent_size = 4
+
+# JSON and config files
+[*.{json,jsonc}]
+indent_style = space
+indent_size = 2
+
+# YAML / TOML
+[*.{yml,yaml,toml}]
+indent_style = space
+indent_size = 2
+
+# Markdown — preserve trailing whitespace (significant in some dialects)
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Shell scripts
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
+
+# Windows batch files — LF for cross-platform CI/Docker
+[*.{bat,cmd}]
+end_of_line = lf
+
+# PowerShell scripts — LF enforced
+[*.ps1]
+end_of_line = lf
+
+# Makefile — tabs are semantic
+[{Makefile,makefile,*.mk}]
+indent_style = tab
+
+# Lock files — generated, minimize diff noise
+[{uv.lock,package-lock.json,package-lock.yaml,poetry.lock}]
+indent_style = space
+insert_final_newline = true
