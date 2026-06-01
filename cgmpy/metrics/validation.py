@@ -113,7 +113,7 @@ def validate_glucose_range(
     glucose = data["glucose"]
     low, high = _resolve_thresholds(targets)
 
-    n_total = int(len(glucose))
+    n_total = len(glucose)
     n_null = int(glucose.isna().sum())
     valid_mask = glucose.between(low, high, inclusive="both")
     n_below = int((glucose < low).sum())

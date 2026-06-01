@@ -33,11 +33,11 @@ def main() -> int:
 
     if cgmpy_changed and not docs_changed:
         print(
-            "WARNING: cgmpy/ changed but docs/, CHANGELOG.md, AGENTS.md, or " "README.md did not.",
+            "WARNING: cgmpy/ changed but docs/, CHANGELOG.md, AGENTS.md, or README.md did not.",
             file=sys.stderr,
         )
         print(
-            "       Per the Documentation Golden Rule (AGENTS.md §3), " "consider updating:",
+            "       Per the Documentation Golden Rule (AGENTS.md §3), consider updating:",
             file=sys.stderr,
         )
         print("         - docs/user-guide/ — user-facing behavior", file=sys.stderr)

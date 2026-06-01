@@ -124,6 +124,8 @@ ignore = [
   "E501",   # line-too-long (handled by formatter)
   "B008",   # function call in default argument (common in dataclasses)
   "SIM108", # use ternary operator (often hurts readability)
+  "RUF046", # unnecessary int() cast (common in glucose-metric counters)
+  "RUF059", # unused unpacked variables (matplotlib idiom: fig, ax = plt.subplots())
 ]
 
 fixable = ["ALL"]
