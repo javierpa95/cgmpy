@@ -5,7 +5,9 @@ import pandas as pd
 from ..data.core import ModularGlucoseData
 
 
-def prepare_data_for_agata(glucose_data: ModularGlucoseData, resample_freq: str = "5min") -> pd.DataFrame:
+def prepare_data_for_agata(
+    glucose_data: ModularGlucoseData, resample_freq: str = "5min"
+) -> pd.DataFrame:
     """
     Prepara los datos de un objeto cgmpy para ser analizados por py_agata,
     manejando tiempos de inicio no alineados.

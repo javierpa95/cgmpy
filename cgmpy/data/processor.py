@@ -4,7 +4,6 @@ Module for glucose data processing and validation.
 
 import logging
 import time
-from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ class DataProcessor:
     Class responsible for glucose data processing, validation, and cleaning.
     """
 
-    def __init__(self, logger: logging.Logger = None):
+    def __init__(self, logger: logging.Logger | None = None):
         """
         Initializes the DataProcessor.
 
@@ -29,7 +28,7 @@ class DataProcessor:
         date_col: str,
         glucose_col: str,
         log_performance: bool = False,
-    ) -> Tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Processes glucose data in an optimized way.
 
@@ -51,9 +50,13 @@ class DataProcessor:
         from_parquet = self._is_optimized_parquet(data, date_col, glucose_col)
 
         if from_parquet:
-            processed_data, time_diffs = self._process_parquet_optimized(data, date_col, glucose_col, log_performance)
+            processed_data, time_diffs = self._process_parquet_optimized(
+                data, date_col, glucose_col, log_performance
+            )
         else:
-            processed_data, time_diffs = self._process_standard(data, date_col, glucose_col, log_performance)
+            processed_data, time_diffs = self._process_standard(
+                data, date_col, glucose_col, log_performance
+            )
 
         # Final validation
         if not pd.api.types.is_datetime64_any_dtype(processed_data[date_col]):
@@ -92,7 +95,10 @@ class DataProcessor:
         :param glucose_col: Name of the glucose column
         :return: True if it is optimized Parquet
         """
-        return pd.api.types.is_datetime64_any_dtype(data[date_col]) and data[glucose_col].dtype == "int16"
+        return (
+            pd.api.types.is_datetime64_any_dtype(data[date_col])
+            and data[glucose_col].dtype == "int16"
+        )
 
     def _process_parquet_optimized(
         self,
@@ -100,7 +106,7 @@ class DataProcessor:
         date_col: str,
         glucose_col: str,
         log_performance: bool = False,
-    ) -> Tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Processes optimized Parquet data with a fast path.
 
@@ -155,7 +161,7 @@ class DataProcessor:
         date_col: str,
         glucose_col: str,
         log_performance: bool = False,
-    ) -> Tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Processes data with full validations for CSV and other formats.
 
@@ -220,7 +226,9 @@ class DataProcessor:
 
         return data_cleaned
 
-    def _convert_data_types(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> pd.DataFrame:
+    def _convert_data_types(
+        self, data: pd.DataFrame, date_col: str, glucose_col: str
+    ) -> pd.DataFrame:
         """
         Convert date and glucose columns to correct types.
 
@@ -238,7 +246,9 @@ class DataProcessor:
                 unit = "ms" if data_converted[date_col].iloc[0] > 1e10 else "s"
                 data_converted[date_col] = pd.to_datetime(data_converted[date_col], unit=unit)
             else:
-                data_converted[date_col] = pd.to_datetime(data_converted[date_col], errors="coerce", format="mixed")
+                data_converted[date_col] = pd.to_datetime(
+                    data_converted[date_col], errors="coerce", format="mixed"
+                )
 
         # Convert glucose column
         if not pd.api.types.is_numeric_dtype(data_converted[glucose_col]):
@@ -247,9 +257,13 @@ class DataProcessor:
             # Si es tipo objeto (string), manejamos posibles comas decimales
             if data_converted[glucose_col].dtype == "object":
                 # Reemplazamos comas por puntos para soportar formatos europeos
-                data_converted[glucose_col] = data_converted[glucose_col].astype(str).str.replace(",", ".", regex=False)
+                data_converted[glucose_col] = (
+                    data_converted[glucose_col].astype(str).str.replace(",", ".", regex=False)
+                )
 
-            data_converted[glucose_col] = pd.to_numeric(data_converted[glucose_col], errors="coerce")
+            data_converted[glucose_col] = pd.to_numeric(
+                data_converted[glucose_col], errors="coerce"
+            )
             data_converted = data_converted.dropna(subset=[glucose_col])
 
         # Optimize glucose type to int16 if possible
@@ -273,7 +287,9 @@ class DataProcessor:
 
         return data_converted
 
-    def _handle_duplicates(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> pd.DataFrame:
+    def _handle_duplicates(
+        self, data: pd.DataFrame, date_col: str, glucose_col: str
+    ) -> pd.DataFrame:
         """
         Finds and resolves duplicates in the date column.
 
@@ -289,11 +305,15 @@ class DataProcessor:
             self.logger.debug(f"  - Found {num_duplicados // 2} duplicate timestamps. Resolving...")
 
             df_dups = data[mask_duplicados].copy()
-            df_dups["diff"] = df_dups.groupby(date_col)[glucose_col].transform(lambda x: (x - x.mean()).abs())
+            df_dups["diff"] = df_dups.groupby(date_col)[glucose_col].transform(
+                lambda x: (x - x.mean()).abs()
+            )
 
             idx_to_keep = df_dups.groupby(date_col)["diff"].idxmin()
 
-            return pd.concat([data[~mask_duplicados], df_dups.loc[idx_to_keep].drop(columns="diff")])
+            return pd.concat(
+                [data[~mask_duplicados], df_dups.loc[idx_to_keep].drop(columns="diff")]
+            )
 
         return data
 
@@ -333,8 +353,8 @@ class DataProcessor:
     def filter_by_dates(
         self,
         data: pd.DataFrame,
-        start_date: Union[str, pd.Timestamp, None] = None,
-        end_date: Union[str, pd.Timestamp, None] = None,
+        start_date: str | pd.Timestamp | None = None,
+        end_date: str | pd.Timestamp | None = None,
         date_col: str = "time",
     ) -> pd.DataFrame:
         """
@@ -406,10 +426,14 @@ class DataProcessor:
 
         # 4. Interpolate with limit
         # This fills small gaps but keeps large ones as NaN (disconnections)
-        regularized_glucose = resampled.interpolate(method="linear", limit=limit, limit_area="inside")
+        regularized_glucose = resampled.interpolate(
+            method="linear", limit=limit, limit_area="inside"
+        )
 
         # 5. Reconstruct the DataFrame
-        regularized_df = pd.DataFrame({date_col: regularized_glucose.index, glucose_col: regularized_glucose.values})
+        regularized_df = pd.DataFrame(
+            {date_col: regularized_glucose.index, glucose_col: regularized_glucose.values}
+        )
 
         # 6. Drop NaNs created by resampling that weren't interpolated
         # (These are the actual long disconnections)

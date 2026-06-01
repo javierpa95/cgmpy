@@ -49,11 +49,19 @@ coverage.xml
 
 # --- Editors / IDEs ---
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.vscode/settings.local.json
+.vscode/launch.local.json
+.vscode/tasks.local.json
 *.swp
 *.swo
 *~
 .cursorignore
+.devcontainer/local/
 
 # --- OS Files ---
 .DS_Store

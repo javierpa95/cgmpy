@@ -8,7 +8,7 @@ Este módulo contiene las clases y funciones para calcular:
 - Métricas avanzadas: GRADE, GRI, M-Value, J-Index
 """
 
-from typing import Any, Dict
+from typing import Any
 
 import pandas as pd
 
@@ -31,7 +31,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
     mantiene compatibilidad con la interfaz existente.
     """
 
-    def all(self) -> Dict[str, Any]:
+    def all(self) -> dict[str, Any]:
         """
         Calculates all available glucose metrics with optional progress logging.
         """
@@ -56,7 +56,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                 if do_log:
                     print(f" Done ({time.time() - s:.2f}s)")
             except Exception as e:
-                all_metrics["basic"] = {"error": f"Error: {str(e)}"}
+                all_metrics["basic"] = {"error": f"Error: {e!s}"}
 
             # 2. TIME IN RANGE
             if do_log:
@@ -68,7 +68,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                 if do_log:
                     print(f" Done ({time.time() - s:.2f}s)")
             except Exception as e:
-                all_metrics["time_in_range"] = {"error": f"Error: {str(e)}"}
+                all_metrics["time_in_range"] = {"error": f"Error: {e!s}"}
 
             # 3. VARIABILITY
             if do_log:
@@ -194,7 +194,7 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
             return all_metrics
 
         except Exception as e:
-            return {"error": f"General error: {str(e)}"}
+            return {"error": f"General error: {e!s}"}
 
     def all_simplified(self) -> dict:
         """
@@ -211,12 +211,18 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
                 print("Advertencia: No hay datos para calcular métricas.")
                 return {
                     "DataCompleteness": 0,
-                    "GMI": None, "Mean": None, "Median": None, "SD": None, "CV": None,
-                    "TIR": 0, "TIR_tight": 0, "MAGE": None, "GRI": None
+                    "GMI": None,
+                    "Mean": None,
+                    "Median": None,
+                    "SD": None,
+                    "CV": None,
+                    "TIR": 0,
+                    "TIR_tight": 0,
+                    "MAGE": None,
+                    "GRI": None,
                 }
 
             print("Calculando métricas simplificadas...")
-
 
             # 1. Basic main metrics
             basic = BasicMetrics.calculate_all_metrics(self)
@@ -282,14 +288,14 @@ class ModularGlucoseMetrics(BasicMetrics, TimeInRangeMetrics, VariabilityMetrics
             return simplified
 
         except Exception as e:
-            return {"error": f"Error en métricas simplificadas: {str(e)}"}
+            return {"error": f"Error en métricas simplificadas: {e!s}"}
 
     pass
 
 
 __all__ = [
     "BasicMetrics",
+    "ModularGlucoseMetrics",
     "TimeInRangeMetrics",
     "VariabilityMetrics",
-    "ModularGlucoseMetrics",
 ]

@@ -8,7 +8,7 @@ This module contains metrics related to time in different ranges:
 - Specific time statistics
 """
 
-from typing import TYPE_CHECKING, Any, Dict, Union
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -40,7 +40,7 @@ class TimeInRangeMetrics:
             self.targets = get_targets("diabetes")
         return self.targets
 
-    def _calculate_data_completeness(self, interval_minutes: Union[float, None] = None) -> Dict[str, Any]:
+    def _calculate_data_completeness(self, interval_minutes: float | None = None) -> dict[str, Any]:
         """
         Calculates the percentage of available data for the current DataFrame.
 
@@ -60,14 +60,13 @@ class TimeInRangeMetrics:
 
         # Analysis for the entire period
         total_time = (data["time"].max() - data["time"].min()).total_seconds() / 60
-        
+
         if pd.isna(total_time) or interval_minutes <= 0:
             expected_data = 0
         else:
             expected_data = int(total_time / interval_minutes)
-            
-        real_data = len(data)
 
+        real_data = len(data)
 
         return {
             "start": data["time"].min(),
@@ -78,7 +77,7 @@ class TimeInRangeMetrics:
             "percentage": (real_data / expected_data) * 100 if expected_data > 0 else 0,
         }
 
-    def data_completeness(self, interval_minutes: Union[float, None] = None) -> int:
+    def data_completeness(self, interval_minutes: float | None = None) -> int:
         """
         Returns the percentage of available data.
 
@@ -101,7 +100,9 @@ class TimeInRangeMetrics:
         Returns:
             float: Percentage of time in range.
         """
-        in_range = self.data[(self.data["glucose"] >= low_threshold) & (self.data["glucose"] <= high_threshold)]
+        in_range = self.data[
+            (self.data["glucose"] >= low_threshold) & (self.data["glucose"] <= high_threshold)
+        ]
         return (len(in_range) / len(self.data)) * 100
 
     def TAR(self, threshold: float) -> float:
@@ -143,7 +144,9 @@ class TimeInRangeMetrics:
         In standard diabetes: 54-70 mg/dL.
         In pregnancy: 55-63 mg/dL.
         """
-        return self.calculate_time_in_range(self.current_targets.hypo_level2, self.current_targets.hypo_level1)
+        return self.calculate_time_in_range(
+            self.current_targets.hypo_level2, self.current_targets.hypo_level1
+        )
 
     def TBR_L2(self) -> float:
         """
@@ -167,7 +170,9 @@ class TimeInRangeMetrics:
         In standard diabetes: 181-250 mg/dL.
         In pregnancy: 141-250 mg/dL.
         """
-        return self.calculate_time_in_range(self.current_targets.target_high + 1, self.current_targets.hyper_level2)
+        return self.calculate_time_in_range(
+            self.current_targets.target_high + 1, self.current_targets.hyper_level2
+        )
 
     def TAR_L2(self) -> float:
         """
@@ -192,7 +197,9 @@ class TimeInRangeMetrics:
 
     def TIR(self) -> float:
         """Calculates Time in Range (TIR) based on current targets."""
-        return self.calculate_time_in_range(self.current_targets.target_low, self.current_targets.target_high)
+        return self.calculate_time_in_range(
+            self.current_targets.target_low, self.current_targets.target_high
+        )
 
     def TIR_tight(self) -> float:
         """Calculates tight time in range between 70 and 140 mg/dL."""
@@ -218,7 +225,7 @@ class TimeInRangeMetrics:
         """Calculates Level 2 Hypoglycemia (TBR)."""
         return self.TBR_L2()
 
-    def time_statistics(self) -> Dict[str, Any]:
+    def time_statistics(self) -> dict[str, Any]:
         """Calculates glucose time statistics based on current targets."""
         t = self.current_targets
         return {
@@ -233,7 +240,7 @@ class TimeInRangeMetrics:
             "TAR_total": self.TAR_total(),
         }
 
-    def time_range_summary(self) -> Dict[str, Any]:
+    def time_range_summary(self) -> dict[str, Any]:
         """
         Complete summary of all time in range metrics.
 

@@ -2,7 +2,7 @@
 Module for simplified gestational diabetes analysis.
 """
 
-from typing import Any, Dict, Union
+from typing import Any
 
 import pandas as pd
 
@@ -16,10 +16,14 @@ class GestationalDiabetes(PregnancyData, ModularGlucoseMetrics):
     Inherits data processing from PregnancyData and calculation logic from ModularGlucoseMetrics.
     """
 
-    def __init__(self, data_source: Union[str, pd.DataFrame], delivery_date: str, week: int, day: int = 0, **kwargs):
+    def __init__(
+        self, data_source: str | pd.DataFrame, delivery_date: str, week: int, day: int = 0, **kwargs
+    ):
         # 1. Initialize data and trimesters via PregnancyData
         # (Passes target_type="pregnancy" automatically from PregnancyData)
-        super().__init__(data_source=data_source, delivery_date=delivery_date, week=week, day=day, **kwargs)
+        super().__init__(
+            data_source=data_source, delivery_date=delivery_date, week=week, day=day, **kwargs
+        )
 
         # 2. Local import to avoid circular dependency
         from .. import GlucoseMetrics
@@ -29,12 +33,12 @@ class GestationalDiabetes(PregnancyData, ModularGlucoseMetrics):
         self.t2 = self._wrap_trimester(self.trimesters["second_trimester"], GlucoseMetrics)
         self.t3 = self._wrap_trimester(self.trimesters["third_trimester"], GlucoseMetrics)
 
-    def _wrap_trimester(self, df: pd.DataFrame, cls) -> Union[None, Any]:
+    def _wrap_trimester(self, df: pd.DataFrame, cls) -> None | Any:
         if len(df) == 0:
             return None
         return cls(data_source=df, target_type="pregnancy")
 
-    def summary_by_trimester(self) -> Dict[str, Any]:
+    def summary_by_trimester(self) -> dict[str, Any]:
         """Simplified comparative summary."""
         return {
             "T1": self.t1.all_simplified() if self.t1 else None,
@@ -42,12 +46,12 @@ class GestationalDiabetes(PregnancyData, ModularGlucoseMetrics):
             "T3": self.t3.all_simplified() if self.t3 else None,
         }
 
-    def calculate_all_metrics(self, flatten: bool = False) -> Dict[str, Any]:
+    def calculate_all_metrics(self, flatten: bool = False) -> dict[str, Any]:
         """
         Complete analysis summary.
-        
+
         Args:
-            flatten (bool): If True, returns a flat dictionary with prefixes 
+            flatten (bool): If True, returns a flat dictionary with prefixes
                            (total_, t1_, t2_, t3_, gest_) suitable for CSV/DataFrames.
         """
         w, d = self.get_weeks_days()

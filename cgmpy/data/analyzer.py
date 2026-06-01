@@ -4,7 +4,7 @@ Módulo para análisis básico de datos de glucosa.
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ class DataAnalyzer:
     Clase responsable del análisis básico de datos de glucosa.
     """
 
-    def __init__(self, logger: logging.Logger = None):
+    def __init__(self, logger: logging.Logger | None = None):
         """
         Inicializa el DataAnalyzer.
 
@@ -23,7 +23,9 @@ class DataAnalyzer:
         """
         self.logger = logger or logging.getLogger(__name__)
 
-    def calculate_typical_interval(self, time_diffs: pd.Series, log_performance: bool = False) -> float:
+    def calculate_typical_interval(
+        self, time_diffs: pd.Series, log_performance: bool = False
+    ) -> float:
         """
         Calcula el intervalo típico entre mediciones en minutos.
 
@@ -61,7 +63,7 @@ class DataAnalyzer:
         time_diffs: pd.Series,
         typical_interval: float,
         include_disconnections: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Genera información básica sobre los datos de glucosa.
 
@@ -91,14 +93,16 @@ class DataAnalyzer:
 
         # Datos teóricos esperados
         tiempo_total = (data["time"].max() - data["time"].min()).total_seconds() / 60
-        
+
         # Evitar errores si tiempo_total o typical_interval son inválidos
         if pd.isna(tiempo_total) or typical_interval <= 0:
             datos_teoricos = 0
         else:
             datos_teoricos = int(tiempo_total / typical_interval)
-            
-        porcentaje_disponibilidad = (num_datos / datos_teoricos * 100) if datos_teoricos > 0 else 0.0
+
+        porcentaje_disponibilidad = (
+            (num_datos / datos_teoricos * 100) if datos_teoricos > 0 else 0.0
+        )
 
         # Create summary dictionary
         summary = {
@@ -138,7 +142,9 @@ class DataAnalyzer:
                     if current_pos > 0:
                         disconnection_end = data.iloc[current_pos]["time"]
                         disconnection_start = data.iloc[current_pos - 1]["time"]
-                        duration_minutes = (disconnection_end - disconnection_start).total_seconds() / 60
+                        duration_minutes = (
+                            disconnection_end - disconnection_start
+                        ).total_seconds() / 60
                         hours = int(duration_minutes // 60)
                         minutes = int(duration_minutes % 60)
                         disconnection_list.append(
@@ -153,7 +159,7 @@ class DataAnalyzer:
 
         return disconnection_list
 
-    def get_summary_string(self, info: Dict[str, Any]) -> str:
+    def get_summary_string(self, info: dict[str, Any]) -> str:
         """
         Generates a string representation of basic information.
 
@@ -172,7 +178,7 @@ class DataAnalyzer:
 
     def get_data_quality_metrics(
         self, data: pd.DataFrame, time_diffs: pd.Series, typical_interval: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calcula métricas de calidad de los datos.
 

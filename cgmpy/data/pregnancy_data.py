@@ -3,7 +3,6 @@ Module for handling pregnancy-specific data.
 """
 
 import datetime
-from typing import Dict, Tuple, Union
 
 import pandas as pd
 
@@ -19,16 +18,16 @@ class PregnancyData(ModularGlucoseData):
 
     def __init__(
         self,
-        data_source: Union[str, pd.DataFrame],
+        data_source: str | pd.DataFrame,
         delivery_date: str,
         week: int,
         day: int = 0,
         date_col: str = "time",
         glucose_col: str = "glucose",
-        delimiter: Union[str, None] = None,
+        delimiter: str | None = None,
         header: int = 0,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
         target_type: str = "pregnancy",
         regularize: bool = False,
@@ -65,7 +64,9 @@ class PregnancyData(ModularGlucoseData):
         self.second_trimester_end = self.gestational_info["second_trimester_end"]
 
         # 2. Filter the main dataframe to ensure "Overall" metrics only cover the pregnancy period
-        mask = (self.data["time"] >= self.conception_date) & (self.data["time"] <= self.delivery_date)
+        mask = (self.data["time"] >= self.conception_date) & (
+            self.data["time"] <= self.delivery_date
+        )
         self.data = self.data[mask].copy()
 
         # 3. Recalculate time differences and typical interval after filtering
@@ -101,14 +102,20 @@ class PregnancyData(ModularGlucoseData):
             "gestation_week_decimal": gestation_week,
         }
 
-    def _split_trimesters(self) -> Dict[str, pd.DataFrame]:
+    def _split_trimesters(self) -> dict[str, pd.DataFrame]:
         """
         Splits the main dataframe into three dataframes, one per trimester.
         """
         return {
-            "first_trimester": self.get_trimester_data(self.conception_date, self.first_trimester_end),
-            "second_trimester": self.get_trimester_data(self.first_trimester_end, self.second_trimester_end),
-            "third_trimester": self.get_trimester_data(self.second_trimester_end, self.delivery_date),
+            "first_trimester": self.get_trimester_data(
+                self.conception_date, self.first_trimester_end
+            ),
+            "second_trimester": self.get_trimester_data(
+                self.first_trimester_end, self.second_trimester_end
+            ),
+            "third_trimester": self.get_trimester_data(
+                self.second_trimester_end, self.delivery_date
+            ),
         }
 
     def get_trimester_data(self, start_date: pd.Timestamp, end_date: pd.Timestamp) -> pd.DataFrame:
@@ -118,7 +125,7 @@ class PregnancyData(ModularGlucoseData):
         return self.data[(self.data["time"] >= start_date) & (self.data["time"] < end_date)].copy()
 
     @staticmethod
-    def decimal_to_weeks_days(weeks_decimal: float) -> Tuple[int, int]:
+    def decimal_to_weeks_days(weeks_decimal: float) -> tuple[int, int]:
         """
         Converts decimal weeks to (weeks, days).
         """
@@ -126,7 +133,7 @@ class PregnancyData(ModularGlucoseData):
         days = round((weeks_decimal - weeks) * 7)
         return weeks, days
 
-    def get_weeks_days(self) -> Tuple[int, int]:
+    def get_weeks_days(self) -> tuple[int, int]:
         """
         Returns gestation weeks and days in traditional format.
         """
@@ -141,7 +148,12 @@ class PregnancyData(ModularGlucoseData):
         # Trimester definitions for calculation
         periods = [
             ("First Trimester", self.conception_date, self.first_trimester_end, "first_trimester"),
-            ("Second Trimester", self.first_trimester_end, self.second_trimester_end, "second_trimester"),
+            (
+                "Second Trimester",
+                self.first_trimester_end,
+                self.second_trimester_end,
+                "second_trimester",
+            ),
             ("Third Trimester", self.second_trimester_end, self.delivery_date, "third_trimester"),
         ]
 
@@ -151,12 +163,11 @@ class PregnancyData(ModularGlucoseData):
 
             # Calculate expected records
             duration_mins = (end - start).total_seconds() / 60
-            
+
             if pd.isna(duration_mins) or self.typical_interval <= 0:
                 expected = 0
             else:
                 expected = int(duration_mins / self.typical_interval)
-
 
             coverage = (count / expected * 100) if expected > 0 else 0
 

@@ -3,8 +3,7 @@ Module for loading glucose data from different sources.
 """
 
 import logging
-import os
-from typing import Union
+from pathlib import Path
 
 import pandas as pd
 
@@ -14,7 +13,7 @@ class DataLoader:
     Class responsible for loading data from different sources (CSV, Parquet, DataFrame).
     """
 
-    def __init__(self, logger: logging.Logger = None):
+    def __init__(self, logger: logging.Logger | None = None):
         """
         Initializes the DataLoader.
 
@@ -24,10 +23,10 @@ class DataLoader:
 
     def load_from_source(
         self,
-        data_source: Union[str, pd.DataFrame],
+        data_source: str | pd.DataFrame,
         date_col: str,
         glucose_col: str,
-        delimiter: Union[str, None] = None,
+        delimiter: str | None = None,
         header: int = 0,
     ) -> pd.DataFrame:
         """
@@ -52,7 +51,7 @@ class DataLoader:
         file_path: str,
         date_col: str,
         glucose_col: str,
-        delimiter: Union[str, None],
+        delimiter: str | None,
         header: int,
     ) -> pd.DataFrame:
         """
@@ -65,7 +64,7 @@ class DataLoader:
         :param header: Header row
         :return: DataFrame with the data
         """
-        if not os.path.isfile(file_path):
+        if not Path(file_path).is_file():
             raise FileNotFoundError(f"File not found: {file_path}")
 
         is_parquet = file_path.lower().endswith(".parquet")
@@ -87,14 +86,14 @@ class DataLoader:
         try:
             return pd.read_parquet(file_path, columns=[date_col, glucose_col])
         except Exception as e:
-            raise ValueError(f"Error reading Parquet file: {str(e)}") from e
+            raise ValueError(f"Error reading Parquet file: {e!s}") from e
 
     def _load_csv(
         self,
         file_path: str,
         date_col: str,
         glucose_col: str,
-        delimiter: Union[str, None],
+        delimiter: str | None,
         header: int,
     ) -> pd.DataFrame:
         """
@@ -129,11 +128,13 @@ class DataLoader:
                     )
                 except Exception as inner_e:
                     raise ValueError(
-                        f"Error reading CSV file: {str(e)}. "
+                        f"Error reading CSV file: {e!s}. "
                         "Try manually specifying the delimiter with the 'delimiter' parameter."
                     ) from inner_e
             else:
-                raise ValueError(f"Error reading CSV file with delimiter '{delimiter}': {str(e)}") from e
+                raise ValueError(
+                    f"Error reading CSV file with delimiter '{delimiter}': {e!s}"
+                ) from e
 
     def _load_from_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         """

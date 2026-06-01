@@ -8,8 +8,6 @@ Este módulo contiene las funciones para generar gráficos estadísticos:
 - Análisis de distribución estadística
 """
 
-from typing import List, Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -97,9 +95,13 @@ class StatisticalPlotter:
             title = "Tiempo en Rango - Estándar"
 
         # Filtrar valores mayores que 0 para el gráfico
-        non_zero_data = [(label, size, color) for label, size, color in zip(labels, sizes, colors) if size > 0]
+        non_zero_data = [
+            (label, size, color)
+            for label, size, color in zip(labels, sizes, colors, strict=False)
+            if size > 0
+        ]
         if non_zero_data:
-            labels, sizes, colors = zip(*non_zero_data)
+            labels, sizes, colors = zip(*non_zero_data, strict=False)
 
         # Crear figura
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
@@ -126,7 +128,7 @@ class StatisticalPlotter:
         ax2.set_title("Distribución Detallada", fontsize=14, fontweight="bold")
 
         # Añadir valores en las barras
-        for _i, (bar, size) in enumerate(zip(bars, sizes)):
+        for _i, (bar, size) in enumerate(zip(bars, sizes, strict=False)):
             ax2.text(
                 bar.get_width() + 0.5,
                 bar.get_y() + bar.get_height() / 2,
@@ -141,7 +143,7 @@ class StatisticalPlotter:
         plt.tight_layout()
         plt.show()
 
-    def plot_distribution_comparison(self, target_ranges: Optional[List[tuple]] = None):
+    def plot_distribution_comparison(self, target_ranges: list[tuple] | None = None):
         """
         Compara la distribución actual con rangos objetivo.
 
@@ -183,7 +185,7 @@ class StatisticalPlotter:
             self.data["glucose"],
             vert=True,
             patch_artist=True,
-            boxprops=dict(facecolor="lightblue"),
+            boxprops={"facecolor": "lightblue"},
         )
         ax2.set_ylabel("Glucosa (mg/dL)")
         ax2.set_title("Box Plot de Glucosa")
@@ -207,13 +209,13 @@ class StatisticalPlotter:
             fontsize=11,
             verticalalignment="top",
             fontfamily="monospace",
-            bbox=dict(boxstyle="round", facecolor="lightgray", alpha=0.8),
+            bbox={"boxstyle": "round", "facecolor": "lightgray", "alpha": 0.8},
         )
 
         plt.tight_layout()
         plt.show()
 
-    def plot_correlation_matrix(self, time_segments: Optional[List[str]] = None):
+    def plot_correlation_matrix(self, time_segments: list[str] | None = None):
         """
         Genera una matriz de correlación entre diferentes segmentos temporales.
 

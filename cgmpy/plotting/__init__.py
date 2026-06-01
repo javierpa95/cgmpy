@@ -29,4 +29,4 @@ class ModularGlucosePlot(AGPPlotter, DailyPlotter, StatisticalPlotter):
     pass
 
 
-__all__ = ["AGPPlotter", "DailyPlotter", "StatisticalPlotter", "ModularGlucosePlot"]
+__all__ = ["AGPPlotter", "DailyPlotter", "ModularGlucosePlot", "StatisticalPlotter"]

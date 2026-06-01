@@ -5,7 +5,7 @@ Main module for modular glucose data management.
 import datetime
 import logging
 import time
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Union
 
 import pandas as pd
 
@@ -30,10 +30,10 @@ class ModularGlucoseData:
     @classmethod
     def from_sources(
         cls,
-        sources: List[Union[str, pd.DataFrame, "ModularGlucoseData"]],
+        sources: list[Union[str, pd.DataFrame, "ModularGlucoseData"]],
         date_col: str = "time",
         glucose_col: str = "glucose",
-        delimiter: Union[str, None] = None,
+        delimiter: str | None = None,
         header: int = 0,
         log: bool = False,
         target_type: str = "diabetes",
@@ -66,9 +66,11 @@ class ModularGlucoseData:
                 # These are already named 'time' and 'glucose'
                 all_dfs.append(df)
 
-            elif isinstance(source, (str, pd.DataFrame)):
+            elif isinstance(source, str | pd.DataFrame):
                 # Load the source (if string) or take the DataFrame
-                raw_df = temp_loader.load_from_source(source, date_col, glucose_col, delimiter, header)
+                raw_df = temp_loader.load_from_source(
+                    source, date_col, glucose_col, delimiter, header
+                )
                 # Standardize column names before concatenation
                 standard_df = temp_processor.rename_columns(raw_df, date_col, glucose_col)
                 all_dfs.append(standard_df)
@@ -96,13 +98,13 @@ class ModularGlucoseData:
 
     def __init__(
         self,
-        data_source: Union[str, pd.DataFrame],
+        data_source: str | pd.DataFrame,
         date_col: str = "time",
         glucose_col: str = "glucose",
-        delimiter: Union[str, None] = None,
+        delimiter: str | None = None,
         header: int = 0,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
         target_type: str = "diabetes",
         regularize: bool = False,
@@ -179,17 +181,17 @@ class ModularGlucoseData:
 
     def _initialize_data(
         self,
-        data_source: Union[str, pd.DataFrame],
+        data_source: str | pd.DataFrame,
         date_col: str,
         glucose_col: str,
-        delimiter: Union[str, None],
+        delimiter: str | None,
         header: int,
-        start_date: Union[str, datetime.datetime, None],
-        end_date: Union[str, datetime.datetime, None],
+        start_date: str | datetime.datetime | None,
+        end_date: str | datetime.datetime | None,
         regularize: bool = False,
         regularize_interval: int = 5,
         regularize_max_gap: int = 30,
-    ) -> Tuple[pd.DataFrame, pd.Series, float]:
+    ) -> tuple[pd.DataFrame, pd.Series, float]:
         """
         Initializes and processes data using modules.
 
@@ -199,7 +201,9 @@ class ModularGlucoseData:
 
         # Step 1: Load data
         t0 = time.time()
-        raw_data = self.loader.load_from_source(data_source, date_col, glucose_col, delimiter, header)
+        raw_data = self.loader.load_from_source(
+            data_source, date_col, glucose_col, delimiter, header
+        )
         t1 = time.time()
 
         # Step 2: Rename columns
@@ -266,14 +270,16 @@ class ModularGlucoseData:
         """
         return self.typical_interval
 
-    def info(self, include_disconnections: bool = False) -> Dict[str, Any]:
+    def info(self, include_disconnections: bool = False) -> dict[str, Any]:
         """
         Shows basic file information.
 
         :param include_disconnections: Whether to include disconnection details
         :return: Dictionary with basic information
         """
-        return self.analyzer.get_basic_info(self.data, self.time_diffs, self.typical_interval, include_disconnections)
+        return self.analyzer.get_basic_info(
+            self.data, self.time_diffs, self.typical_interval, include_disconnections
+        )
 
     def __str__(self) -> str:
         """
@@ -284,22 +290,26 @@ class ModularGlucoseData:
         info = self.info()
         return self.analyzer.get_summary_string(info)
 
-    def get_data_quality_metrics(self) -> Dict[str, Any]:
+    def get_data_quality_metrics(self) -> dict[str, Any]:
         """
         Calculates data quality metrics.
 
         :return: Dictionary with quality metrics
         """
-        return self.analyzer.get_data_quality_metrics(self.data, self.time_diffs, self.typical_interval)
+        return self.analyzer.get_data_quality_metrics(
+            self.data, self.time_diffs, self.typical_interval
+        )
 
-    def get_logs(self) -> Dict[str, Any]:
+    def get_logs(self) -> dict[str, Any]:
         """
         Returns all stored logs.
 
         :return: Dictionary with generated logs
         """
         if not self.log:
-            self.logger.warning("Logging is not enabled. Initialize the class with log=True to generate logs.")
+            self.logger.warning(
+                "Logging is not enabled. Initialize the class with log=True to generate logs."
+            )
             return {}
         return self.logs
 
@@ -361,8 +371,8 @@ class ModularGlucoseData:
     # Filtering methods
     def filter_by_date_range(
         self,
-        start_date: Union[str, datetime.datetime],
-        end_date: Union[str, datetime.datetime],
+        start_date: str | datetime.datetime,
+        end_date: str | datetime.datetime,
     ) -> "ModularGlucoseData":
         """
         Creates a new instance filtered by date range.
@@ -377,7 +387,9 @@ class ModularGlucoseData:
         # Create new instance using the constructor
         return self._create_filtered_instance(filtered_data)
 
-    def filter_by_glucose_range(self, min_glucose: float, max_glucose: float) -> "ModularGlucoseData":
+    def filter_by_glucose_range(
+        self, min_glucose: float, max_glucose: float
+    ) -> "ModularGlucoseData":
         """
         Creates a new instance filtered by glucose range.
 
@@ -407,7 +419,11 @@ class ModularGlucoseData:
         """
         # 1. Use processor to regularize data
         self.data = self.processor.regularize(
-            self.data, interval_mins=interval_mins, max_gap_mins=max_gap_mins, date_col="time", glucose_col="glucose"
+            self.data,
+            interval_mins=interval_mins,
+            max_gap_mins=max_gap_mins,
+            date_col="time",
+            glucose_col="glucose",
         )
 
         # 2. Update time differences and internal metrics
@@ -456,7 +472,9 @@ class ModularGlucoseData:
         # Refresh dependent data
         new_instance.data = filtered_data.copy()
         new_instance.time_diffs = new_instance.data["time"].diff()
-        new_instance.typical_interval = self.analyzer.calculate_typical_interval(new_instance.time_diffs)
+        new_instance.typical_interval = self.analyzer.calculate_typical_interval(
+            new_instance.time_diffs
+        )
 
         # Refresh trimesters if PregnancyData
         if hasattr(self, "_split_trimesters"):
@@ -471,6 +489,8 @@ class ModularGlucoseData:
         # Assign data and recalculate internal metrics
         new_instance.data = filtered_data.copy()
         new_instance.time_diffs = new_instance.data["time"].diff()
-        new_instance.typical_interval = self.analyzer.calculate_typical_interval(new_instance.time_diffs)
+        new_instance.typical_interval = self.analyzer.calculate_typical_interval(
+            new_instance.time_diffs
+        )
 
         return new_instance

@@ -8,7 +8,8 @@ Este módulo combina todas las funcionalidades de análisis:
 """
 
 import datetime
-from typing import Any, Dict, Union
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -43,13 +44,13 @@ class GlucoseAnalysis(
 
     def __init__(
         self,
-        data_source: Union[str, pd.DataFrame],
+        data_source: str | pd.DataFrame,
         date_col: str = "time",
         glucose_col: str = "glucose",
-        delimiter: Union[str, None] = None,
+        delimiter: str | None = None,
         header: int = 0,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
     ):
         """
@@ -77,7 +78,7 @@ class GlucoseAnalysis(
             log=log,
         )
 
-    def get_comprehensive_report(self) -> Dict[str, Any]:
+    def get_comprehensive_report(self) -> dict[str, Any]:
         """
         Genera un reporte completo con todas las métricas disponibles.
 
@@ -201,7 +202,7 @@ class GlucoseAnalysis(
         if format.lower() == "json":
             import json
 
-            with open(file_path, "w", encoding="utf-8") as f:
+            with Path(file_path).open("w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2, default=str, ensure_ascii=False)
 
         elif format.lower() == "csv":
@@ -213,18 +214,24 @@ class GlucoseAnalysis(
             # Crear Excel con múltiples hojas
             with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
                 # Hoja 1: Información básica
-                pd.DataFrame([report["informacion_basica"]]).to_excel(writer, sheet_name="Info_Basica", index=False)
+                pd.DataFrame([report["informacion_basica"]]).to_excel(
+                    writer, sheet_name="Info_Basica", index=False
+                )
 
                 # Hoja 2: Métricas básicas
-                pd.DataFrame([report["metricas_basicas"]]).to_excel(writer, sheet_name="Metricas_Basicas", index=False)
+                pd.DataFrame([report["metricas_basicas"]]).to_excel(
+                    writer, sheet_name="Metricas_Basicas", index=False
+                )
 
                 # Hoja 3: Tiempo en rango
-                pd.DataFrame([report["estadisticas_tiempo"]]).to_excel(writer, sheet_name="Tiempo_Rango", index=False)
+                pd.DataFrame([report["estadisticas_tiempo"]]).to_excel(
+                    writer, sheet_name="Tiempo_Rango", index=False
+                )
 
         else:
             raise ValueError(f"Formato no soportado: {format}")
 
-    def _flatten_report(self, report: Dict[str, Any]) -> pd.DataFrame:
+    def _flatten_report(self, report: dict[str, Any]) -> pd.DataFrame:
         """
         Convierte el reporte anidado a un DataFrame plano.
 

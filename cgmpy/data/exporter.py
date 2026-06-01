@@ -3,8 +3,8 @@ Module for glucose data export.
 """
 
 import logging
-import os
 import time
+from pathlib import Path
 
 import pandas as pd
 
@@ -14,7 +14,7 @@ class DataExporter:
     Class responsible for exporting glucose data in different formats.
     """
 
-    def __init__(self, logger: logging.Logger = None):
+    def __init__(self, logger: logging.Logger | None = None):
         """
         Initializes the DataExporter.
 
@@ -77,7 +77,7 @@ class DataExporter:
         :param handle_duplicates: Strategy for handling duplicates
         :return: Number of records added
         """
-        if not os.path.exists(file_path):
+        if not Path(file_path).exists():
             self.logger.info(f"File {file_path} does not exist. Creating new file...")
             self.to_parquet(data, file_path, compression=compression)
             return len(data)
@@ -95,7 +95,9 @@ class DataExporter:
         new_data = self._prepare_new_data(data)
 
         # Handle duplicates
-        existing_data, new_data = self._handle_duplicates(existing_data, new_data, handle_duplicates)
+        existing_data, new_data = self._handle_duplicates(
+            existing_data, new_data, handle_duplicates
+        )
 
         # Combine and sort data
         t_combine = time.time()
@@ -110,7 +112,7 @@ class DataExporter:
 
         # Final information
         records_added = len(final_data) - len(existing_data)
-        file_size = os.path.getsize(file_path) / 1024 / 1024
+        file_size = Path(file_path).stat().st_size / 1024 / 1024
         print("Data added successfully:")
         print(f"  - Records added: {records_added:,}")
         print(f"  - Total records: {len(final_data):,}")
@@ -138,7 +140,9 @@ class DataExporter:
         max_val = df_optimized["glucose"].max()
 
         if pd.notna(min_val) and pd.notna(max_val) and min_val >= -32768 and max_val <= 32767:
-            self.logger.info(f"  - Optimizing 'glucose' to int16 (range: {min_val} to {max_val})...")
+            self.logger.info(
+                f"  - Optimizing 'glucose' to int16 (range: {min_val} to {max_val})..."
+            )
             df_optimized["glucose"] = df_optimized["glucose"].astype("int16")
         else:
             self.logger.warning(
@@ -191,7 +195,9 @@ class DataExporter:
 
         return new_data
 
-    def _handle_duplicates(self, existing_data: pd.DataFrame, new_data: pd.DataFrame, strategy: str) -> tuple:
+    def _handle_duplicates(
+        self, existing_data: pd.DataFrame, new_data: pd.DataFrame, strategy: str
+    ) -> tuple:
         """
         Handles duplicates between existing and new data.
 
@@ -232,7 +238,7 @@ class DataExporter:
         :param data: Saved DataFrame
         :param save_time: Save time
         """
-        file_size = os.path.getsize(file_path) / 1024 / 1024
+        file_size = Path(file_path).stat().st_size / 1024 / 1024
         print(f"Data saved in Parquet format at: {file_path}")
         print(f"  - File size: {file_size:.2f} MB")
         print(f"  - Save time: {save_time:.3f}s")
@@ -261,7 +267,7 @@ class DataExporter:
         data.to_csv(file_path, sep=separator, index=include_index)
         t_end = time.time()
 
-        file_size = os.path.getsize(file_path) / 1024 / 1024
+        file_size = Path(file_path).stat().st_size / 1024 / 1024
         print(f"Data saved in CSV format at: {file_path}")
         print(f"  - File size: {file_size:.2f} MB")
         print(f"  - Save time: {t_end - t_start:.3f}s")
@@ -281,7 +287,7 @@ class DataExporter:
         data.to_excel(file_path, sheet_name=sheet_name, index=False)
         t_end = time.time()
 
-        file_size = os.path.getsize(file_path) / 1024 / 1024
+        file_size = Path(file_path).stat().st_size / 1024 / 1024
         print(f"Data saved in Excel format at: {file_path}")
         print(f"  - File size: {file_size:.2f} MB")
         print(f"  - Save time: {t_end - t_start:.3f}s")
