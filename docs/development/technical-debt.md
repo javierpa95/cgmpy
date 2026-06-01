@@ -31,7 +31,8 @@ that work on the codebase.
 ### 2026-06 — Mixed language error messages
 
 - **Category**: i18n
-- **Files**: `cgmpy/data/processor.py`, `cgmpy/metrics/pregnancy.py`
+- **Files**: `cgmpy/data/processor.py`, `cgmpy/metrics/pregnancy.py`,
+  `cgmpy/utils/date_utils.py`
 - **Issue**: A few error messages and metric names are still in Spanish
   (carryover from the v0.2 codebase).
 - **Proposed fix**: Audit and translate. Add a regression test that
@@ -46,9 +47,27 @@ that work on the codebase.
 - **Proposed fix**: Recruit 1–2 co-maintainers from the open source
   community. Add them to CODEOWNERS with appropriate scope.
 
+### 2026-06 — Docstring language
+
+- **Category**: i18n
+- **Files**: `cgmpy/data/*.py`, `cgmpy/metrics/*.py`, `cgmpy/utils/*.py`
+- **Issue**: Most docstrings (Google-style) are in Spanish.
+- **Proposed fix**: Translate to English in v0.6.
+
 ## Resolved
 
-_(None yet — log starts on 2026-06-01 with the v0.3 refactor.)_
+### 2026-06 — Ruff lint warnings (156 errors)
+
+- **Category**: tooling
+- **Files**: `cgmpy/`
+- **Issue**: 156 ruff warnings (UP006/UP007/UP035/UP038 typing,
+  RUF002 unicode in docstring, RUF010/RUF013 explicit conversion /
+  implicit Optional, RUF022 unsorted `__all__`, C408 unnecessary
+  `dict()` literal, PTH110/PTH113/PTH123/PTH202 pathlib, W291/W293
+  whitespace, C414, SIM102 collapsible-if, F401 unused import).
+- **Resolution**: Fixed in commit `style(ruff): resolve 156 lint
+  warnings (typing, pathlib, formatting)` of the v0.5.0 prep.
+  `ruff check .` now reports `All checks passed!`.
 
 ## How to add an entry
 

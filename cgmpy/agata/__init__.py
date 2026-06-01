@@ -18,4 +18,4 @@ from .metrics import AgataAnalysis, analyze_one_arm, analyze_with_agata
 
 # Definir qué se importa cuando un usuario ejecuta 'from cgmpy.agata import *'
 # Es una buena práctica para definir la API pública del subpaquete.
-__all__ = ["prepare_data_for_agata", "analyze_with_agata", "analyze_one_arm", "AgataAnalysis"]
+__all__ = ["AgataAnalysis", "analyze_one_arm", "analyze_with_agata", "prepare_data_for_agata"]

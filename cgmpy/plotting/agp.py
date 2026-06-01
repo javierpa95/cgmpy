@@ -27,7 +27,9 @@ class AGPPlotter:
         """
         # Preparar datos
         data_copy = self.data.copy()
-        data_copy["time_decimal"] = (data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0).round(2)
+        data_copy["time_decimal"] = (
+            data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
+        ).round(2)
 
         # Calcular percentiles
         percentiles = data_copy.groupby("time_decimal")["glucose"].agg(
@@ -45,7 +47,9 @@ class AGPPlotter:
 
         # Aplicar suavizado
         for col in percentiles.columns:
-            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+            percentiles[col] = (
+                percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+            )
 
         # Asegurar que los datos están ordenados
         percentiles = percentiles.sort_index()
@@ -76,7 +80,9 @@ class AGPPlotter:
         """
         # Preparar los datos
         data_copy = self.data.copy()
-        data_copy["time_decimal"] = (data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0).round(2)
+        data_copy["time_decimal"] = (
+            data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
+        ).round(2)
         data_copy["weekday"] = data_copy["time"].dt.day_name(locale="es_ES")
 
         if combined:
@@ -173,7 +179,7 @@ class AGPPlotter:
         # Configurar zonas de glucemia
         self._add_glucose_zones(ax)
 
-        for dia, color in zip(dias, colores):
+        for dia, color in zip(dias, colores, strict=False):
             # Filtrar datos para el día específico
             dia_data = data_copy[data_copy["weekday"] == dia]
 
@@ -246,7 +252,7 @@ class AGPPlotter:
             y=0.92,
         )
 
-        for ax, dia in zip(axes, dias):
+        for ax, dia in zip(axes, dias, strict=False):
             # Filtrar datos para el día específico
             dia_data = data_copy[data_copy["weekday"] == dia]
 
@@ -293,7 +299,9 @@ class AGPPlotter:
 
         # Aplicar suavizado
         for col in percentiles.columns:
-            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+            percentiles[col] = (
+                percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+            )
 
         return percentiles
 
@@ -314,6 +322,8 @@ class AGPPlotter:
 
         # Aplicar suavizado
         for col in percentiles.columns:
-            percentiles[col] = percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+            percentiles[col] = (
+                percentiles[col].rolling(window=smoothing_window, center=True, min_periods=1).mean()
+            )
 
         return percentiles

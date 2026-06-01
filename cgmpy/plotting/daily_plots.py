@@ -8,8 +8,6 @@ Este módulo contiene las funciones para generar gráficos relacionados con patr
 - Análisis de variaciones diarias
 """
 
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -23,7 +21,7 @@ class DailyPlotter:
     Esta clase debe ser utilizada como mixin con GlucoseData.
     """
 
-    def day_graph(self, fecha: Optional[str] = None):
+    def day_graph(self, fecha: str | None = None):
         """
         Genera y muestra el gráfico de glucosa para un día específico.
 
@@ -91,7 +89,10 @@ class DailyPlotter:
 
         # Calcular el perfil medio
         mean_profile = (
-            data_copy.groupby("time_decimal")["glucose"].mean().rolling(window=15, center=True, min_periods=1).mean()
+            data_copy.groupby("time_decimal")["glucose"]
+            .mean()
+            .rolling(window=15, center=True, min_periods=1)
+            .mean()
         )
 
         # Graficar cada día individual
@@ -163,8 +164,8 @@ class DailyPlotter:
             data=data_copy,
             order=orden_dias,
             whis=1.5,
-            medianprops=dict(color="red", linewidth=1.5),
-            flierprops=dict(marker="o", markerfacecolor="gray", markersize=4),
+            medianprops={"color": "red", "linewidth": 1.5},
+            flierprops={"marker": "o", "markerfacecolor": "gray", "markersize": 4},
         )
 
         # Líneas de referencia
@@ -215,7 +216,9 @@ class DailyPlotter:
         # Aplicar suavizado
         window_size = 15
         for col in ["mean", "std", "p25", "p75"]:
-            hourly_stats[col] = hourly_stats[col].rolling(window=window_size, center=True, min_periods=1).mean()
+            hourly_stats[col] = (
+                hourly_stats[col].rolling(window=window_size, center=True, min_periods=1).mean()
+            )
 
         # Crear figura
         fig, ax = plt.subplots(figsize=(14, 8))

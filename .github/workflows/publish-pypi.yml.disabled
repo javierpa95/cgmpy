@@ -1,3 +1,21 @@
+# ==========================================
+# PUBLISH TO PYPI — CURRENTLY DISABLED
+# ==========================================
+# This workflow is renamed to .disabled so GitHub Actions will not pick
+# it up. The project is in a pre-release phase (v0.5.0) and the
+# maintainer wants to hold off on publishing to PyPI until they are
+# happy with the package.
+#
+# TO RE-ENABLE:
+#   1. git mv .github/workflows/publish-pypi.yml.disabled \
+#           .github/workflows/publish-pypi.yml
+#   2. Configure PyPI Trusted Publishing (OIDC) at
+#      https://pypi.org/manage/account/publishing/
+#   3. Verify the workflow_dispatch input and the environment name
+#      match the configuration above.
+#   4. Trigger the workflow manually from the Actions tab.
+# ==========================================
+
 name: Publish to PyPI
 
 # Manual trigger only. Per the project's security posture, publishing

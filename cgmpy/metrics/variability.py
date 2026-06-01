@@ -10,7 +10,7 @@ This module contains metrics related to glycemic variability:
 """
 
 import math
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -139,7 +139,7 @@ class VariabilityMetrics:
         """
         return self.sd_within_day(min_count_threshold)["sd"]
 
-    def sd_within_day_segment(self, start_time: str, duration_hours: int) -> Dict[str, float]:
+    def sd_within_day_segment(self, start_time: str, duration_hours: int) -> dict[str, float]:
         """
         Calculates within-day standard deviation for a specific day segment.
         For each day, calculates the SD of the specified time segment and then
@@ -160,7 +160,9 @@ class VariabilityMetrics:
             return {"sd": 0.0, "mean": 0.0}
 
         # Calcular SD y media para el segmento de cada día
-        daily_segment_stats = segment_data.groupby(segment_data["time"].dt.date)["glucose"].agg(["std", "mean"])
+        daily_segment_stats = segment_data.groupby(segment_data["time"].dt.date)["glucose"].agg(
+            ["std", "mean"]
+        )
 
         return {
             "sd": daily_segment_stats["std"].mean() if not daily_segment_stats.empty else 0.0,
@@ -173,7 +175,7 @@ class VariabilityMetrics:
         filter_outliers: bool = True,
         agrupar_por_intervalos: bool = False,
         intervalo_minutos: int = 5,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculates standard deviation between timepoints (SDhh:mm).
         Calculates the mean of a timestamp and then the standard deviation of those means.
@@ -412,7 +414,9 @@ class VariabilityMetrics:
             df["minute"] = df["interval"] % 60
 
         # Crear clave de tiempo para agrupación
-        df["time_key"] = df["hour"].astype(str).str.zfill(2) + ":" + df["minute"].astype(str).str.zfill(2)
+        df["time_key"] = (
+            df["hour"].astype(str).str.zfill(2) + ":" + df["minute"].astype(str).str.zfill(2)
+        )
 
         # Agrupar por día y punto temporal
         grouped = df.groupby(["day", "time_key"])
@@ -523,7 +527,9 @@ class VariabilityMetrics:
         df["hour"] = df["time"].dt.hour
         df["minute"] = df["time"].dt.minute
         df["day"] = df["time"].dt.date
-        df["time_key"] = df["hour"].astype(str).str.zfill(2) + ":" + df["minute"].astype(str).str.zfill(2)
+        df["time_key"] = (
+            df["hour"].astype(str).str.zfill(2) + ":" + df["minute"].astype(str).str.zfill(2)
+        )
 
         # Calcular valores necesarios para la fórmula de SDI
 
@@ -553,7 +559,9 @@ class VariabilityMetrics:
 
         # Calcular la interacción para cada punto
         df_temp["expected"] = (
-            global_mean + (df_temp["day_mean"] - global_mean) + (df_temp["timepoint_mean"] - global_mean)
+            global_mean
+            + (df_temp["day_mean"] - global_mean)
+            + (df_temp["timepoint_mean"] - global_mean)
         )
         df_temp["interaction"] = df_temp["glucose"] - df_temp["expected"]
 
@@ -587,7 +595,9 @@ class VariabilityMetrics:
         if start <= end:
             segment_data = self.data[self.data["time"].apply(lambda dt: start <= dt.time() < end)]
         else:
-            segment_data = self.data[self.data["time"].apply(lambda dt: dt.time() >= start or dt.time() < end)]
+            segment_data = self.data[
+                self.data["time"].apply(lambda dt: dt.time() >= start or dt.time() < end)
+            ]
 
         return {
             "sd": segment_data["glucose"].std() if not segment_data.empty else 0.0,
@@ -622,16 +632,30 @@ class VariabilityMetrics:
         return {
             "CVT": self.sd_total()["sd"] / self.sd_total()["mean"] * 100,
             "CVw": self.sd_within_day()["sd"] / self.sd_within_day()["mean"] * 100,
-            "CVhh:mm": self.sd_between_timepoints()["sd"] / self.sd_between_timepoints()["mean"] * 100,
-            "CVNoche": self.sd_segment("00:00", 8)["sd"] / self.sd_segment("00:00", 8)["mean"] * 100,
+            "CVhh:mm": self.sd_between_timepoints()["sd"]
+            / self.sd_between_timepoints()["mean"]
+            * 100,
+            "CVNoche": self.sd_segment("00:00", 8)["sd"]
+            / self.sd_segment("00:00", 8)["mean"]
+            * 100,
             "CVDía": self.sd_segment("08:00", 8)["sd"] / self.sd_segment("08:00", 8)["mean"] * 100,
-            "CVTarde": self.sd_segment("16:00", 8)["sd"] / self.sd_segment("16:00", 8)["mean"] * 100,
-            "CVSDws_1h": self.sd_within_series(hours=1)["sd"] / self.sd_within_series(hours=1)["mean"] * 100,
-            "CVSDws_6h": self.sd_within_series(hours=6)["sd"] / self.sd_within_series(hours=6)["mean"] * 100,
-            "CVSDws_24h": self.sd_within_series(hours=24)["sd"] / self.sd_within_series(hours=24)["mean"] * 100,
+            "CVTarde": self.sd_segment("16:00", 8)["sd"]
+            / self.sd_segment("16:00", 8)["mean"]
+            * 100,
+            "CVSDws_1h": self.sd_within_series(hours=1)["sd"]
+            / self.sd_within_series(hours=1)["mean"]
+            * 100,
+            "CVSDws_6h": self.sd_within_series(hours=6)["sd"]
+            / self.sd_within_series(hours=6)["mean"]
+            * 100,
+            "CVSDws_24h": self.sd_within_series(hours=24)["sd"]
+            / self.sd_within_series(hours=24)["mean"]
+            * 100,
             "CVdm": self.sd_daily_mean()["sd"] / self.sd_daily_mean()["mean"] * 100,
             "CVbhh:mm": self.sd_same_timepoint()["sd"] / self.sd_same_timepoint()["mean"] * 100,
-            "CVbhh:mm_dm": self.sd_same_timepoint_adjusted()["sd"] / self.sd_same_timepoint_adjusted()["mean"] * 100,
+            "CVbhh:mm_dm": self.sd_same_timepoint_adjusted()["sd"]
+            / self.sd_same_timepoint_adjusted()["mean"]
+            * 100,
             "CVSDI": self.sd_interaction()["sd"] / self.sd_interaction()["mean"] * 100,
         }
 
@@ -667,9 +691,9 @@ class VariabilityMetrics:
         if approach == 1 or plot:
             # PASO 1: Aplicar filtro de suavizado e identificar turning points en datos suavizados
             weights = np.array([1, 2, 4, 8, 16, 8, 4, 2, 1]) / 46
-            
+
             # Usar np.convolve para suavizado central (mucho más rápido)
-            smoothed = np.convolve(glucose, weights, mode='same')
+            smoothed = np.convolve(glucose, weights, mode="same")
 
             # Ajustar bordes que np.convolve no maneja como el algoritmo original de Baghurst
             for i in range(min(4, len(glucose))):
@@ -697,13 +721,25 @@ class VariabilityMetrics:
                     turning_points_1.append(true_valley)
 
             # Añadir el primer y último punto si son extremos
-            if len(turning_points_1) > 0 and turning_points_1[0] > 0:
-                if glucose[0] > glucose[turning_points_1[0]] or glucose[0] < glucose[turning_points_1[0]]:
-                    turning_points_1.insert(0, 0)
+            if (
+                len(turning_points_1) > 0
+                and turning_points_1[0] > 0
+                and (
+                    glucose[0] > glucose[turning_points_1[0]]
+                    or glucose[0] < glucose[turning_points_1[0]]
+                )
+            ):
+                turning_points_1.insert(0, 0)
 
-            if len(turning_points_1) > 0 and turning_points_1[-1] < len(glucose) - 1:
-                if glucose[-1] > glucose[turning_points_1[-1]] or glucose[-1] < glucose[turning_points_1[-1]]:
-                    turning_points_1.append(len(glucose) - 1)
+            if (
+                len(turning_points_1) > 0
+                and turning_points_1[-1] < len(glucose) - 1
+                and (
+                    glucose[-1] > glucose[turning_points_1[-1]]
+                    or glucose[-1] < glucose[turning_points_1[-1]]
+                )
+            ):
+                turning_points_1.append(len(glucose) - 1)
 
             # PASO 3: Eliminar turning points asociados con excursiones no contables en ambos lados
             # Mantener aquellos cuyos máximos/mínimos adyacentes son más bajos/altos en ambos lados
@@ -721,7 +757,10 @@ class VariabilityMetrics:
                     next_val = glucose[next_idx]
 
                     # Verificar si ambas diferencias son menores que el umbral
-                    if abs(current_val - prev_val) < threshold and abs(current_val - next_val) < threshold:
+                    if (
+                        abs(current_val - prev_val) < threshold
+                        and abs(current_val - next_val) < threshold
+                    ):
                         # Retener si es un máximo local (ambos adyacentes más bajos)
                         is_local_max = current_val > prev_val and current_val > next_val
                         # Retener si es un mínimo local (ambos adyacentes más altos)
@@ -796,12 +835,13 @@ class VariabilityMetrics:
                 # Verificar excursión final
                 if (
                     len(turning_points_1) >= 2
-                    and abs(glucose[turning_points_1[-1]] - glucose[turning_points_1[-2]]) < threshold
+                    and abs(glucose[turning_points_1[-1]] - glucose[turning_points_1[-2]])
+                    < threshold
                 ):
                     turning_points_1.pop(-1)
 
             # Asegurar que los puntos están ordenados y son únicos
-            turning_points_1 = sorted(list(set(turning_points_1)))
+            turning_points_1 = sorted(set(turning_points_1))
             turning_points_approaches[1] = turning_points_1
 
             if approach == 1:
@@ -814,7 +854,9 @@ class VariabilityMetrics:
 
             # 1. Primera pasada: eliminar puntos intermedios en secuencias monótonas
             while i < len(glucose) - 2:
-                if (glucose[i] <= glucose[i + 1] <= glucose[i + 2]) or (glucose[i] >= glucose[i + 1] >= glucose[i + 2]):
+                if (glucose[i] <= glucose[i + 1] <= glucose[i + 2]) or (
+                    glucose[i] >= glucose[i + 1] >= glucose[i + 2]
+                ):
                     # El punto intermedio es parte de una secuencia monótona
                     i += 1
                 else:
@@ -837,8 +879,11 @@ class VariabilityMetrics:
 
                 # Verificar si es un máximo o mínimo válido
                 if (
-                    (curr_val > prev_val and curr_val > next_val) or (curr_val < prev_val and curr_val < next_val)
-                ) and (abs(curr_val - prev_val) >= threshold or abs(curr_val - next_val) >= threshold):
+                    (curr_val > prev_val and curr_val > next_val)
+                    or (curr_val < prev_val and curr_val < next_val)
+                ) and (
+                    abs(curr_val - prev_val) >= threshold or abs(curr_val - next_val) >= threshold
+                ):
                     valid_points.append(turning_points_2[i])
 
             # Asegurar que mantenemos puntos inicial y final si son necesarios
@@ -908,16 +953,29 @@ class VariabilityMetrics:
                         continue
 
                     # Si tenemos un pico entre dos valles, verificar si es significativo
-                    if curr_type == "peak" and prev_type == "valley" and next_type == "valley":
+                    if (
+                        curr_type == "peak"
+                        and prev_type == "valley"
+                        and next_type == "valley"
+                        and (
+                            curr_value - prev_value < threshold / 2
+                            or curr_value - next_value < threshold / 2
+                        )
+                    ):
                         # Si el pico no es significativamente más alto que ambos valles, lo saltamos
-                        if (curr_value - prev_value < threshold / 2) or (curr_value - next_value < threshold / 2):
-                            continue
+                        continue
 
                     # Si tenemos un valle entre dos picos, verificar si es significativo
-                    if curr_type == "valley" and prev_type == "peak" and next_type == "peak":
-                        # Si el valle no es significativamente más bajo que ambos picos, lo saltamos
-                        if (prev_value - curr_value < threshold / 2) or (next_value - curr_value < threshold / 2):
-                            continue
+                    if (
+                        curr_type == "valley"
+                        and prev_type == "peak"
+                        and next_type == "peak"
+                        and (
+                            prev_value - curr_value < threshold / 2
+                            or next_value - curr_value < threshold / 2
+                        )
+                    ):
+                        continue
 
                     # Si llegamos aquí, el punto es significativo
                     turning_points_3.append(curr_point)
@@ -973,7 +1031,9 @@ class VariabilityMetrics:
 
         mage_plus = np.mean(excursions_up) if excursions_up else 0
         mage_minus = np.mean(excursions_down) if excursions_down else 0
-        mage_avg = np.mean(excursions_up + excursions_down) if (excursions_up or excursions_down) else 0
+        mage_avg = (
+            np.mean(excursions_up + excursions_down) if (excursions_up or excursions_down) else 0
+        )
 
         # Generar visualización si plot=True
         if plot:
@@ -1073,8 +1133,12 @@ class VariabilityMetrics:
                                 day_excursions.append(exc)
 
                         # Clasificar turning points
-                        significant_points = [tp for tp in day_turning_points if tp in excursion_points]
-                        non_significant_points = [tp for tp in day_turning_points if tp not in excursion_points]
+                        significant_points = [
+                            tp for tp in day_turning_points if tp in excursion_points
+                        ]
+                        non_significant_points = [
+                            tp for tp in day_turning_points if tp not in excursion_points
+                        ]
 
                         # Dibujar puntos no significativos en azul
                         for tp in non_significant_points:
@@ -1102,12 +1166,20 @@ class VariabilityMetrics:
                                 )
 
                         # Calcular MAGE para este enfoque y día
-                        excursions_up = [e["magnitude"] for e in day_excursions if e["type"] == "up"]
-                        excursions_down = [e["magnitude"] for e in day_excursions if e["type"] == "down"]
+                        excursions_up = [
+                            e["magnitude"] for e in day_excursions if e["type"] == "up"
+                        ]
+                        excursions_down = [
+                            e["magnitude"] for e in day_excursions if e["type"] == "down"
+                        ]
 
                         mage_plus = np.mean(excursions_up) if excursions_up else 0
                         mage_minus = np.mean(excursions_down) if excursions_down else 0
-                        mage_avg = np.mean(excursions_up + excursions_down) if (excursions_up or excursions_down) else 0
+                        mage_avg = (
+                            np.mean(excursions_up + excursions_down)
+                            if (excursions_up or excursions_down)
+                            else 0
+                        )
 
                         # Configurar título y etiquetas
                         approach_name = (
@@ -1322,7 +1394,7 @@ class VariabilityMetrics:
                 "correlation": None,
             }
 
-    def CONGA(self, hours: int = 4, max_gap_minutes: float = None) -> dict:
+    def CONGA(self, hours: int = 4, max_gap_minutes: float | None = None) -> dict:
         """
         Calculates CONGA (Continuous Overlapping Net Glycemic Action).
 
@@ -1350,7 +1422,9 @@ class VariabilityMetrics:
         n_intervals = int((hours * 60) / interval_minutes)
 
         if n_intervals <= 0:
-            raise ValueError(f"El intervalo de {hours} horas es demasiado pequeño para los datos disponibles")
+            raise ValueError(
+                f"El intervalo de {hours} horas es demasiado pequeño para los datos disponibles"
+            )
 
         # Calcular diferencias entre valores actuales y valores de 'n' horas antes
         # pero teniendo en cuenta posibles desconexiones
@@ -1364,12 +1438,14 @@ class VariabilityMetrics:
 
         # Calcular diferencia de glucosa solo si la diferencia de tiempo está cerca del objetivo
         target_diff_minutes = hours * 60
-        df["valid_comparison"] = (df["time_diff_minutes"] >= target_diff_minutes - max_gap_minutes) & (
-            df["time_diff_minutes"] <= target_diff_minutes + max_gap_minutes
-        )
+        df["valid_comparison"] = (
+            df["time_diff_minutes"] >= target_diff_minutes - max_gap_minutes
+        ) & (df["time_diff_minutes"] <= target_diff_minutes + max_gap_minutes)
 
         # Calcular diferencia solo para comparaciones válidas
-        df["difference"] = np.where(df["valid_comparison"], df["glucose"] - df["glucose_n_hours_ago"], np.nan)
+        df["difference"] = np.where(
+            df["valid_comparison"], df["glucose"] - df["glucose_n_hours_ago"], np.nan
+        )
 
         # Eliminar filas con valores faltantes o comparaciones inválidas
         valid_data = df.dropna(subset=["difference"])
@@ -1407,7 +1483,9 @@ class VariabilityMetrics:
             "total_comparisons": total_comparisons,
             "valid_comparisons": valid_comparisons,
             "invalid_comparisons": invalid_comparisons,
-            "percent_valid": (valid_comparisons / total_comparisons * 100) if total_comparisons > 0 else 0,
+            "percent_valid": (valid_comparisons / total_comparisons * 100)
+            if total_comparisons > 0
+            else 0,
         }
 
     def Lability_index(self, interval: int = 1, period: str = "week") -> dict:
@@ -1475,7 +1553,7 @@ class VariabilityMetrics:
         }
         return variability_metrics
 
-    def variability_summary(self) -> Dict[str, Any]:
+    def variability_summary(self) -> dict[str, Any]:
         """
         Complete summary of all variability metrics.
 
@@ -1561,7 +1639,9 @@ class VariabilityMetrics:
 
         # Clasificar valores según rangos (usando valores en mg/dL)
         df["hypo"] = df["glucose_value"] < hypo_threshold
-        df["eu"] = (df["glucose_value"] >= hypo_threshold) & (df["glucose_value"] <= hyper_threshold)
+        df["eu"] = (df["glucose_value"] >= hypo_threshold) & (
+            df["glucose_value"] <= hyper_threshold
+        )
         df["hyper"] = df["glucose_value"] > hyper_threshold
 
         # Vectorización para calcular GRADE
@@ -1650,7 +1730,7 @@ class VariabilityMetrics:
         GRI combines time in different glucose ranges, giving different weights
         to hypoglycemia and hyperglycemia.
 
-        GRI = (3.0 × VLow) + (2.4 × Low) + (1.6 × VHigh) + (0.8 × High)
+        GRI = (3.0 * VLow) + (2.4 * Low) + (1.6 * VHigh) + (0.8 * High)
 
         Standard ranges:
         - VLow: <54 mg/dL
@@ -1850,7 +1930,7 @@ class VariabilityMetrics:
                 )
             except Exception as e:
                 if self.log:
-                    print(f"Error calculating MAGE: {str(e)}")
+                    print(f"Error calculating MAGE: {e!s}")
 
             # MODD - returns dictionary
             try:
@@ -1863,7 +1943,7 @@ class VariabilityMetrics:
                 )
             except Exception as e:
                 if self.log:
-                    print(f"Error calculating MODD: {str(e)}")
+                    print(f"Error calculating MODD: {e!s}")
 
             # Risk indices and others
             try:
@@ -1884,9 +1964,15 @@ class VariabilityMetrics:
                     "GRI": gri.get("GRI") if isinstance(gri, dict) else gri,
                     "GRI_high": gri.get("derived_metrics", {}).get("hyper_component", 0),
                     "GRI_low": gri.get("derived_metrics", {}).get("hypo_component", 0),
-                    "GRI_pregnancy": gri_pregnancy.get("GRI") if isinstance(gri_pregnancy, dict) else gri_pregnancy,
-                    "GRI_pregnancy_high": gri_pregnancy.get("derived_metrics", {}).get("hyper_component", 0),
-                    "GRI_pregnancy_low": gri_pregnancy.get("derived_metrics", {}).get("hypo_component", 0),
+                    "GRI_pregnancy": gri_pregnancy.get("GRI")
+                    if isinstance(gri_pregnancy, dict)
+                    else gri_pregnancy,
+                    "GRI_pregnancy_high": gri_pregnancy.get("derived_metrics", {}).get(
+                        "hyper_component", 0
+                    ),
+                    "GRI_pregnancy_low": gri_pregnancy.get("derived_metrics", {}).get(
+                        "hypo_component", 0
+                    ),
                     "GRADE": grade.get("total") if isinstance(grade, dict) else grade,
                     "M_Value": m_value if not isinstance(m_value, dict) else m_value.get("M_Value"),
                     "J_Index": j_index,
@@ -1896,7 +1982,7 @@ class VariabilityMetrics:
                 metrics.update(risk_metrics)
 
             except Exception as e:
-                print(f"Error general calculando métricas de riesgo: {str(e)}")
+                print(f"Error general calculando métricas de riesgo: {e!s}")
                 import traceback
 
                 traceback.print_exc()

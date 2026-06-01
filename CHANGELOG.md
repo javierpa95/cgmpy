@@ -10,22 +10,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.5.0] — 2026-06-01
 
 ### Added
 
+- **OpenCode agent harness** (`AGENTS.md` + `.opencode/`) with 9
+  agents (architect + 6 specialists + 2 execution agents), 5 skills,
+  4 slash-commands, and 5 rule files.
+- **GitHub Actions CI/CD**: matrix testing (3 OS × 3 Python), coverage
+  upload to Codecov, `release-please` for version bumps, CodeQL,
+  close-stale, line-ending check, PR title standards.
+- **MkDocs documentation site** (`mkdocs.yml` + `docs/`): Material
+  theme, mkdocstrings auto-API, sections for getting-started,
+  user-guide, API, development, architecture (with ADRs), and legal
+  (privacy + GDPR).
+- **PyPI prep**: `MANIFEST.in`, `cgmpy/py.typed` (PEP 561),
+  cross-platform `build-dist.{sh,ps1}` and `publish-{test,prod}.{sh,ps1}`
+  scripts.
+- **VSCode workspace** (`.vscode/`): `settings.json` (ruff, format,
+  Python interpreter, EOL), `extensions.json` (16 recommendations),
+  `launch.json` (6 debug configs), `tasks.json` (13 task shortcuts).
+- **Devcontainer** (`.devcontainer/`): reproducible Python 3.11
+  environment with `uv` and pre-configured VSCode extensions.
 - Open source documentation: English `README.md`, `CONTRIBUTING.md`,
-  `CODE_OF_CONDUCT.md`, `SECURITY.md`, `ROADMAP.md`.
-- Comprehensive `pyproject.toml` metadata (classifiers, project URLs, optional
-  dependencies for `dev`, `docs`, and `agata`).
+  `CODE_OF_CONDUCT.md` (Covenant 2.1), `SECURITY.md`, `ROADMAP.md`.
+- `commitlint` with Conventional Commits and an enumerated set of
+  allowed scopes; `.pre-commit-config.yaml` with ruff, interrogate,
+  commitlint, and a local docs-sync hook.
+- `Makefile` with cross-platform targets (`help`, `test-fast`,
+  `lint-fix`, `docs-serve`, `build`, `publish-test`, etc.).
+- `CODEOWNERS`, `dependabot.yml`, issue and PR templates.
 - `.editorconfig` and `.gitattributes` for cross-platform consistency.
-- Strengthened `.gitignore`.
 
 ### Changed
 
+- Examples reorganized into numbered folders:
+  `examples/01_quickstart/`, `02_pregnancy/`, `03_agata_comparison/`,
+  `04_performance/`.
+- Test suite reorganized into `tests/{unit,integration,clinical}/`
+  with new test files (`test_targets.py`, `test_loader.py`,
+  `test_processor.py`, `test_data_pipeline.py`).
 - `LICENSE` populated with the full MIT text.
+- Strengthened `.gitignore`.
+- Comprehensive `pyproject.toml` metadata (classifiers, project URLs,
+  optional dependencies for `dev`, `docs`, and `agata`).
+- `cgmpy/__version__` bumped to `0.5.0`.
+
+### Fixed
+
+- All 156 ruff lint warnings in `cgmpy/`: replaced `typing.Dict` /
+  `typing.List` / `typing.Tuple` with PEP 585 generics, replaced
+  `Union[X, Y]` and `Optional[X]` with PEP 604 `X | Y`, fixed
+  implicit optional, replaced `os.path.*` with `pathlib.Path`,
+  removed unused imports, sorted `__all__` lists, fixed `dict(...)`
+  literals, collapsible-`if`, ambiguous `×` characters in docstrings.
+
+### Security
+
+- `.github/workflows/publish-pypi.yml` **disabled** (renamed to
+  `.disabled`) until the maintainer is ready to publish to PyPI.
+  Re-enable instructions are in the file header.
+- `SECURITY.md` documents PHI policies, vulnerability reporting
+  email, and supported versions.
+- `detect-secrets` and `bandit` integrated into the local pre-commit
+  hooks and CI.
 
 ---
+
+## [0.3.0] — 2026-06-01
 
 ## [0.3.0] — 2026-06-01
 

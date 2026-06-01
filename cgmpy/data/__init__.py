@@ -38,22 +38,18 @@ from .specialized import (
 GlucoseData = ModularGlucoseData
 
 __all__ = [
-    # Main class
-    "ModularGlucoseData",
-    "GlucoseData",  # Alias for compatibility
-    # Specialized modules
-    "DataLoader",
-    "DataProcessor",
     "DataAnalyzer",
     "DataExporter",
-    # Specialized classes by device
+    "DataLoader",
+    "DataProcessor",
     "Dexcom",
+    "GlucoseData",
     "Libreview",
     "MedtronicCarelink",
-    "TandemDiabetes",
-    # Utilities
-    "detect_device_type",
-    "create_specialized_loader",
+    "ModularGlucoseData",
     "PregnancyData",
     "PregnancyDataHandler",
+    "TandemDiabetes",
+    "create_specialized_loader",
+    "detect_device_type",
 ]

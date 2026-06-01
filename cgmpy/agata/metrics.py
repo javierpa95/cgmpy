@@ -18,7 +18,9 @@ def time_in_target(data, glycemic_target='diabetes'):
 """
 
 
-def analyze_one_arm(data_list: list[ModularGlucoseData], glycemic_target: str = "diabetes", **kwargs) -> dict:
+def analyze_one_arm(
+    data_list: list[ModularGlucoseData], glycemic_target: str = "diabetes", **kwargs
+) -> dict:
     """
     Analiza un grupo (brazo) de datos de glucosa usando la librería py_agata.
 
@@ -30,7 +32,9 @@ def analyze_one_arm(data_list: list[ModularGlucoseData], glycemic_target: str = 
         dict: El diccionario de resultados devuelto por py_agata con estadísticas de grupo.
     """
     if Agata is None:
-        raise ImportError("La librería 'py_agata' es necesaria para esta funcionalidad. Por favor, instálala.")
+        raise ImportError(
+            "La librería 'py_agata' es necesaria para esta funcionalidad. Por favor, instálala."
+        )
 
     # 1. Preparar todos los DataFrames
     prepared_dfs = [prepare_data_for_agata(d) for d in data_list]
@@ -47,12 +51,16 @@ def analyze_one_arm(data_list: list[ModularGlucoseData], glycemic_target: str = 
         raise
 
 
-def analyze_with_agata(glucose_data: ModularGlucoseData, glycemic_target: str = "diabetes", **kwargs) -> dict:
+def analyze_with_agata(
+    glucose_data: ModularGlucoseData, glycemic_target: str = "diabetes", **kwargs
+) -> dict:
     """
     Analiza un objeto de datos de cgmpy usando la librería py_agata.
     """
     if Agata is None:
-        raise ImportError("La librería 'py_agata' es necesaria para esta funcionalidad. Por favor, instálala.")
+        raise ImportError(
+            "La librería 'py_agata' es necesaria para esta funcionalidad. Por favor, instálala."
+        )
 
     # 1. Preparar los datos con el adaptador
     df_for_agata = prepare_data_for_agata(glucose_data)
@@ -151,7 +159,11 @@ class AgataAnalysis(ModularGlucoseData):
 
     @classmethod
     def analyze_one_arm(
-        cls, data_list: list[ModularGlucoseData], glycemic_target: str = "diabetes", summary: bool = False, **kwargs
+        cls,
+        data_list: list[ModularGlucoseData],
+        glycemic_target: str = "diabetes",
+        summary: bool = False,
+        **kwargs,
     ) -> dict:
         """
         Analiza un grupo (brazo) de objetos ModularGlucoseData.

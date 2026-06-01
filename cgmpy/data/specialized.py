@@ -3,7 +3,6 @@ Module with specialized classes for specific glucose devices.
 """
 
 import datetime
-from typing import Union
 
 from .core import ModularGlucoseData
 
@@ -19,8 +18,8 @@ class Dexcom(ModularGlucoseData):
     def __init__(
         self,
         file_path: str,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
     ):
         """
@@ -69,8 +68,8 @@ class Libreview(ModularGlucoseData):
         self,
         file_path: str,
         header: int = 2,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
     ):
         """
@@ -120,8 +119,8 @@ class MedtronicCarelink(ModularGlucoseData):
     def __init__(
         self,
         file_path: str,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
     ):
         """
@@ -169,8 +168,8 @@ class TandemDiabetes(ModularGlucoseData):
     def __init__(
         self,
         file_path: str,
-        start_date: Union[str, datetime.datetime, None] = None,
-        end_date: Union[str, datetime.datetime, None] = None,
+        start_date: str | datetime.datetime | None = None,
+        end_date: str | datetime.datetime | None = None,
         log: bool = False,
     ):
         """
@@ -237,7 +236,7 @@ def detect_device_type(file_path: str) -> str:
         return "unknown"
 
 
-def create_specialized_loader(file_path: str, device_type: str = None, **kwargs):
+def create_specialized_loader(file_path: str, device_type: str | None = None, **kwargs):
     """
     Automatically creates the appropriate specialized loader.
 

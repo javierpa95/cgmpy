@@ -6,13 +6,12 @@ y validación de fechas en diferentes formatos.
 """
 
 import datetime
-from typing import Union
 
 import pandas as pd
 
 
 def parse_date(
-    date_string: Union[str, pd.Timestamp, datetime.datetime],
+    date_string: str | pd.Timestamp | datetime.datetime,
 ) -> pd.Timestamp:
     """
     Parsea una fecha desde diferentes formatos comunes.
@@ -27,7 +26,7 @@ def parse_date(
         ValueError: Si no se puede parsear la fecha
     """
     # Si ya es un Timestamp o datetime, devolverlo directamente
-    if isinstance(date_string, (pd.Timestamp, datetime.datetime)):
+    if isinstance(date_string, pd.Timestamp | datetime.datetime):
         return pd.Timestamp(date_string)
 
     # Si es string, intentar parsear con diferentes formatos
@@ -52,8 +51,8 @@ def parse_date(
 
 
 def validate_date_range(
-    start_date: Union[str, pd.Timestamp, datetime.datetime, None],
-    end_date: Union[str, pd.Timestamp, datetime.datetime, None],
+    start_date: str | pd.Timestamp | datetime.datetime | None,
+    end_date: str | pd.Timestamp | datetime.datetime | None,
 ) -> tuple:
     """
     Valida y parsea un rango de fechas.
@@ -78,14 +77,13 @@ def validate_date_range(
         end_parsed = parse_date(end_date)
 
     # Validar que start_date <= end_date si ambas están presentes
-    if start_parsed is not None and end_parsed is not None:
-        if start_parsed > end_parsed:
-            raise ValueError("La fecha de inicio debe ser anterior a la fecha de fin")
+    if start_parsed is not None and end_parsed is not None and start_parsed > end_parsed:
+        raise ValueError("La fecha de inicio debe ser anterior a la fecha de fin")
 
     return start_parsed, end_parsed
 
 
-def format_date_for_display(date: Union[pd.Timestamp, datetime.datetime]) -> str:
+def format_date_for_display(date: pd.Timestamp | datetime.datetime) -> str:
     """
     Formatea una fecha para mostrar en pantalla.
 
@@ -95,12 +93,12 @@ def format_date_for_display(date: Union[pd.Timestamp, datetime.datetime]) -> str
     Returns:
         str: Fecha formateada como string
     """
-    if isinstance(date, (pd.Timestamp, datetime.datetime)):
+    if isinstance(date, pd.Timestamp | datetime.datetime):
         return date.strftime("%d/%m/%Y %H:%M")
     return str(date)
 
 
-def get_date_components(date: Union[pd.Timestamp, datetime.datetime]) -> dict:
+def get_date_components(date: pd.Timestamp | datetime.datetime) -> dict:
     """
     Extrae los componentes de una fecha.
 
@@ -110,7 +108,7 @@ def get_date_components(date: Union[pd.Timestamp, datetime.datetime]) -> dict:
     Returns:
         dict: Diccionario con año, mes, día, hora, minuto, segundo
     """
-    if isinstance(date, (pd.Timestamp, datetime.datetime)):
+    if isinstance(date, pd.Timestamp | datetime.datetime):
         return {
             "year": date.year,
             "month": date.month,
@@ -125,8 +123,8 @@ def get_date_components(date: Union[pd.Timestamp, datetime.datetime]) -> dict:
 
 
 def calculate_date_difference(
-    date1: Union[pd.Timestamp, datetime.datetime],
-    date2: Union[pd.Timestamp, datetime.datetime],
+    date1: pd.Timestamp | datetime.datetime,
+    date2: pd.Timestamp | datetime.datetime,
     unit: str = "days",
 ) -> float:
     """
@@ -140,8 +138,8 @@ def calculate_date_difference(
     Returns:
         float: Diferencia en la unidad especificada
     """
-    if not isinstance(date1, (pd.Timestamp, datetime.datetime)) or not isinstance(
-        date2, (pd.Timestamp, datetime.datetime)
+    if not isinstance(date1, pd.Timestamp | datetime.datetime) or not isinstance(
+        date2, pd.Timestamp | datetime.datetime
     ):
         raise ValueError("Ambas fechas deben ser Timestamp o datetime")
 
@@ -159,7 +157,7 @@ def calculate_date_difference(
         raise ValueError(f"Unidad no soportada: {unit}")
 
 
-def is_business_day(date: Union[pd.Timestamp, datetime.datetime]) -> bool:
+def is_business_day(date: pd.Timestamp | datetime.datetime) -> bool:
     """
     Verifica si una fecha es un día laboral (lunes a viernes).
 
@@ -169,12 +167,12 @@ def is_business_day(date: Union[pd.Timestamp, datetime.datetime]) -> bool:
     Returns:
         bool: True si es día laboral, False en caso contrario
     """
-    if isinstance(date, (pd.Timestamp, datetime.datetime)):
+    if isinstance(date, pd.Timestamp | datetime.datetime):
         return date.weekday() < 5  # 0-4 son lunes a viernes
     return False
 
 
-def get_quarter_dates(date: Union[pd.Timestamp, datetime.datetime]) -> tuple:
+def get_quarter_dates(date: pd.Timestamp | datetime.datetime) -> tuple:
     """
     Obtiene las fechas de inicio y fin del trimestre para una fecha dada.
 
@@ -184,7 +182,7 @@ def get_quarter_dates(date: Union[pd.Timestamp, datetime.datetime]) -> tuple:
     Returns:
         tuple: (inicio_trimestre, fin_trimestre)
     """
-    if isinstance(date, (pd.Timestamp, datetime.datetime)):
+    if isinstance(date, pd.Timestamp | datetime.datetime):
         year = date.year
         quarter = (date.month - 1) // 3 + 1
 

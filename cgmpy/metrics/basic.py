@@ -8,7 +8,7 @@ This module contains fundamental metrics for glucose data analysis:
 - Distribution analysis
 """
 
-from typing import Any, Dict
+from typing import Any
 
 
 class BasicMetrics:
@@ -81,7 +81,7 @@ class BasicMetrics:
         """
         return round(3.31 + (0.02392 * self.mean()), 2)
 
-    def distribution_analysis(self) -> Dict[str, Any]:
+    def distribution_analysis(self) -> dict[str, Any]:
         """
         Analyzes glucose value distribution.
 
@@ -106,7 +106,7 @@ class BasicMetrics:
         }
         return stats
 
-    def calculate_all_metrics(self) -> Dict[str, float]:
+    def calculate_all_metrics(self) -> dict[str, float]:
         """
         Summary of basic statistics.
 

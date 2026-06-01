@@ -69,43 +69,40 @@ class GlucosePlot(ModularGlucoseData, AGPPlotter, DailyPlotter, StatisticalPlott
 
 __all__ = [
     # Clases principales (nombres tradicionales)
+    "AGPPlotter",
+    "AgataAnalysis",
+    "BasicMetrics",
+    "DailyPlotter",
+    "DataAnalyzer",
+    "DataExporter",
+    "DataLoader",
+    "DataProcessor",
+    "Dexcom",
+    "GestationalDiabetes",
+    "GlucoseAnalysis",
     "GlucoseData",
     "GlucoseMetrics",
     "GlucosePlot",
-    "GestationalDiabetes",
+    "Libreview",
+    "ModularGlucoseData",
     "PregnancyData",
     "PregnancyDataHandler",
-    "GlucoseAnalysis",
-    "Dexcom",
-    "Libreview",
-    # Agata
-    "AgataAnalysis",
-    # Clases modulares (para uso avanzado)
-    "ModularGlucoseData",
-    "DataLoader",
-    "DataProcessor",
-    "DataAnalyzer",
-    "DataExporter",
-    "BasicMetrics",
+    "StatisticalPlotter",
     "TimeInRangeMetrics",
     "VariabilityMetrics",
-    "AGPPlotter",
-    "DailyPlotter",
-    "StatisticalPlotter",
     # Utilidades
-    "parse_date",
-    "validate_date_range",
-    # Módulos
+    "agata",
+    "analysis",
     "data",
     "metrics",
+    "parse_date",
     "plotting",
-    "analysis",
     "utils",
-    "agata",
+    "validate_date_range",
 ]
 
 
 # Información del paquete
-__version__ = "0.2.0"
+__version__ = "0.5.0"
 __author__ = "Javier Peñate Arrieta"
 __description__ = "Paquete modular para análisis de datos de glucosa de monitoreo continuo (CGM)"
