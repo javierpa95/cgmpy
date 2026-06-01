@@ -5,6 +5,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# NOTE: This workflow requires the repo-level setting
+#   Settings -> Actions -> General -> Workflow permissions
+#       -> "Allow GitHub Actions to create and approve pull requests"
+# to be ENABLED. Without it, the action exits with
+# "GitHub Actions is not permitted to create or approve pull requests"
+# (REST API error 422). This is a one-time click in the GitHub UI and
+# cannot be set from a workflow file.
 permissions:
   contents: write
   pull-requests: write
@@ -15,20 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Release Please
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: python
-          package-name: cgmpy
-          # Conventional Commits drive version bumps automatically.
-          # Override the changelog path so the root CHANGELOG.md is used.
-          changelog-path: CHANGELOG.md
-          # Keep version in pyproject.toml in sync
-          extra-files: |
-            pyproject.toml
-          # Auto-merge simple release PRs
-          default-branch: main
+          # All package-level config (release-type, package-name,
+          # changelog-path, extra-files) lives in release-please-config.json
+          # so the action does not duplicate it here. See
+          # release-please-config.json and .release-please-manifest.json.
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
 
       - name: Print release outputs
         if: steps.release.outputs.release_created
