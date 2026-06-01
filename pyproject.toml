@@ -4,59 +4,208 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cgmpy"
-version = "0.2.0"
-description = "A package for analyzing glucose data"
+version = "0.3.0"
+description = "Modular Python library for Continuous Glucose Monitoring (CGM) data analysis"
 readme = "README.md"
 authors = [
   { name = "Javier Peñate Arrieta", email = "javierpenatearrieta@gmail.com" },
 ]
 license = { text = "MIT" }
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+keywords = [
+  "cgm",
+  "glucose",
+  "diabetes",
+  "monitoring",
+  "metrics",
+  "tir",
+  "gmi",
+  "mage",
+  "pregnancy",
+  "health",
 ]
-requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Healthcare Industry",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Typing :: Typed",
+]
+requires-python = ">=3.10"
 dependencies = [
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "seaborn",
-    "pyarrow",
-    "openpyxl",
+  "numpy>=1.23",
+  "pandas>=1.5",
+  "matplotlib>=3.6",
+  "seaborn>=0.12",
+  "pyarrow>=10.0",
+  "openpyxl>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "pytest-cov>=4.0",
+  "pytest-mock>=3.10",
+  "ruff>=0.1.0",
+  "interrogate>=1.5",
+  "mypy>=1.0",
+  "bandit>=1.7",
+  "detect-secrets>=1.4",
+  "pre-commit>=3.0",
+  "build>=0.10",
+  "twine>=4.0",
+  "release-please>=16.0",
+]
+docs = [
+  "mkdocs>=1.5",
+  "mkdocs-material>=9.0",
+  "mkdocstrings[python]>=0.22",
+  "mkdocs-gen-files>=0.5",
+  "mike>=1.1",
+]
+agata = [
+  "agata>=1.0",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/javierpa95/cgmpy"
+"Repository" = "https://github.com/javierpa95/cgmpy"
+"Issues" = "https://github.com/javierpa95/cgmpy/issues"
+"Changelog" = "https://github.com/javierpa95/cgmpy/blob/main/CHANGELOG.md"
+"Documentation" = "https://github.com/javierpa95/cgmpy/tree/main/docs"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cgmpy*"]
 
+# ==========================================
+# Ruff — lint + format
+# ==========================================
 [tool.ruff]
-line-length = 120
-# Mantengo tus exclusiones, son correctas y estándar
-exclude = [".git", ".venv", "venv", "__pypackages__", "build", "dist"]
-
-[tool.ruff.lint]
-# Seleccionamos: Errores (E), Pyflakes (F), Bugbear (B - errores lógicos), Isort (I - importaciones)
-select = ["E", "F", "B", "I"]
-
-ignore = [
-    "E501", # Ignorar líneas largas. El formateador las arreglará donde pueda, 
-            # pero no te bloqueará el check si una línea es necesaria.
+line-length = 100
+target-version = "py310"
+exclude = [
+  ".git",
+  ".venv",
+  "venv",
+  "__pypackages__",
+  "build",
+  "dist",
+  ".eggs",
+  "*.egg-info",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".mypy_cache",
 ]
 
-# Simplificamos fixable: que arregle solo lo que estás validando
-fixable = ["E", "F", "B", "I"]
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "B",    # flake8-bugbear
+  "C4",   # flake8-comprehensions
+  "UP",   # pyupgrade
+  "SIM",  # flake8-simplify
+  "PTH",  # use-pathlib
+  "RUF",  # ruff-specific rules
+]
+ignore = [
+  "E501",   # line-too-long (handled by formatter)
+  "B008",   # function call in default argument (common in dataclasses)
+  "SIM108", # use ternary operator (often hurts readability)
+]
+
+fixable = ["ALL"]
 unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"] # Perfecto: permite imports sin usar en los init
+"__init__.py" = ["F401"]   # allow unused imports in __init__ (re-exports)
+"tests/**" = ["B011"]     # assert False is fine in tests
+"examples/**" = ["E402"]  # imports after code are OK in examples
 
+[tool.ruff.lint.isort]
+known-first-party = ["cgmpy"]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+# ==========================================
+# Pytest
+# ==========================================
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
-testpaths = [
-    "tests",
+minversion = "7.0"
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--showlocals",
+  "--tb=short",
 ]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: integration tests",
+  "clinical: clinical regression tests against reference datasets",
+  "agata: tests that require the agata optional dependency",
+]
+filterwarnings = [
+  "error",
+  "ignore::DeprecationWarning:matplotlib.*",
+  "ignore::DeprecationWarning:seaborn.*",
+]
+
+# ==========================================
+# Coverage
+# ==========================================
+[tool.coverage.run]
+branch = true
+source = ["cgmpy"]
+omit = [
+  "cgmpy/_version.py",
+  "tests/*",
+  "examples/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+  "pass",
+  "\\.\\.\\.",
+]
+show_missing = true
+precision = 2
+fail_under = 70
+
+# ==========================================
+# MyPy
+# ==========================================
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # gradual typing — start permissive
+ignore_missing_imports = true
+exclude = ["tests/", "examples/", "build/", "dist/"]
+
+# ==========================================
+# Bandit (security)
+# ==========================================
+[tool.bandit]
+exclude_dirs = ["tests", "examples"]
+skips = ["B101"]  # assert in tests
