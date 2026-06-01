@@ -1,0 +1,49 @@
+# <type>(<scope>): <subject — imperative, lower-case, ≤ 72 chars>
+#
+# <body — wrap at 100, explain WHY, not WHAT>
+#
+# <footer — BREAKING CHANGE: ..., Closes #N, Co-authored-by: ...>
+#
+# --- TYPES ---
+# feat      New feature (MINOR bump)
+# fix       Bug fix (PATCH bump)
+# docs      Documentation only
+# style     Formatting, missing semicolons, etc. (no code change)
+# refactor  Code change that neither fixes a bug nor adds a feature
+# perf      Performance improvement
+# test      Adding or fixing tests
+# chore     Tooling, deps, build, non-source changes
+# ci        CI/CD workflow changes
+# build     Build system or external dependency changes
+# revert    Reverts a previous commit
+#
+# --- SCOPES (enumerated in commitlint.config.cjs) ---
+# data, metrics, plotting, analysis, agata, utils,
+# docs, ci, deps, release, agents, examples, tests,
+# harness, tooling
+#
+# --- EXAMPLES ---
+#
+# feat(metrics): add MAGE-2 calculation
+#
+# MAGE-2 is the second-generation Mean Amplitude of Glycemic Excursions.
+# Reference: Service et al., Diabetes Care 2010.
+#
+# Closes #42
+#
+# fix(data-loader): handle empty CSV without raising
+#
+# Empty files were crashing load_from_csv with a generic Pandas error.
+# Now we raise GlucoseDataError with a clear, actionable message.
+#
+# docs(readme): add citation section
+#
+# --- BODY ---
+# Body goes here, separated from the subject by a blank line.
+# Wrap at 100 columns. Explain motivation and context, not the diff.
+#
+# --- FOOTER ---
+# BREAKING CHANGE: <description of the change and migration path>
+# Closes #123
+# Fixes #456
+# Co-authored-by: Name <email@example.com>
