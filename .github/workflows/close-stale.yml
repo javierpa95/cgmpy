@@ -1,0 +1,51 @@
+name: Close Stale
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  close-stale:
+    name: Close stale issues and PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close stale issues
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 60
+          days-before-close: 14
+          stale-issue-label: stale
+          close-issue-label: closed-stale
+          exempt-issue-labels: pinned,security,good first issue,help wanted
+          stale-issue-message: |
+            👋 This issue has been inactive for 60 days. It will be closed in 14 days
+            unless there is new activity. If the issue is still relevant, please
+            comment with an update or remove the `stale` label.
+          close-issue-message: |
+            🔒 This issue was closed due to inactivity. Feel free to reopen if
+            the topic becomes relevant again.
+          operations-limit: 100
+
+      - name: Close stale PRs
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 45
+          days-before-close: 14
+          stale-pr-label: stale
+          close-pr-label: closed-stale
+          exempt-pr-labels: pinned,security,wip
+          stale-pr-message: |
+            👋 This PR has been inactive for 45 days. It will be closed in 14 days
+            unless there is new activity. If you're still working on this, please
+            push a commit or remove the `stale` label.
+          close-pr-message: |
+            🔒 This PR was closed due to inactivity. Reopen when ready.
+          operations-limit: 100

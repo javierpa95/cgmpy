@@ -1,0 +1,41 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Please
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: python
+          package-name: cgmpy
+          # Conventional Commits drive version bumps automatically.
+          # Override the changelog path so the root CHANGELOG.md is used.
+          changelog-path: CHANGELOG.md
+          # Keep version in pyproject.toml in sync
+          extra-files: |
+            pyproject.toml
+          # Auto-merge simple release PRs
+          default-branch: main
+
+      - name: Print release outputs
+        if: steps.release.outputs.release_created
+        env:
+          TAG: ${{ steps.release.outputs.tag_name }}
+          SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          echo "Released $TAG at $SHA"
+          echo "Run the publish-pypi workflow to push to PyPI:"
+          echo "  gh workflow run publish-pypi.yml -f tag=$TAG"

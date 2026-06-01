@@ -1,0 +1,39 @@
+"area/data":
+  - cgmpy/data/**
+"area/metrics":
+  - cgmpy/metrics/**
+"area/plotting":
+  - cgmpy/plotting/**
+"area/analysis":
+  - cgmpy/analysis/**
+"area/agata":
+  - cgmpy/agata/**
+
+"docs":
+  - docs/**
+  - "**/*.md"
+  - "**/*.rst"
+
+"tests":
+  - tests/**
+
+"examples":
+  - examples/**
+
+"ci":
+  - .github/**
+  - .pre-commit-config.yaml
+  - Makefile
+
+"tooling":
+  - pyproject.toml
+  - commitlint.config.cjs
+  - .editorconfig
+  - .gitattributes
+  - .gitignore
+  - .gitmessage
+
+"agents":
+  - .opencode/**
+  - AGENTS.md
+  - .geminiignore
