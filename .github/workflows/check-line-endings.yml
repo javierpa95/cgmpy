@@ -24,7 +24,9 @@ jobs:
         run: |
           echo "Checking for CRLF line endings in tracked files..."
           # Find any tracked file that contains CRLF.
-          BAD=$(git ls-files -z | xargs -0 -I {} sh -c 'file "{}" | grep -q CRLF && echo "{}"' 2>/dev/null)
+          # `|| true` masks xargs's exit 123 when no sub-sh returns 0 (i.e. no
+          # files match). The real failure is decided by [ -n "$BAD" ] below.
+          BAD=$(git ls-files -z | xargs -0 -I {} sh -c 'file "{}" 2>/dev/null | grep -q CRLF && echo "{}"' 2>/dev/null || true)
           if [ -n "$BAD" ]; then
             echo "::error::The following files have CRLF line endings (should be LF):"
             echo "$BAD"
@@ -35,7 +37,8 @@ jobs:
       - name: Check for BOM
         run: |
           echo "Checking for UTF-8 BOM in tracked files..."
-          BAD=$(git ls-files -z | xargs -0 -I {} sh -c 'head -c 3 "{}" | xxd | grep -q "efbbbf" && echo "{}"' 2>/dev/null)
+          # See CRLF step above for the `|| true` rationale.
+          BAD=$(git ls-files -z | xargs -0 -I {} sh -c 'head -c 3 "{}" 2>/dev/null | xxd | grep -q "efbbbf" && echo "{}"' 2>/dev/null || true)
           if [ -n "$BAD" ]; then
             echo "::error::The following files have a UTF-8 BOM (should not):"
             echo "$BAD"

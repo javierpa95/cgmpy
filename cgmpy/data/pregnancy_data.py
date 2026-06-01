@@ -139,7 +139,6 @@ class PregnancyData(ModularGlucoseData):
         """
         return self.decimal_to_weeks_days(self.gestation_week)
 
-
     def __str__(self) -> str:
         """
         Overwrites the string representation to include pregnancy-specific information.

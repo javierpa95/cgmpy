@@ -61,7 +61,6 @@ dev = [
   "pre-commit>=3.0",
   "build>=0.10",
   "twine>=4.0",
-  "release-please>=16.0",
 ]
 docs = [
   "mkdocs>=1.5",
@@ -71,7 +70,7 @@ docs = [
   "mike>=1.1",
 ]
 agata = [
-  "agata>=1.0",
+  "py_agata>=0.0.1",
 ]
 
 [project.urls]

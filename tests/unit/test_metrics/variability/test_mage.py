@@ -28,7 +28,12 @@ def test_mage_baghurst_approach_1(variable_glucose_df):
     gm = GlucoseMetrics(data_source=variable_glucose_df)
     result = gm.MAGE_Baghurst(threshold_sd=1, approach=1, plot=False)
     expected_keys = {
-        "MAGE+", "MAGE-", "MAGE_avg", "SD_used", "threshold", "num_excursions",
+        "MAGE+",
+        "MAGE-",
+        "MAGE_avg",
+        "SD_used",
+        "threshold",
+        "num_excursions",
     }
     assert set(result.keys()) == expected_keys
     # SD_used should equal gm.sd() (within rounding).

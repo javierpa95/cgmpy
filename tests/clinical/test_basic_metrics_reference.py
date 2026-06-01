@@ -12,7 +12,6 @@ import pytest
 
 from cgmpy import GlucoseMetrics
 
-
 # ---------------------------------------------------------------------------
 # Synthetic 24h dataset
 # ---------------------------------------------------------------------------
@@ -20,8 +19,30 @@ from cgmpy import GlucoseMetrics
 # so that every metric is exercised. The exact values are chosen so that
 # all hand-computed expected values are exact integers or simple fractions.
 SYNTHETIC_GLUCOSE = [
-    70, 80, 95, 110, 130, 150, 165, 180, 200, 220, 250, 240,
-    210, 180, 150, 130, 115, 105, 100, 95, 90, 85, 80, 75,
+    70,
+    80,
+    95,
+    110,
+    130,
+    150,
+    165,
+    180,
+    200,
+    220,
+    250,
+    240,
+    210,
+    180,
+    150,
+    130,
+    115,
+    105,
+    100,
+    95,
+    90,
+    85,
+    80,
+    75,
 ]
 
 
@@ -93,6 +114,7 @@ EXPECTED_TBR_TOTAL = 0.0
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_mean_matches_hand_computed(synthetic_24h):
     """Mean glucose should match the hand-computed expected value."""

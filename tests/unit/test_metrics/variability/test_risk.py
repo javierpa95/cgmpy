@@ -35,8 +35,9 @@ def test_m_value_with_custom_reference():
 def test_j_index(stable_glucose_df):
     """J-index should equal 0.001 * (mean + sd) ** 2."""
     gm = GlucoseMetrics(data_source=stable_glucose_df)
-    expected = 0.001 * (stable_glucose_df["glucose"].mean()
-                        + stable_glucose_df["glucose"].std()) ** 2
+    expected = (
+        0.001 * (stable_glucose_df["glucose"].mean() + stable_glucose_df["glucose"].std()) ** 2
+    )
     assert gm.j_index() == pytest.approx(expected, rel=1e-4)
 
 

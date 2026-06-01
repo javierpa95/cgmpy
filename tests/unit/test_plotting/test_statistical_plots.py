@@ -24,7 +24,6 @@ import pytest
 from cgmpy import GlucosePlot, ModularGlucoseMetrics
 from cgmpy.plotting.statistical_plots import StatisticalPlotter
 
-
 # ---------------------------------------------------------------------------
 # Test-only subclass that gives the plotters access to metric methods.
 # ---------------------------------------------------------------------------

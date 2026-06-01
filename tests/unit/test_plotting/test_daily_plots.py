@@ -16,13 +16,11 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import pytest
 
 from cgmpy import GlucosePlot
 from cgmpy.plotting.daily_plots import DailyPlotter
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

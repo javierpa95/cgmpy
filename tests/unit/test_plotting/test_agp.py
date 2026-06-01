@@ -22,7 +22,6 @@ import pytest
 from cgmpy import GlucosePlot
 from cgmpy.plotting.agp import AGPPlotter
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

@@ -48,9 +48,7 @@ class CONGAMetrics(VariabilityBase):
         n_intervals = int((hours * 60) / interval_minutes)
 
         if n_intervals <= 0:
-            raise ValueError(
-                f"The interval of {hours} hours is too small for the available data"
-            )
+            raise ValueError(f"The interval of {hours} hours is too small for the available data")
 
         # Compute differences between current values and values from 'n' hours ago
         # but accounting for possible disconnections

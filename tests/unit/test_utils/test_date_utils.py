@@ -156,9 +156,7 @@ class TestCalculateDateDifference:
 
     def test_seconds(self) -> None:
         d1, d2 = self._pair()
-        assert calculate_date_difference(d1, d2, "seconds") == pytest.approx(
-            36 * 3600
-        )
+        assert calculate_date_difference(d1, d2, "seconds") == pytest.approx(36 * 3600)
 
     def test_invalid_unit_raises(self) -> None:
         d1, d2 = self._pair()

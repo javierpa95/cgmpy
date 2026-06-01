@@ -24,9 +24,7 @@ def small_glucose_df() -> pd.DataFrame:
 @pytest.fixture
 def unsorted_glucose_df() -> pd.DataFrame:
     """A DataFrame whose 'time' column is not monotonically increasing."""
-    times = pd.to_datetime(
-        ["2024-01-01 02:00", "2024-01-01 00:00", "2024-01-01 01:00"]
-    )
+    times = pd.to_datetime(["2024-01-01 02:00", "2024-01-01 00:00", "2024-01-01 01:00"])
     glucose = np.array([110, 100, 105], dtype=int)
     return pd.DataFrame({"time": times, "glucose": glucose})
 
@@ -34,9 +32,7 @@ def unsorted_glucose_df() -> pd.DataFrame:
 @pytest.fixture
 def df_with_duplicates() -> pd.DataFrame:
     """DataFrame containing a duplicate timestamp row."""
-    times = pd.to_datetime(
-        ["2024-01-01 00:00", "2024-01-01 00:05", "2024-01-01 00:05"]
-    )
+    times = pd.to_datetime(["2024-01-01 00:00", "2024-01-01 00:05", "2024-01-01 00:05"])
     glucose = np.array([100, 110, 120], dtype=int)
     return pd.DataFrame({"time": times, "glucose": glucose})
 
@@ -44,18 +40,14 @@ def df_with_duplicates() -> pd.DataFrame:
 class TestDataExporterParquet:
     """Round-trip tests for the Parquet writers."""
 
-    def test_to_parquet_creates_file(
-        self, small_glucose_df: pd.DataFrame, tmp_path: Path
-    ) -> None:
+    def test_to_parquet_creates_file(self, small_glucose_df: pd.DataFrame, tmp_path: Path) -> None:
         """`to_parquet` creates a file on disk."""
         out = tmp_path / "out.parquet"
         DataExporter().to_parquet(small_glucose_df, str(out))
         assert out.exists()
         assert out.stat().st_size > 0
 
-    def test_to_parquet_roundtrip(
-        self, small_glucose_df: pd.DataFrame, tmp_path: Path
-    ) -> None:
+    def test_to_parquet_roundtrip(self, small_glucose_df: pd.DataFrame, tmp_path: Path) -> None:
         """Data read back from Parquet matches the original (modulo dtype)."""
         out = tmp_path / "rt.parquet"
         DataExporter().to_parquet(small_glucose_df, str(out))
@@ -74,9 +66,7 @@ class TestDataExporterParquet:
         back = pd.read_parquet(out)
         assert back["time"].is_monotonic_increasing
 
-    def test_to_parquet_no_sort(
-        self, unsorted_glucose_df: pd.DataFrame, tmp_path: Path
-    ) -> None:
+    def test_to_parquet_no_sort(self, unsorted_glucose_df: pd.DataFrame, tmp_path: Path) -> None:
         """When `sort=False`, the original order is preserved."""
         out = tmp_path / "unsorted.parquet"
         DataExporter().to_parquet(unsorted_glucose_df, str(out), sort=False)
@@ -87,17 +77,13 @@ class TestDataExporterParquet:
 class TestDataExporterCsv:
     """Tests for `to_csv`."""
 
-    def test_to_csv_creates_file(
-        self, small_glucose_df: pd.DataFrame, tmp_path: Path
-    ) -> None:
+    def test_to_csv_creates_file(self, small_glucose_df: pd.DataFrame, tmp_path: Path) -> None:
         out = tmp_path / "out.csv"
         DataExporter().to_csv(small_glucose_df, str(out))
         assert out.exists()
         assert out.stat().st_size > 0
 
-    def test_to_csv_roundtrip(
-        self, small_glucose_df: pd.DataFrame, tmp_path: Path
-    ) -> None:
+    def test_to_csv_roundtrip(self, small_glucose_df: pd.DataFrame, tmp_path: Path) -> None:
         out = tmp_path / "rt.csv"
         DataExporter().to_csv(small_glucose_df, str(out))
         back = pd.read_csv(out)
@@ -118,9 +104,7 @@ class TestDataExporterCsv:
 class TestDataExporterExcel:
     """Tests for `to_excel`."""
 
-    def test_to_excel_creates_file(
-        self, small_glucose_df: pd.DataFrame, tmp_path: Path
-    ) -> None:
+    def test_to_excel_creates_file(self, small_glucose_df: pd.DataFrame, tmp_path: Path) -> None:
         out = tmp_path / "out.xlsx"
         DataExporter().to_excel(small_glucose_df, str(out))
         assert out.exists()
@@ -196,10 +180,7 @@ class TestAppendToParquet:
         # No duplicates at the combined timestamp set
         assert not back["time"].duplicated().any()
         # The new values (200) should be present for the overlapping timestamps
-        assert (
-            back.loc[back["time"] == pd.Timestamp("2024-01-01 00:05"), "glucose"].iloc[0]
-            == 200
-        )
+        assert back.loc[back["time"] == pd.Timestamp("2024-01-01 00:05"), "glucose"].iloc[0] == 200
 
     def test_append_keep_old_preserves_existing(self, tmp_path: Path) -> None:
         """`handle_duplicates="keep_old"` discards conflicting new rows."""
@@ -222,10 +203,7 @@ class TestAppendToParquet:
         back = pd.read_parquet(out).sort_values("time").reset_index(drop=True)
         assert not back["time"].duplicated().any()
         # Old values (100) should remain at the overlapping timestamps
-        assert (
-            back.loc[back["time"] == pd.Timestamp("2024-01-01 00:05"), "glucose"].iloc[0]
-            == 100
-        )
+        assert back.loc[back["time"] == pd.Timestamp("2024-01-01 00:05"), "glucose"].iloc[0] == 100
 
 
 class TestOptimizeDataTypes:
@@ -268,17 +246,13 @@ class TestOptimizeDataTypes:
 class TestRemoveDuplicates:
     """Tests for `_remove_duplicates`."""
 
-    def test_removes_duplicate_timestamps(
-        self, df_with_duplicates: pd.DataFrame
-    ) -> None:
+    def test_removes_duplicate_timestamps(self, df_with_duplicates: pd.DataFrame) -> None:
         """Duplicate timestamps are dropped, keeping the first occurrence."""
         cleaned = DataExporter()._remove_duplicates(df_with_duplicates)
         assert len(cleaned) == 2
         assert not cleaned["time"].duplicated().any()
 
-    def test_returns_same_when_no_duplicates(
-        self, small_glucose_df: pd.DataFrame
-    ) -> None:
+    def test_returns_same_when_no_duplicates(self, small_glucose_df: pd.DataFrame) -> None:
         """If there are no duplicates, the DataFrame is returned unchanged."""
         cleaned = DataExporter()._remove_duplicates(small_glucose_df)
         assert len(cleaned) == len(small_glucose_df)
@@ -304,9 +278,7 @@ class TestHandleDuplicates:
 
     def test_keep_new_drops_existing_overlap(self) -> None:
         existing, new = self._make_pair()
-        existing_out, new_out = DataExporter()._handle_duplicates(
-            existing, new, "keep_new"
-        )
+        existing_out, new_out = DataExporter()._handle_duplicates(existing, new, "keep_new")
         # Existing row at 00:05 should be removed
         assert pd.Timestamp("2024-01-01 00:05") not in set(existing_out["time"])
         # New data unchanged
@@ -314,9 +286,7 @@ class TestHandleDuplicates:
 
     def test_keep_old_drops_new_overlap(self) -> None:
         existing, new = self._make_pair()
-        existing_out, new_out = DataExporter()._handle_duplicates(
-            existing, new, "keep_old"
-        )
+        existing_out, new_out = DataExporter()._handle_duplicates(existing, new, "keep_old")
         # New row at 00:05 should be removed
         assert pd.Timestamp("2024-01-01 00:05") not in set(new_out["time"])
         # Existing unchanged
@@ -325,9 +295,7 @@ class TestHandleDuplicates:
     def test_average_strategy_does_not_alter_data(self) -> None:
         """The 'average' branch is not yet implemented but must not crash."""
         existing, new = self._make_pair()
-        existing_out, new_out = DataExporter()._handle_duplicates(
-            existing, new, "average"
-        )
+        existing_out, new_out = DataExporter()._handle_duplicates(existing, new, "average")
         # The current implementation leaves data untouched for unknown strategies
         assert len(existing_out) == len(existing)
         assert len(new_out) == len(new)

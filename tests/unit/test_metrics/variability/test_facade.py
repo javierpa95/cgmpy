@@ -6,13 +6,32 @@ import pytest
 
 from cgmpy import GlucoseMetrics
 
-
 EXPECTED_KEYS = {
-    "Mean", "Median", "Std", "CV", "GMI", "TIR", "SDT", "SDW",
-    "mage_avg", "modd",
-    "CONGA1", "CONGA2", "CONGA4", "CONGA6", "CONGA24",
-    "LBGI", "HBGI", "GRI", "ADRR", "GRADE", "M_Value", "J_Index",
-    "data_completeness", "Skewness", "Kurtosis",
+    "Mean",
+    "Median",
+    "Std",
+    "CV",
+    "GMI",
+    "TIR",
+    "SDT",
+    "SDW",
+    "mage_avg",
+    "modd",
+    "CONGA1",
+    "CONGA2",
+    "CONGA4",
+    "CONGA6",
+    "CONGA24",
+    "LBGI",
+    "HBGI",
+    "GRI",
+    "ADRR",
+    "GRADE",
+    "M_Value",
+    "J_Index",
+    "data_completeness",
+    "Skewness",
+    "Kurtosis",
 }
 
 
@@ -74,8 +93,14 @@ def test_calculate_variability_metrics_gri_components(variable_glucose_df):
     """GRI, GRI_high, GRI_low and their pregnancy variants should be present."""
     gm = GlucoseMetrics(data_source=variable_glucose_df)
     result = gm.calculate_variability_metrics()
-    for key in ("GRI", "GRI_high", "GRI_low",
-                "GRI_pregnancy", "GRI_pregnancy_high", "GRI_pregnancy_low"):
+    for key in (
+        "GRI",
+        "GRI_high",
+        "GRI_low",
+        "GRI_pregnancy",
+        "GRI_pregnancy_high",
+        "GRI_pregnancy_low",
+    ):
         assert key in result, f"{key} missing from result dict"
 
 
@@ -108,9 +133,7 @@ def test_calculate_variability_metrics_triggers_mage_error_logging():
     This exercises the inner ``try/except`` in ``calculate_variability_metrics``
     that logs the MAGE failure when ``self.log`` is True.
     """
-    tiny_df = pd.DataFrame(
-        {"time": pd.to_datetime(["2024-01-01"]), "glucose": [100.0]}
-    )
+    tiny_df = pd.DataFrame({"time": pd.to_datetime(["2024-01-01"]), "glucose": [100.0]})
     gm = GlucoseMetrics(data_source=tiny_df, log=True)
     result = gm.calculate_variability_metrics()
     assert isinstance(result, dict)

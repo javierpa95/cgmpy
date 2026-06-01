@@ -61,8 +61,15 @@ def test_sd_between_timepoints_default(stable_glucose_df):
     """sd_between_timepoints should return a dict with sd/mean plus statistics."""
     gm = GlucoseMetrics(data_source=stable_glucose_df)
     result = gm.sd_between_timepoints()
-    for key in ("sd", "mean", "valid_timepoints", "total_timepoints",
-                "median_count", "min_count", "max_count"):
+    for key in (
+        "sd",
+        "mean",
+        "valid_timepoints",
+        "total_timepoints",
+        "median_count",
+        "min_count",
+        "max_count",
+    ):
         assert key in result
     assert isinstance(result["sd"], float)
 
@@ -185,9 +192,19 @@ def test_calculate_all_sd_metrics_returns_full_dict(stable_glucose_df):
     gm = GlucoseMetrics(data_source=stable_glucose_df)
     result = gm.calculate_all_sd_metrics()
     expected = {
-        "SDT", "SDw", "SDhh:mm", "Noche", "Day", "Tarde",
-        "SDws_1h", "SDws_6h", "SDws_24h", "SDdm", "SDbhh:mm",
-        "SDbhh:mm_dm", "SDI",
+        "SDT",
+        "SDw",
+        "SDhh:mm",
+        "Noche",
+        "Day",
+        "Tarde",
+        "SDws_1h",
+        "SDws_6h",
+        "SDws_24h",
+        "SDdm",
+        "SDbhh:mm",
+        "SDbhh:mm_dm",
+        "SDI",
     }
     assert set(result.keys()) == expected
     for k, v in result.items():
@@ -200,9 +217,19 @@ def test_calculate_all_cv_metrics_returns_percentages():
     gm = GlucoseMetrics(data_source=df)
     result = gm.calculate_all_cv_metrics()
     expected = {
-        "CVT", "CVw", "CVhh:mm", "CVNoche", "CVDay", "CVTarde",
-        "CVSDws_1h", "CVSDws_6h", "CVSDws_24h", "CVdm",
-        "CVbhh:mm", "CVbhh:mm_dm", "CVSDI",
+        "CVT",
+        "CVw",
+        "CVhh:mm",
+        "CVNoche",
+        "CVDay",
+        "CVTarde",
+        "CVSDws_1h",
+        "CVSDws_6h",
+        "CVSDws_24h",
+        "CVdm",
+        "CVbhh:mm",
+        "CVbhh:mm_dm",
+        "CVSDI",
     }
     assert set(result.keys()) == expected
     for k, v in result.items():
