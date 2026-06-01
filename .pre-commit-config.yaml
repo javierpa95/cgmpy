@@ -1,0 +1,102 @@
+# ==========================================
+# CGMPy - .pre-commit-config.yaml
+# ==========================================
+# Install: pip install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
+# Update hooks: pre-commit autoupdate
+
+# Cross-platform: hooks must work on Windows + Linux + macOS.
+# Most pre-commit hooks have Python implementations, so this works
+# uniformly. For shell-only tools (shfmt, shellcheck), we either
+# skip or use a Python alternative.
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+fail_fast: false
+
+repos:
+  # ------------------------------------------------------------------
+  # Built-in pre-commit-hooks (lightweight, no Python deps)
+  # ------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+        name: Ensure files end with a newline
+      - id: check-yaml
+        name: Validate YAML files
+        args: [--allow-multiple-documents]
+      - id: check-toml
+        name: Validate TOML files
+      - id: check-json
+        name: Validate JSON files
+        exclude: ^(\.vscode/.*\.json|tsconfig.*\.json)$
+      - id: check-added-large-files
+        name: Block files larger than 5MB
+        args: [--maxkb=5120]
+      - id: check-merge-conflict
+        name: Block merge conflict markers
+      - id: check-case-conflict
+        name: Block filenames that differ only in case
+      - id: mixed-line-ending
+        name: Force LF line endings
+        args: [--fix=lf]
+      - id: detect-private-key
+        name: Block private SSH keys
+
+  # ------------------------------------------------------------------
+  # Ruff (lint + format, replaces black + isort + flake8)
+  # ------------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        name: ruff lint
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        types_or: [python, pyi]
+
+  # ------------------------------------------------------------------
+  # Docstring coverage
+  # ------------------------------------------------------------------
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0
+    hooks:
+      - id: interrogate
+        name: interrogate (docstring coverage)
+        args: [
+          --config=pyproject.toml,
+          --verbose,
+          --fail-under=70,
+          --exclude=tests,
+          --exclude=examples,
+        ]
+        pass_filenames: false
+
+  # ------------------------------------------------------------------
+  # Conventional Commits (commit-msg)
+  # ------------------------------------------------------------------
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.5.0
+    hooks:
+      - id: commitlint
+        name: commitlint (Conventional Commits)
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional"]
+
+  # ------------------------------------------------------------------
+  # Local: documentation sync
+  # ------------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: cgmpy-docs-sync
+        name: cgmpy — documentation sync check
+        entry: python scripts/check_docs_sync.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
