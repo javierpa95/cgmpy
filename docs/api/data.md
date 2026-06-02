@@ -71,6 +71,23 @@ CGM time series.
     options:
       show_root_heading: true
 
+## Exceptions
+
+All data-loading errors raise a subclass of `cgmpy.errors.DataError`, which
+inherits from both `CGMPyError` and `ValueError`. Catch `CGMPyError` to
+handle any CGMPy-raised error. Common ones:
+
+- `ColumnNotFoundError` — required column missing (has `.column`, `.available`)
+- `InvalidCSVFormatError` — CSV cannot be parsed (has `.file_path`, `.reason`)
+- `DeviceDetectionError` — auto-detect failed (has `.file_path`, `.columns_found`)
+- `GlucoseRangeError` — values outside 39-600 mg/dL (has `.n_invalid`, `.total`)
+- `EmptyDataError` — no rows left after filtering
+
+For the full hierarchy (including `MetricError`, `AgataIntegrationError`,
+`AgataNotInstalledError`, `ConfigurationError`), see
+[`cgmpy.errors`](https://github.com/javierpa95/cgmpy/blob/main/cgmpy/errors.py)
+in the source tree.
+
 ## Pregnancy
 
 ::: cgmpy.data.pregnancy_data.PregnancyData
