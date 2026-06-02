@@ -120,10 +120,12 @@ nav:
       - Data Formats: getting-started/data-formats.md
   - User Guide:
       - Loading Data: user-guide/loading-data.md
+      - Supported Devices: user-guide/supported-devices.md
       - Computing Metrics: user-guide/computing-metrics.md
       - Visualization: user-guide/visualization.md
       - Pregnancy Analysis: user-guide/pregnancy-analysis.md
       - AGATA Integration: user-guide/agata-integration.md
+      - Command-line Interface: user-guide/cli.md
   - API Reference:
       - Data: api/data.md
       - Metrics: api/metrics.md

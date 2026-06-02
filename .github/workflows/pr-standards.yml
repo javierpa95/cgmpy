@@ -51,6 +51,7 @@ jobs:
             docs
             ci
             deps
+            actions
             release
             agents
             examples

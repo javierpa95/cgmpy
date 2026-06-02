@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
-from cgmpy.data.core import ModularGlucoseData
 from cgmpy.data.specialized import (
     Dexcom,
     Libreview,
@@ -15,6 +15,7 @@ from cgmpy.data.specialized import (
     create_specialized_loader,
     detect_device_type,
 )
+from cgmpy.errors import DeviceDetectionError
 
 
 # --------------------------------------------------------------------- helpers
@@ -124,11 +125,11 @@ class TestDetectDeviceType:
 
     def test_unknown_format(self, tmp_path: Path) -> None:
         f = _write_unknown_csv(tmp_path / "unknown.csv")
-        assert detect_device_type(str(f)) == "unknown"
+        assert detect_device_type(str(f)) is None
 
-    def test_nonexistent_file_returns_unknown(self, tmp_path: Path) -> None:
-        """Missing file → returns 'unknown' rather than raising."""
-        assert detect_device_type(str(tmp_path / "missing.csv")) == "unknown"
+    def test_nonexistent_file_returns_none(self, tmp_path: Path) -> None:
+        """Missing file → returns ``None`` rather than raising."""
+        assert detect_device_type(str(tmp_path / "missing.csv")) is None
 
 
 # ----------------------------------------------------- create_specialized_loader
@@ -155,8 +156,14 @@ class TestCreateSpecializedLoader:
         loader = create_specialized_loader(str(f))
         assert isinstance(loader, TandemDiabetes)
 
-    def test_unknown_falls_back_to_modular(self, tmp_path: Path) -> None:
-        """Unknown device type falls back to the generic `ModularGlucoseData`."""
+    def test_unknown_device_raises_detection_error(self, tmp_path: Path) -> None:
+        """An unknown device type raises ``DeviceDetectionError`` instead of
+        silently falling back to the generic ``ModularGlucoseData``.
+
+        The user is forced to make an explicit choice (e.g. by using
+        :class:`ModularGlucoseData` directly) so silent mis-classifications
+        are avoided.
+        """
         f = tmp_path / "fallback.csv"
         df = pd.DataFrame(
             {
@@ -165,15 +172,13 @@ class TestCreateSpecializedLoader:
             }
         )
         df.to_csv(f, index=False)
-        loader = create_specialized_loader(
-            str(f),
-            device_type="totally_unknown",
-            date_col="time",
-            glucose_col="glucose",
-        )
-        # Should be the generic class, not one of the specialized subclasses
-        assert isinstance(loader, ModularGlucoseData)
-        assert not isinstance(loader, Dexcom | Libreview | MedtronicCarelink | TandemDiabetes)
+        with pytest.raises(DeviceDetectionError):
+            create_specialized_loader(
+                str(f),
+                device_type="totally_unknown",
+                date_col="time",
+                glucose_col="glucose",
+            )
 
 
 # ------------------------------------------------------ specialized class behaviour

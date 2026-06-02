@@ -16,6 +16,33 @@ No changes yet. The next release will be **v0.6.0** (MAGE deep refactor + deprec
 
 ---
 
+## [0.5.2] — 2026-06-02
+
+Hardening of the data-ingestion-to-AGATA pipeline. No breaking changes. All four CGM device loaders are now in the public API, all data-path and AGATA-path errors are now raised as CGMPy-specific subclasses (catchable as `CGMPyError` or, for backward compatibility, as `ValueError`), and the test suite is anchored on deterministic synthetic fixtures with hand-computed expected values.
+
+### Added
+- **`cgmpy.errors`**: new `CGMPyError` base + 12 specialised subclasses (`DataError` → `ColumnNotFoundError`, `InvalidCSVFormatError`, `DeviceDetectionError`, `GlucoseRangeError`, `EmptyDataError`; `AgataIntegrationError` → `AgataNotInstalledError`; `MetricError` → `InsufficientDataError`; `ConfigurationError`). All carry their context as instance attributes (`.column`, `.file_path`, `.columns_found`, `.n_invalid`, …) so callers can react programmatically.
+- **`cgmpy-info` CLI**: new console-script entry point (`pyproject.toml [project.scripts]`) that reports the installed CGMPy version, the running Python interpreter, and the status of the optional `[agata]`, `[docs]`, and `[dev]` extras. Supports `--json` for machine-readable consumption in CI.
+- **`MedtronicCarelink` and `TandemDiabetes` in the public API**: previously importable only via the private `cgmpy.data.specialized` path. All four device loaders are now in `cgmpy.__init__` and `cgmpy.__all__`.
+- **13 deterministic synthetic CSV fixtures** under `tests/fixtures/` (4 device-format constant-120 datasets, 6 edge-case CSVs, 1 sine-24h synthetic). All values are reproducible byte-for-byte; the expected metric values are documented in two `README.md` files alongside the data. A generator script (`scripts/generate_fixtures_v052.py`) can re-create them.
+- **122 new tests** across 4 new test files: `tests/unit/test_data/test_errors.py` (41), `tests/unit/test_data/test_synthetic_metrics.py` (67), `tests/unit/test_agata/test_metrics_errors.py` (15), and `tests/integration/test_data_to_agata.py` (22, gated by `pytest.importorskip("py_agata")`).
+- **3 new docs pages**: `docs/user-guide/supported-devices.md` (clinician-friendly device list), `docs/user-guide/cli.md` (cgmpy-info reference), and a new "Troubleshooting" section in `docs/user-guide/loading-data.md`. The `docs/api/data.md` page now has an "Exceptions" section.
+
+### Changed
+- **`cgmpy.data.loader.DataLoader`**: unparseable CSVs and PyArrow failures now raise `InvalidCSVFormatError` (with the original parser error in `.reason` and a delimiter hint). Missing columns in a DataFrame raise `ColumnNotFoundError`.
+- **`cgmpy.data.specialized.detect_device_type`** now returns `None` (not the string `"unknown"`) when no device format matches. **`create_specialized_loader`** now raises `DeviceDetectionError` (with the first 5 file columns in `.columns_found`) instead of silently falling back to a generic `ModularGlucoseData` with no columns configured.
+- **`cgmpy.data.processor.DataProcessor.process_data`** gains a `strict_glucose_range: bool = False` parameter. When `True`, out-of-physiological-range glucose values (default 39–600 mg/dL) raise `GlucoseRangeError`; when `False` (default), the previous warn-only behaviour is preserved.
+- **`cgmpy.agata.adapter.prepare_data_for_agata`** now raises `EmptyDataError` at 5 distinct points (empty input, empty after timestamp normalisation, NaT bounds, empty time range, all-NaN glucose on the regular grid) where it previously crashed with a cryptic pandas error or returned a useless DataFrame.
+- **`cgmpy.agata.metrics.{analyze_one_arm,analyze_with_agata}`** now raise `AgataNotInstalledError` (with a `pip install 'cgmpy[agata]'` hint) instead of a bare `ImportError`. The redundant no-op `try/except Exception: raise` blocks in both functions are removed.
+- **`py_agata` pinned to `==0.0.8`** in `pyproject.toml` for reproducible AGATA parity comparisons across environments.
+
+### Notes for reviewers
+- `DataError` deliberately inherits from both `CGMPyError` and `ValueError` so that pre-v0.5.2 code using `except ValueError:` continues to work. New code should prefer `except CGMPyError:` or the more specific subclasses.
+- The `detect_device_type` heuristic still does not handle Libreview's 2-row banner header — that path requires `Libreview(file, header=2)`. A regression test (`test_detect_device_type_libreview_returns_none`) documents the limitation.
+- The `cgmpy-info` CLI is brand new in v0.5.2. Pinning `py_agata==0.0.8` is a behavioural change for anyone upgrading from `>=0.0.1`; the AGATA parity tests in `tests/unit/test_agata/` will need to be re-validated when the pin is bumped.
+
+---
+
 ## [0.5.1] — 2026-06-01
 
 Bug-fix sweep over the 6 latent bugs surfaced by the v0.5.0 test expansion.

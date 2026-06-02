@@ -1,22 +1,26 @@
+"""Bridge between CGMPy and the optional ``py_agata`` reference library.
+
+The :mod:`py_agata` package is an **optional** dependency of CGMPy. The
+top-level :func:`import cgmpy` call must not require it; only the call
+sites in this module do. We import lazily and surface a clean
+:class:`~cgmpy.errors.AgataNotInstalledError` when the library is missing.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..data.core import ModularGlucoseData
+from ..errors import AgataNotInstalledError
+from .adapter import prepare_data_for_agata
+
+# Lazy import: py_agata is an optional dependency. We allow `import cgmpy`
+# to succeed even when py_agata is not installed; the missing-dependency
+# error is raised only when the analysis functions are actually called.
 try:
     from py_agata.py_agata import Agata
 except ImportError:
-    # We don't fail here, allow the package to be imported.
-    # The error will occur if the functionality is used.
     Agata = None
-from ..data.core import ModularGlucoseData
-
-from .adapter import prepare_data_for_agata
-from typing import Any
-
-"""Comments
-def time_in_given_range(data, th_l, th_h, include_th_l=False, include_th_h=False)
-
-def time_in_target(data, glycemic_target='diabetes'):
-    # By default, not include thresholds. I Change to True
-    return time_in_given_range(data=data, th_l=th_l, th_h=th_h, include_th_l=True, include_th_h=True)
-
-"""
 
 
 def analyze_one_arm(
@@ -31,51 +35,44 @@ def analyze_one_arm(
 
     Returns:
         dict: The results dictionary returned by py_agata with group statistics.
+
+    Raises:
+        AgataNotInstalledError: If ``py_agata`` is not installed.
+        EmptyDataError: If any of the input datasets is empty (propagated
+            from :func:`prepare_data_for_agata`).
     """
     if Agata is None:
-        raise ImportError(
-            "The 'py_agata' library is required for this functionality. Please install it."
-        )
+        raise AgataNotInstalledError()
 
     # 1. Prepare all DataFrames
     prepared_dfs = [prepare_data_for_agata(d) for d in data_list]
 
-    try:
-        # 2. Instantiate Agata and run the group analysis
-        analyzer = Agata(glycemic_target=glycemic_target)
-        results = analyzer.analyze_one_arm(prepared_dfs)
-
-        return results
-
-    except Exception:
-        raise
+    # 2. Instantiate Agata and run the group analysis
+    analyzer = Agata(glycemic_target=glycemic_target)
+    return analyzer.analyze_one_arm(prepared_dfs)
 
 
 def analyze_with_agata(
     glucose_data: ModularGlucoseData, glycemic_target: str = "diabetes", **kwargs
 ) -> dict:
-    """
-    Analyzes a cgmpy data object using the py_agata library.
+    """Analyze a single :class:`ModularGlucoseData` using ``py_agata``.
+
+    Raises:
+        AgataNotInstalledError: If ``py_agata`` is not installed.
+        EmptyDataError: If the input dataset is empty (propagated from
+            :func:`prepare_data_for_agata`).
     """
     if Agata is None:
-        raise ImportError(
-            "The 'py_agata' library is required for this functionality. Please install it."
-        )
+        raise AgataNotInstalledError()
 
     # 1. Prepare the data with the adapter
     df_for_agata = prepare_data_for_agata(glucose_data)
 
-    try:
-        # 2. Instantiate Agata with the correct target
-        analyzer = Agata(glycemic_target=glycemic_target)
+    # 2. Instantiate Agata with the correct target
+    analyzer = Agata(glycemic_target=glycemic_target)
 
-        # 3. Run the analysis
-        results = analyzer.analyze_glucose_profile(df_for_agata)
-
-        return results
-
-    except Exception:
-        raise
+    # 3. Run the analysis
+    return analyzer.analyze_glucose_profile(df_for_agata)
 
 
 def summarize_agata_results(results: dict) -> dict:
@@ -111,11 +108,18 @@ def summarize_agata_results(results: dict) -> dict:
 
 # --- NEW CLASS ---
 class AgataAnalysis(ModularGlucoseData):
-    """
-    Container class to analyze glucose data using the py_agata library.
+    """Object-oriented bridge to the ``py_agata`` analysis pipeline.
 
-    This class acts as an object-oriented bridge, allowing data loading
-    and the py_agata analysis pipeline to be executed in a simple way.
+    Inherits from :class:`~cgmpy.data.core.ModularGlucoseData` so it can
+    be constructed in exactly the same way (file path, DataFrame, etc.),
+    and exposes :meth:`run` / :meth:`analyze_one_arm` to drive the
+    py_agata analysis.
+
+    Raises:
+        AgataNotInstalledError: If ``py_agata`` is not installed.
+        EmptyDataError: If :meth:`run` (or :meth:`analyze_one_arm`) is
+            called on empty data, raised by the adapter during data
+            preparation.
     """
 
     def __init__(self, *args, glycemic_target: str = "diabetes", **kwargs: Any):
@@ -143,6 +147,10 @@ class AgataAnalysis(ModularGlucoseData):
 
         Returns:
             dict: The results dictionary.
+
+        Raises:
+            EmptyDataError: If the underlying data is empty.
+            AgataNotInstalledError: If ``py_agata`` is not installed.
         """
         # Use the defined target if no specific one is passed in the call
         target = glycemic_target or self.glycemic_target
@@ -171,6 +179,10 @@ class AgataAnalysis(ModularGlucoseData):
             data_list (list[ModularGlucoseData]): List of objects to analyze.
             glycemic_target (str): The glycemic target to use.
             summary (bool): If True, returns a flat summary.
+
+        Raises:
+            EmptyDataError: If any element of ``data_list`` is empty.
+            AgataNotInstalledError: If ``py_agata`` is not installed.
         """
         results = analyze_one_arm(data_list, glycemic_target=glycemic_target, **kwargs)
 
