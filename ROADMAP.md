@@ -2,14 +2,17 @@
 
 > Continuous Glucose Monitoring analysis library for Python.
 
-## Current Focus
+## Current Status
 
-> **v0.6.0 — MAGE Refactor & Type-Strict API** (target: July 2026)
+> **Maintenance mode — repo cleanup complete (June 2026).**
 >
-> Split the 645-line `MAGE_Baghurst` into three focused methods, move
-> interactive matplotlib out of the metric module, define a deprecation
-> policy, and run `mypy --strict` on the public API. No new clinical
-> features in this release — internal cleanup only.
+> The 5-commit cleanup sweep (ghost files, CI security, docs site,
+> legal consolidation, ADRs) is done. See [Recently Completed](#recently-completed-june-2026).
+>
+> **No active development focus.** The next planned work is the MAGE
+> refactor, but it will not be started until the maintainer explicitly
+> requests it. AI agents must not propose or initiate MAGE work
+> unprompted (see AGENTS.md §12).
 
 ---
 
@@ -47,13 +50,6 @@ Other:
   failure" were inverted to assert the fixed behaviour.
 - Auto-fixed 13 pre-existing UP038 isinstance lint warnings.
 - Tests: 310 → 329 passing. Coverage: 81.18% → 81.66%.
-
-### v0.4 → v0.5 — Modernisation Sprint
-
-> Massive refactor and translation pass that took the library from "hobby
-> project" to "competent open-source package". 42 → 310 tests, 30% → 81% line
-> coverage, 100% of library code English, zero `print()` calls, monolith
-> split into a package.
 
 ### v0.4 → v0.5 — Modernisation Sprint
 
@@ -140,7 +136,7 @@ Other:
 
 ## Roadmap
 
-### v0.6.0 — MAGE Refactor & Type-Strict API (target: July 2026)
+### v0.6.0 — MAGE Refactor & Type-Strict API (deferred — user-request only)
 
 - [ ] **Split `MAGE_Baghurst`** — the 645-line function with 3 approaches
       becomes three focused methods (`mage_baghurst_smoothing`,

@@ -281,6 +281,28 @@ Before suggesting `git commit`, verify:
 
 ---
 
+## 12. Deferred Work (do not propose proactively)
+
+The following items are in the ROADMAP but must **not** be proposed,
+started, or suggested by the agent unless the human maintainer
+explicitly asks for them:
+
+1. **MAGE refactor (v0.6.0)** — splitting `MAGE_Baghurst`, moving
+   matplotlib code to plotting, `mypy --strict`. The agent must wait
+   for the user to say "start MAGE" before touching any of this.
+2. Any item under **v0.7.0 through v1.0.0** in ROADMAP.md — these are
+   future milestones. Do not work on them or propose starting them.
+   If the user asks, proceed normally.
+
+### Rationale
+
+The maintainer is solo and time-limited. Proactive feature proposals
+create mental overhead ("should I do this now?") even when the answer
+is no. By deferring roadmap items to explicit user requests, the agent
+becomes a **responsive tool** rather than a **proactive distractor**.
+
+---
+
 ## 11. Communication Style
 
 - Be concise. Use tables and bullet lists. No essays.
