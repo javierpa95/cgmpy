@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cgmpy"
-version = "0.5.1"
+version = "0.5.2"
 description = "Modular Python library for Continuous Glucose Monitoring (CGM) data analysis"
 readme = "README.md"
 authors = [
