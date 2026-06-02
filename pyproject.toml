@@ -70,8 +70,16 @@ docs = [
   "mike>=1.1",
 ]
 agata = [
-  "py_agata>=0.0.1",
+  # py_agata is the reference implementation used for cross-validation. Pinned
+  # to 0.0.8 (last release as of 2024) because newer versions on PyPI are
+  # not ABI-compatible and we have observed behaviour changes in time-in-range
+  # computations across patch versions. Bumping this requires a re-run of
+  # the AGATA parity tests in `tests/unit/test_agata/`.
+  "py_agata==0.0.8",
 ]
+
+[project.scripts]
+cgmpy-info = "cgmpy.cli:main"
 
 [project.urls]
 "Homepage" = "https://github.com/javierpa95/cgmpy"
