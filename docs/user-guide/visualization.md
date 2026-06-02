@@ -119,4 +119,4 @@ comprehensive dashboard.
 
 - [Computing metrics](computing-metrics.md) — what the plots show.
 - [API reference → Plotting](../api/plotting.md) — function signatures.
-- [Contributing → Adding a new plot](../../CONTRIBUTING.md#adding-a-new-plot) — for contributors.
+- [Contributing → Adding a new plot](https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md#adding-a-new-plot) — for contributors.

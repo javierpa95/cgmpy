@@ -124,5 +124,5 @@ agp.plot_agp(save_path="agp_pregnancy.png")
 ## See also
 
 - [Computing metrics](computing-metrics.md) — the general API.
-- [Targets](../api/metrics.md#cgmpy.metrics.targets) — the full cutoff table.
+- [Targets](../api/metrics.md#targets) — the full cutoff table.
 - [Example: 02_pregnancy](https://github.com/javierpa95/cgmpy/tree/main/examples/02_pregnancy).

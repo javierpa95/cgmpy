@@ -141,5 +141,5 @@ CGMPy's processor will:
 ## See also
 
 - [Loading Data](../user-guide/loading-data.md) — full reference.
-- [Adding a new device loader](../../CONTRIBUTING.md#adding-a-new-device-loader) — for contributors.
+- [Adding a new device loader](https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md#adding-a-new-device-loader) — for contributors.
 - [Security policy](https://github.com/javierpa95/cgmpy/blob/main/SECURITY.md) — what to do with real exports.

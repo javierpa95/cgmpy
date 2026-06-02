@@ -1,0 +1,57 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Required for the official actions/deploy-pages path. The classic
+# `mkdocs gh-deploy` (used below) only needs `contents: write` and is
+# kept here because it is simpler and works without GitHub-OIDC
+# configuration. If we ever switch to actions/deploy-pages, add
+# `pages: write` and `id-token: write` to this block.
+permissions:
+  contents: write
+
+# Do NOT cancel in-progress doc builds — a partial deploy leaves the
+# gh-pages branch in a bad state.
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy mkdocs site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install cgmpy with the [docs] extra
+        # The [docs] extra pulls in mkdocs, mkdocs-material, mkdocstrings,
+        # mkdocs-gen-files and mike — everything mkdocs.yml needs.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[docs]"
+
+      - name: Strict build (fail on warnings)
+        # `--strict` turns mkdocs warnings (broken refs, missing nav
+        # targets, etc.) into errors. Catches docs regressions at PR
+        # time instead of producing a silently broken site.
+        run: mkdocs build --strict
+
+      - name: Deploy to gh-pages
+        # --clean: remove any stale files in the gh-pages branch that
+        #          no longer exist in the new build.
+        # --force: overwrite the gh-pages branch without prompting.
+        # --message: explicit commit subject so the deploy commits in
+        #            the gh-pages branch history are easy to grep.
+        run: mkdocs gh-deploy --clean --force --message "Deploy docs from ${{ github.sha }}"

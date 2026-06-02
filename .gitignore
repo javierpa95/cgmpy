@@ -111,6 +111,7 @@ ruff_report.txt
 cgmpy.egg-info/
 build/
 dist/
+site/
 
 # --- Generated / vendored ---
 node_modules/

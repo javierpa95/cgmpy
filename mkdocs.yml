@@ -135,7 +135,6 @@ nav:
       - Testing: development/testing.md
       - Git Workflow: development/git-workflow.md
       - Release Process: development/release-process.md
-      - Technical Debt: development/technical-debt.md
   - Architecture:
       - System Overview: architecture/system-overview.md
       - Decisions: architecture/decisions/index.md
@@ -143,9 +142,9 @@ nav:
       - Privacy: legal/privacy.md
       - GDPR: legal/gdpr.md
   - Project:
-      - Changelog: CHANGELOG.md
-      - Roadmap: ROADMAP.md
       - Contributing: https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md
       - Code of Conduct: https://github.com/javierpa95/cgmpy/blob/main/CODE_OF_CONDUCT.md
       - Security: https://github.com/javierpa95/cgmpy/blob/main/SECURITY.md
       - License: https://github.com/javierpa95/cgmpy/blob/main/LICENSE
+      - Changelog: https://github.com/javierpa95/cgmpy/blob/main/CHANGELOG.md
+      - Roadmap: https://github.com/javierpa95/cgmpy/blob/main/ROADMAP.md

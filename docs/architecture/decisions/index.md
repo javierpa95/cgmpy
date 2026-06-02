@@ -51,7 +51,7 @@ Chosen option: "[option 1]", because [justification].
 
 | #   | Title                                                                       | Status   |
 |-----|-----------------------------------------------------------------------------|----------|
-| 0001 | [Record architecture decisions](decisions/0001-record-architecture-decisions.md) | Accepted |
+| 0001 | [Record architecture decisions](0001-record-architecture-decisions.md) | Accepted |
 
 ## How to add a new ADR
 

@@ -4,9 +4,10 @@ except ImportError:
     # We don't fail here, allow the package to be imported.
     # The error will occur if the functionality is used.
     Agata = None
-
 from ..data.core import ModularGlucoseData
+
 from .adapter import prepare_data_for_agata
+from typing import Any
 
 """Comments
 def time_in_given_range(data, th_l, th_h, include_th_l=False, include_th_h=False)
@@ -117,7 +118,7 @@ class AgataAnalysis(ModularGlucoseData):
     and the py_agata analysis pipeline to be executed in a simple way.
     """
 
-    def __init__(self, *args, glycemic_target: str = "diabetes", **kwargs):
+    def __init__(self, *args, glycemic_target: str = "diabetes", **kwargs: Any):
         """
         Initializes the Agata analysis.
 
@@ -129,7 +130,7 @@ class AgataAnalysis(ModularGlucoseData):
         super().__init__(*args, **kwargs)
         self.glycemic_target = glycemic_target
 
-    def run(self, glycemic_target: str = "diabetes", summary: bool = False, **kwargs) -> dict:
+    def run(self, glycemic_target: str = "diabetes", summary: bool = False, **kwargs: Any) -> dict:
         """
         Runs the full py_agata analysis pipeline on the loaded data.
 
