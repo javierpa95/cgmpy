@@ -41,7 +41,7 @@ class GlucoseData(ModularGlucoseData):
     pass
 
 
-class GlucoseMetrics(ModularGlucoseData, ModularGlucoseMetrics):
+class GlucoseMetrics(ModularGlucoseData, ModularGlucoseMetrics):  # type: ignore[misc]
     """
     Main class for glucose metrics.
 
@@ -53,7 +53,7 @@ class GlucoseMetrics(ModularGlucoseData, ModularGlucoseMetrics):
     """
 
 
-class GlucosePlot(
+class GlucosePlot(  # type: ignore[misc]
     ModularGlucoseData,
     BasicMetrics,
     TimeInRangeMetrics,

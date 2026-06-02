@@ -31,8 +31,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install ruff
-        run: pip install "ruff>=0.6"
+      - name: Install ruff + mypy
+        run: pip install "ruff>=0.6" mypy
 
       - name: ruff check
         run: ruff check .
@@ -40,8 +40,11 @@ jobs:
       - name: ruff format check
         run: ruff format --check .
 
+      - name: mypy
+        run: mypy cgmpy
+
   # ------------------------------------------------------------------
-  # Security audit
+  # Security audit + pre-commit
   # ------------------------------------------------------------------
   security:
     name: Security audit
@@ -55,8 +58,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install bandit + pip-audit
-        run: pip install "bandit[toml]>=1.7" pip-audit
+      - name: Install bandit + pip-audit + pre-commit
+        run: pip install "bandit[toml]>=1.7" pip-audit pre-commit
 
       - name: Bandit
         run: bandit -r cgmpy/ -ll
@@ -67,6 +70,9 @@ jobs:
         # dependency is flagged, fix it (pin a safe version, replace,
         # or open an issue) — do not silence the failure.
         run: pip-audit
+
+      - name: pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
 
   # ------------------------------------------------------------------
   # Test matrix (multi-OS, multi-Python)

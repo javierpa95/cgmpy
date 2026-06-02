@@ -29,11 +29,12 @@ repos:
       - id: check-yaml
         name: Validate YAML files
         args: [--allow-multiple-documents]
+        exclude: ^mkdocs\.yml$
       - id: check-toml
         name: Validate TOML files
       - id: check-json
         name: Validate JSON files
-        exclude: ^(\.vscode/.*\.json|tsconfig.*\.json)$
+        exclude: ^(\.vscode/.*\.json|tsconfig.*\.json|\.devcontainer/.*\.json)$
       - id: check-added-large-files
         name: Block files larger than 5MB
         args: [--maxkb=5120]
@@ -51,7 +52,7 @@ repos:
   # Ruff (lint + format, replaces black + isort + flake8)
   # ------------------------------------------------------------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.15.0
     hooks:
       - id: ruff
         name: ruff lint
