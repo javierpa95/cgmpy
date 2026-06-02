@@ -1,5 +1,9 @@
 """
 Module for glucose data processing and validation.
+
+Errors raised by this module are CGMPy-specific subclasses of
+:class:`ValueError` (see :mod:`cgmpy.errors`), so legacy callers that
+catch :class:`ValueError` continue to work.
 """
 
 import logging
@@ -8,6 +12,7 @@ import time
 import numpy as np
 import pandas as pd
 
+from ..errors import ColumnNotFoundError, GlucoseRangeError
 from ..metrics.validation import ValidationReport, validate_glucose_range
 
 
@@ -31,6 +36,7 @@ class DataProcessor:
         date_col: str,
         glucose_col: str,
         log_performance: bool = False,
+        strict_glucose_range: bool = False,
     ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Processes glucose data in an optimized way.
@@ -39,7 +45,13 @@ class DataProcessor:
         :param date_col: Name of the date column
         :param glucose_col: Name of the glucose column
         :param log_performance: If True, records performance metrics
+        :param strict_glucose_range: If ``True``, raise
+            :class:`GlucoseRangeError` when any glucose value falls outside
+            the physiologically plausible range (39-600 mg/dL). Defaults to
+            ``False`` to preserve the legacy warn-only behaviour.
         :return: Tuple with processed DataFrame and time differences Series
+        :raises GlucoseRangeError: Only when ``strict_glucose_range=True``
+            and the validation report contains out-of-range values.
         """
         t_start = time.time()
 
@@ -65,6 +77,32 @@ class DataProcessor:
         if not pd.api.types.is_datetime64_any_dtype(processed_data[date_col]):
             raise ValueError("Error in date conversion")
 
+        # Optional strict gate on glucose range (does not change the
+        # internal validation flow: _convert_data_types still runs
+        # validate_glucose_range(warn=True) so the report is always fresh
+        # and inspectable via `last_validation_report`).
+        if strict_glucose_range and self._last_validation_report is not None:
+            report = self._last_validation_report
+            n_invalid = report.n_below + report.n_above
+            if n_invalid > 0:
+                # Handle NaN min/max for fully-empty series gracefully.
+                if (
+                    report.n_total == 0
+                    or report.min_glucose != report.min_glucose
+                    or report.max_glucose != report.max_glucose
+                ):
+                    min_value, max_value = 0.0, 0.0
+                else:
+                    min_value = float(report.min_glucose)
+                    max_value = float(report.max_glucose)
+                raise GlucoseRangeError(
+                    n_invalid=n_invalid,
+                    total=report.n_total,
+                    min_value=min_value,
+                    max_value=max_value,
+                    bounds=(report.low_threshold, report.high_threshold),
+                )
+
         if log_performance:
             t_end = time.time()
             memory_bytes = processed_data.memory_usage(deep=True).sum()
@@ -82,11 +120,29 @@ class DataProcessor:
         :param data: DataFrame to validate
         :param date_col: Name of the date column
         :param glucose_col: Name of the glucose column
+        :raises ColumnNotFoundError: If ``date_col`` or ``glucose_col`` is
+            not present in ``data.columns``. A separate exception is raised
+            for each missing column, with the list of available columns
+            attached for diagnostics.
         """
-        if date_col not in data.columns or glucose_col not in data.columns:
-            raise ValueError(
-                f"Columns '{date_col}' or '{glucose_col}' not found in the DataFrame. "
-                f"Available columns: {data.columns.tolist()}."
+        available = list(data.columns)
+        if date_col not in data.columns:
+            raise ColumnNotFoundError(
+                date_col,
+                available=available,
+                message=(
+                    f"Required date column '{date_col}' not found in the "
+                    f"DataFrame. Available columns: {available}."
+                ),
+            )
+        if glucose_col not in data.columns:
+            raise ColumnNotFoundError(
+                glucose_col,
+                available=available,
+                message=(
+                    f"Required glucose column '{glucose_col}' not found in the "
+                    f"DataFrame. Available columns: {available}."
+                ),
             )
 
     def _is_optimized_parquet(self, data: pd.DataFrame, date_col: str, glucose_col: str) -> bool:

@@ -1,10 +1,21 @@
 """
 Module with specialized classes for specific glucose devices.
+
+Errors raised by this module are CGMPy-specific subclasses of
+:class:`ValueError` (see :mod:`cgmpy.errors`).
 """
 
 import datetime
 
+import pandas as pd
+
+from ..errors import DeviceDetectionError
 from .core import ModularGlucoseData
+
+#: Tuple of device type strings recognised by :func:`detect_device_type` and
+#: :func:`create_specialized_loader`. Used in error messages and for sanity
+#: checks.
+SUPPORTED_DEVICES: tuple[str, ...] = ("dexcom", "libreview", "medtronic", "tandem")
 
 
 class Dexcom(ModularGlucoseData):
@@ -206,15 +217,15 @@ class TandemDiabetes(ModularGlucoseData):
         )
 
 
-def detect_device_type(file_path: str) -> str:
+def detect_device_type(file_path: str) -> str | None:
     """
-    Automatically detects the device type based on the file.
+    Automatically detects the device type based on the file's header.
 
     :param file_path: Path to the CSV file
-    :return: Detected device type
+    :return: The detected device type (``"dexcom"``, ``"libreview"``,
+        ``"medtronic"`` or ``"tandem"``) or ``None`` when the file cannot
+        be read or does not match any known format.
     """
-    import pandas as pd
-
     try:
         # Read the first few rows to detect the format
         sample = pd.read_csv(file_path, nrows=5)
@@ -230,10 +241,10 @@ def detect_device_type(file_path: str) -> str:
         elif "Timestamp" in columns and "CGM Glucose Value (mg/dL)" in columns:
             return "tandem"
         else:
-            return "unknown"
+            return None
 
     except Exception:
-        return "unknown"
+        return None
 
 
 def create_specialized_loader(file_path: str, device_type: str | None = None, **kwargs):
@@ -241,12 +252,28 @@ def create_specialized_loader(file_path: str, device_type: str | None = None, **
     Automatically creates the appropriate specialized loader.
 
     :param file_path: Path to the file
-    :param device_type: Device type (if None, it is detected automatically)
-    :param kwargs: Additional arguments for the constructor
-    :return: Instance of the appropriate specialized loader
+    :param device_type: Device type (if ``None``, it is detected
+        automatically via :func:`detect_device_type`).
+    :param kwargs: Additional arguments forwarded to the loader constructor.
+    :return: Instance of the appropriate specialized loader.
+    :raises DeviceDetectionError: If ``device_type`` is ``None`` after
+        auto-detection (i.e. the file does not match any known format and
+        no explicit override was provided). The exception's
+        ``columns_found`` attribute lists the first columns of the input
+        file to help the caller diagnose the issue.
     """
     if device_type is None:
         device_type = detect_device_type(file_path)
+
+    # Auto-detection returned None → cannot decide which loader to use.
+    if device_type is None:
+        try:
+            columns_found = pd.read_csv(file_path, nrows=0).columns.tolist()
+        except Exception:
+            columns_found = []
+        # Cap to the first 5 columns for readability.
+        columns_found = list(columns_found[:5])
+        raise DeviceDetectionError(file_path, columns_found=columns_found)
 
     device_type = device_type.lower()
 
@@ -259,7 +286,12 @@ def create_specialized_loader(file_path: str, device_type: str | None = None, **
     elif device_type == "tandem":
         return TandemDiabetes(file_path, **kwargs)
     else:
-        # Use generic loader if device type is not recognized
-        from .core import ModularGlucoseData
-
-        return ModularGlucoseData(file_path, **kwargs)
+        # Explicit device type that is not in the known set. Treat the same
+        # way as auto-detection failure: do not silently fall back to the
+        # generic loader, raise so the user can make an explicit choice.
+        try:
+            columns_found = pd.read_csv(file_path, nrows=0).columns.tolist()
+        except Exception:
+            columns_found = []
+        columns_found = list(columns_found[:5])
+        raise DeviceDetectionError(file_path, columns_found=columns_found)

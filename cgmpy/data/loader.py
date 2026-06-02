@@ -1,11 +1,17 @@
 """
 Module for loading glucose data from different sources.
+
+Errors raised by this module are CGMPy-specific subclasses of
+:class:`ValueError` (see :mod:`cgmpy.errors`), so legacy callers that
+catch :class:`ValueError` continue to work.
 """
 
 import logging
 from pathlib import Path
 
 import pandas as pd
+
+from ..errors import InvalidCSVFormatError
 
 
 class DataLoader:
@@ -82,11 +88,13 @@ class DataLoader:
         :param date_col: Name of the date column
         :param glucose_col: Name of the glucose column
         :return: DataFrame with the data
+        :raises InvalidCSVFormatError: If pyarrow/pandas fails to read the
+            file (corrupt, missing columns, schema mismatch, ...).
         """
         try:
             return pd.read_parquet(file_path, columns=[date_col, glucose_col])
         except Exception as e:
-            raise ValueError(f"Error reading Parquet file: {e!s}") from e
+            raise InvalidCSVFormatError(file_path, reason=str(e)) from e
 
     def _load_csv(
         self,
@@ -105,6 +113,8 @@ class DataLoader:
         :param delimiter: Delimiter
         :param header: Header row
         :return: DataFrame with the data
+        :raises InvalidCSVFormatError: If the file cannot be parsed by pandas
+            using either ``,`` or ``;`` as the delimiter.
         """
         if delimiter is None:
             delimiter = ","
@@ -127,13 +137,15 @@ class DataLoader:
                         usecols=[date_col, glucose_col],
                     )
                 except Exception as inner_e:
-                    raise ValueError(
-                        f"Error reading CSV file: {e!s}. "
-                        "Try manually specifying the delimiter with the 'delimiter' parameter."
+                    raise InvalidCSVFormatError(
+                        file_path,
+                        reason=str(inner_e),
+                        hint=("Try specifying the delimiter with the 'delimiter' parameter."),
                     ) from inner_e
             else:
-                raise ValueError(
-                    f"Error reading CSV file with delimiter '{delimiter}': {e!s}"
+                raise InvalidCSVFormatError(
+                    file_path,
+                    reason=(f"Error reading CSV file with delimiter '{delimiter}': {e!s}"),
                 ) from e
 
     def _load_from_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:

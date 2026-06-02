@@ -14,7 +14,7 @@ from .data.exporter import DataExporter
 from .data.loader import DataLoader
 from .data.pregnancy_data import PregnancyData, PregnancyDataHandler
 from .data.processor import DataProcessor
-from .data.specialized import Dexcom, Libreview
+from .data.specialized import Dexcom, Libreview, MedtronicCarelink, TandemDiabetes
 from .metrics import ModularGlucoseMetrics
 from .metrics.basic import BasicMetrics
 from .metrics.pregnancy import GestationalDiabetes
@@ -93,10 +93,12 @@ __all__ = [
     "GlucoseMetrics",
     "GlucosePlot",
     "Libreview",
+    "MedtronicCarelink",
     "ModularGlucoseData",
     "PregnancyData",
     "PregnancyDataHandler",
     "StatisticalPlotter",
+    "TandemDiabetes",
     "TimeInRangeMetrics",
     "VariabilityMetrics",
     # Utilities
