@@ -138,9 +138,7 @@ nav:
   - Architecture:
       - System Overview: architecture/system-overview.md
       - Decisions: architecture/decisions/index.md
-  - Legal:
-      - Privacy: legal/privacy.md
-      - GDPR: legal/gdpr.md
+  - Legal: legal.md
   - Project:
       - Contributing: https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md
       - Code of Conduct: https://github.com/javierpa95/cgmpy/blob/main/CODE_OF_CONDUCT.md

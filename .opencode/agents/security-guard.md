@@ -63,8 +63,7 @@ The script shifts timestamps by a random offset, replaces patient IDs with
 ## Reference
 
 - `SECURITY.md` — vulnerability reporting policy.
-- `docs/legal/privacy.md` — privacy posture.
-- `docs/legal/gdpr.md` — GDPR compliance notes.
+- `docs/legal.md` — privacy posture and GDPR compliance notes.
 - `.gitignore` — must exclude `*.csv`, `*.parquet`, etc. unless explicitly whitelisted.
 
 ## Output Format

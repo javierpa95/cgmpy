@@ -1,4 +1,66 @@
-# GDPR Notes
+# Legal
+
+## Privacy
+
+CGMPy is a **research and analysis library**. It does not collect,
+transmit, or store any user data. The library operates entirely
+locally on the data you provide.
+
+### Data you provide to CGMPy
+
+When you call `ModularGlucoseData("my_file.csv")`, CGMPy reads the file
+from your local disk and processes it in memory. **No data ever leaves
+your machine** as a result of using the library.
+
+### Data you share with the CGMPy project
+
+CGMPy does not have a backend. Sharing data with the project is
+entirely under your control and happens only when you:
+
+- Open an **issue** (GitHub Issues).
+- Open a **discussion** (GitHub Discussions).
+- Open a **pull request**.
+
+In all of these cases, **you decide what to share**. Please review the
+[Security policy](https://github.com/javierpa95/cgmpy/blob/main/SECURITY.md)
+before sharing data, especially medical data.
+
+### Cookies and tracking
+
+The CGMPy documentation site is hosted on **GitHub Pages** and does not
+set any cookies. No analytics, no tracking, no third-party scripts.
+
+### Telemetry
+
+CGMPy does not phone home, does not collect usage statistics, and does
+not embed any analytics SDK.
+
+### What CGMPy does log
+
+CGMPy uses the Python `logging` module. By default, log levels are
+`WARNING` and above. The library does not log glucose values, patient
+IDs, or any other potentially sensitive data.
+
+If you enable `INFO` or `DEBUG` logging, you may see messages like:
+
+```
+INFO: cgmpy.data.loader: Loaded 1728 records from /path/to/file.csv
+INFO: cgmpy.data.processor: Dropped 3 duplicate rows
+```
+
+These messages **do not** include glucose values or patient identifiers.
+
+### Compliance
+
+CGMPy is released under the **MIT License** and ships without warranty.
+The library is not certified under HIPAA, GDPR, or any other medical-
+data regulation. **It is the user's responsibility** to ensure that
+their use of the library complies with applicable laws in their
+jurisdiction.
+
+---
+
+## GDPR
 
 CGMPy is a **tool**, not a service. The General Data Protection
 Regulation (GDPR) applies to **data controllers** and **data
@@ -10,9 +72,9 @@ That said, if you use CGMPy to process personal data (including
 health data, which is a **special category** under GDPR Art. 9), you
 are likely a data controller and have obligations.
 
-This page summarizes the **library's posture**, not legal advice.
+This section summarizes the **library's posture**, not legal advice.
 
-## Posture of the CGMPy library
+### Posture of the CGMPy library
 
 - **CGMPy does not collect any data.** It is a pure-Python library
   that runs locally.
@@ -23,7 +85,7 @@ This page summarizes the **library's posture**, not legal advice.
 - **CGMPy explicitly forbids committing real patient data** to the
   repository (see [SECURITY.md](https://github.com/javierpa95/cgmpy/blob/main/SECURITY.md)).
 
-## What you (the user / controller) must do
+### What you (the user / controller) must do
 
 If you use CGMPy on personal data:
 
@@ -40,7 +102,7 @@ If you use CGMPy on personal data:
 6. **Document your processing** (Art. 30) and run a DPIA if high-risk
    (Art. 35).
 
-## PHI / special category data
+### PHI / special category data
 
 CGM data is **health data** and therefore a special category under
 Art. 9. Treat it as such:
@@ -55,7 +117,7 @@ CGMPy provides a basic anonymization script at
 `scripts/anonymize_cgm.py`. Use it on any real dataset before
 including it in a bug report.
 
-## Anonymization vs. pseudonymization
+### Anonymization vs. pseudonymization
 
 CGMPy's helper produces **pseudonymization** (patient IDs are replaced,
 but timestamps are only shifted, not removed). True anonymization
@@ -68,14 +130,14 @@ If you need stronger guarantees, consider:
 - Using k-anonymity or differential-privacy techniques for cohort
   analyses.
 
-## International transfers
+### International transfers
 
 CGMPy is hosted on GitHub. If you are in the EU and use GitHub, your
 data may be transferred to the US. See
 [GitHub's DPA](https://github.com/security/platform-compliance) for
 their commitments under the EU-US Data Privacy Framework.
 
-## Right to erasure
+### Right to erasure
 
 If a data subject requests erasure (Art. 17):
 
@@ -87,9 +149,11 @@ If a data subject requests erasure (Art. 17):
 CGMPy does not retain any of your data, so there is nothing to erase
 on the library side.
 
+---
+
 ## See also
 
-- [Privacy](privacy.md) — general privacy posture.
 - [Security policy](https://github.com/javierpa95/cgmpy/blob/main/SECURITY.md).
+- [License](https://github.com/javierpa95/cgmpy/blob/main/LICENSE).
 - [GDPR full text](https://gdpr-info.eu/).
 - [EDPB guidelines on health data](https://edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-032020-data-protection-by-design-and-default_en).
