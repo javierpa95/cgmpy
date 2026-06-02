@@ -52,13 +52,16 @@ Chosen option: "[option 1]", because [justification].
 | #   | Title                                                                       | Status   |
 |-----|-----------------------------------------------------------------------------|----------|
 | 0001 | [Record architecture decisions](0001-record-architecture-decisions.md) | Accepted |
+| 0002 | [Single-source configuration with pyproject.toml](0002-pyproject-toml-config.md) | Accepted |
+| 0003 | [Facade + mixin pattern for the public API](0003-facade-mixin-pattern.md) | Accepted |
+| 0004 | [Asymmetric agent harness](0004-agent-harness-asymmetric.md) | Accepted |
 
 ## How to add a new ADR
 
-1. Copy `0001-record-architecture-decisions.md` to a new file:
+1. Copy an existing ADR (e.g., `0002-pyproject-toml-config.md`) to a new file:
    ```bash
-   cp docs/architecture/decisions/0001-record-architecture-decisions.md \
-      docs/architecture/decisions/0002-my-decision.md
+   cp docs/architecture/decisions/0002-pyproject-toml-config.md \
+      docs/architecture/decisions/0005-my-decision.md
    ```
 2. Update the title, status, date, and content.
 3. Add a row to the **Index** table above.
