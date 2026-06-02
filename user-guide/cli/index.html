@@ -12,27 +12,31 @@
         <meta name="author" content="Javier Peñate Arrieta">
       
       
-        <link rel="canonical" href="https://javierpa95.github.io/cgmpy/architecture/decisions/0004-agent-harness-asymmetric/">
+        <link rel="canonical" href="https://javierpa95.github.io/cgmpy/user-guide/cli/">
       
       
+        <link rel="prev" href="../agata-integration/">
+      
+      
+        <link rel="next" href="../../api/data/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>ADR 0004 — Asymmetric agent harness for AI-assisted development - CGMPy — Continuous Glucose Monitoring Analysis</title>
+        <title>Command-line Interface - CGMPy — Continuous Glucose Monitoring Analysis</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adr-0004-asymmetric-agent-harness-for-ai-assisted-development" class="md-skip">
+        <a href="#command-line-interface" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +98,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-header__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
+    <a href="../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-header__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -114,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ADR 0004 — Asymmetric agent harness for AI-assisted development
+              Command-line Interface
             
           </span>
         </div>
@@ -221,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -242,7 +246,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../getting-started/installation/" class="md-tabs__link">
+        <a href="../../getting-started/installation/" class="md-tabs__link">
           
   
   
@@ -260,11 +264,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../user-guide/loading-data/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../loading-data/" class="md-tabs__link">
           
   
   
@@ -286,7 +292,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../api/data/" class="md-tabs__link">
+        <a href="../../api/data/" class="md-tabs__link">
           
   
   
@@ -308,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../development/setup/" class="md-tabs__link">
+        <a href="../../development/setup/" class="md-tabs__link">
           
   
   
@@ -330,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../system-overview/" class="md-tabs__link">
+        <a href="../../architecture/system-overview/" class="md-tabs__link">
           
   
   
@@ -350,7 +356,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../legal/" class="md-tabs__link">
+      <a href="../../legal/" class="md-tabs__link">
         
   
   
@@ -413,7 +419,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-nav__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
+    <a href="../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-nav__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -443,7 +449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -530,7 +536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/installation/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -558,7 +564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -586,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/data-formats/" class="md-nav__link">
+      <a href="../../getting-started/data-formats/" class="md-nav__link">
         
   
   
@@ -618,8 +624,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -641,19 +649,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -671,7 +682,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -689,7 +700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/loading-data/" class="md-nav__link">
+      <a href="../loading-data/" class="md-nav__link">
         
   
   
@@ -717,7 +728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/supported-devices/" class="md-nav__link">
+      <a href="../supported-devices/" class="md-nav__link">
         
   
   
@@ -745,7 +756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/computing-metrics/" class="md-nav__link">
+      <a href="../computing-metrics/" class="md-nav__link">
         
   
   
@@ -773,7 +784,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/visualization/" class="md-nav__link">
+      <a href="../visualization/" class="md-nav__link">
         
   
   
@@ -801,7 +812,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/pregnancy-analysis/" class="md-nav__link">
+      <a href="../pregnancy-analysis/" class="md-nav__link">
         
   
   
@@ -829,7 +840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/agata-integration/" class="md-nav__link">
+      <a href="../agata-integration/" class="md-nav__link">
         
   
   
@@ -854,10 +865,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../user-guide/cli/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command-line Interface
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -873,6 +911,126 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-output-tells-you" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the output tells you
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ci-gate-on-py_agata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI gate on py_agata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagnose-a-user-support-ticket" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnose a user support ticket
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confirm-a-fresh-dev-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirm a fresh dev environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -954,7 +1112,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/data/" class="md-nav__link">
+      <a href="../../api/data/" class="md-nav__link">
         
   
   
@@ -982,7 +1140,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/metrics/" class="md-nav__link">
+      <a href="../../api/metrics/" class="md-nav__link">
         
   
   
@@ -1010,7 +1168,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/plotting/" class="md-nav__link">
+      <a href="../../api/plotting/" class="md-nav__link">
         
   
   
@@ -1038,7 +1196,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/agata/" class="md-nav__link">
+      <a href="../../api/agata/" class="md-nav__link">
         
   
   
@@ -1137,7 +1295,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/setup/" class="md-nav__link">
+      <a href="../../development/setup/" class="md-nav__link">
         
   
   
@@ -1165,7 +1323,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/architecture/" class="md-nav__link">
+      <a href="../../development/architecture/" class="md-nav__link">
         
   
   
@@ -1193,7 +1351,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/testing/" class="md-nav__link">
+      <a href="../../development/testing/" class="md-nav__link">
         
   
   
@@ -1221,7 +1379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/git-workflow/" class="md-nav__link">
+      <a href="../../development/git-workflow/" class="md-nav__link">
         
   
   
@@ -1249,7 +1407,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/release-process/" class="md-nav__link">
+      <a href="../../development/release-process/" class="md-nav__link">
         
   
   
@@ -1309,7 +1467,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../architecture/decisions/" class="md-nav__link ">
               
   
   
@@ -1351,7 +1509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../system-overview/" class="md-nav__link">
+      <a href="../../architecture/system-overview/" class="md-nav__link">
         
   
   
@@ -1388,7 +1546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../legal/" class="md-nav__link">
+      <a href="../../legal/" class="md-nav__link">
         
   
   
@@ -1676,44 +1834,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#context-and-problem-statement" class="md-nav__link">
+  <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Context and Problem Statement
+        Usage
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#considered-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Considered Options
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#decision-outcome" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Decision Outcome
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Decision Outcome">
+    <nav class="md-nav" aria-label="Usage">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#consequences" class="md-nav__link">
+  <a href="#-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Consequences
+        --json
       
     </span>
   </a>
@@ -1726,22 +1862,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pros-and-cons-of-the-options" class="md-nav__link">
+  <a href="#what-the-output-tells-you" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pros and Cons of the Options
+        What the output tells you
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Pros and Cons of the Options">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use cases">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#asymmetric-agents-chosen" class="md-nav__link">
+  <a href="#ci-gate-on-py_agata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Asymmetric agents (chosen)
+        CI gate on py_agata
       
     </span>
   </a>
@@ -1749,10 +1896,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#symmetric-agents" class="md-nav__link">
+  <a href="#diagnose-a-user-support-ticket" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Symmetric agents
+        Diagnose a user support ticket
       
     </span>
   </a>
@@ -1760,10 +1907,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#monolithic-single-agent" class="md-nav__link">
+  <a href="#confirm-a-fresh-dev-environment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Monolithic single-agent
+        Confirm a fresh dev environment
       
     </span>
   </a>
@@ -1772,6 +1919,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1792,7 +1950,7 @@
 
 
   
-    <a href="https://github.com/javierpa95/cgmpy/edit/main/docs/architecture/decisions/0004-agent-harness-asymmetric.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/javierpa95/cgmpy/edit/main/docs/user-guide/cli.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
     </a>
@@ -1800,83 +1958,151 @@
   
 
 
-<h1 id="adr-0004-asymmetric-agent-harness-for-ai-assisted-development">ADR 0004 — Asymmetric agent harness for AI-assisted development<a class="headerlink" href="#adr-0004-asymmetric-agent-harness-for-ai-assisted-development" title="Permanent link">&para;</a></h1>
+<h1 id="command-line-interface">Command-line interface<a class="headerlink" href="#command-line-interface" title="Permanent link">&para;</a></h1>
+<p>CGMPy ships a small command-line tool, <code>cgmpy-info</code>, that prints a snapshot
+of the installed CGMPy environment: package version, Python interpreter, and
+the status of the optional dependencies that the <code>[agata]</code>, <code>[docs]</code>, and
+<code>[dev]</code> extras provide.</p>
+<p>It is intended for sysadmins, ops engineers, support staff, and clinicians
+who need a quick way to check what is installed before opening a support
+ticket or running a script.</p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<p>The tool is installed automatically when you install CGMPy (no extra
+dependencies). Run it from any shell:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cgmpy-info
+</span></code></pre></div>
+<p>Example output:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>CGMPy 0.5.2
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Python 3.11.9 on Linux-6.5.0-x86_64-with-glibc2.38
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Optional dependencies:
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  py_agata        installed (0.0.8)
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  mkdocs          not installed
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  ruff            installed (0.6.9)
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  pytest          installed (8.3.3)
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  mypy            not installed
+</span></code></pre></div>
+<h3 id="-json"><code>--json</code><a class="headerlink" href="#-json" title="Permanent link">&para;</a></h3>
+<p>For scripts and CI, use <code>--json</code> to emit a machine-readable payload that
+is easy to parse with <code>jq</code> or Python:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cgmpy-info<span class="w"> </span>--json
+</span></code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;cgmpy_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.5.2&quot;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;optional_dependencies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&quot;mkdocs&quot;</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="nt">&quot;extra&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;docs&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;missing&quot;</span><span class="p">,</span><span class="w">   </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">},</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">&quot;mypy&quot;</span><span class="p">:</span><span class="w">     </span><span class="p">{</span><span class="nt">&quot;extra&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dev&quot;</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;missing&quot;</span><span class="p">,</span><span class="w">   </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">},</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">&quot;py_agata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;extra&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;agata&quot;</span><span class="p">,</span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;installed&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0.8&quot;</span><span class="p">},</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">&quot;pytest&quot;</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="nt">&quot;extra&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dev&quot;</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;installed&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;8.3.3&quot;</span><span class="p">},</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">&quot;ruff&quot;</span><span class="p">:</span><span class="w">     </span><span class="p">{</span><span class="nt">&quot;extra&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dev&quot;</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;installed&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.6.9&quot;</span><span class="p">}</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="nt">&quot;platform&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Linux-6.5.0-x86_64-with-glibc2.38&quot;</span><span class="p">,</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="nt">&quot;python_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3.11.9&quot;</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="what-the-output-tells-you">What the output tells you<a class="headerlink" href="#what-the-output-tells-you" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cgmpy_version</code></td>
+<td>Installed CGMPy package version.</td>
+</tr>
+<tr>
+<td><code>python_version</code></td>
+<td>Version of the active Python interpreter.</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td>OS / kernel / arch string (from <code>platform.platform()</code>).</td>
+</tr>
+<tr>
+<td><code>optional_dependencies</code></td>
+<td>Map of module name → status. Each entry has:</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;<code>status</code></td>
+<td><code>installed</code> or <code>missing</code>.</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;<code>version</code></td>
+<td>Installed version (or empty string if missing).</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;<code>extra</code></td>
+<td>The pip extra that provides the module.</td>
+</tr>
+</tbody>
+</table>
+<p>The reported optional modules and their extras are:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Pip extra</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>py_agata</code></td>
+<td><code>[agata]</code></td>
+<td>AGATA reference integration.</td>
+</tr>
+<tr>
+<td><code>mkdocs</code></td>
+<td><code>[docs]</code></td>
+<td>Build the documentation site locally.</td>
+</tr>
+<tr>
+<td><code>ruff</code></td>
+<td><code>[dev]</code></td>
+<td>Linter and formatter.</td>
+</tr>
+<tr>
+<td><code>pytest</code></td>
+<td><code>[dev]</code></td>
+<td>Test runner.</td>
+</tr>
+<tr>
+<td><code>mypy</code></td>
+<td><code>[dev]</code></td>
+<td>Static type checker.</td>
+</tr>
+</tbody>
+</table>
+<p>If a module is reported as <code>missing</code>, the human-readable output suggests
+the matching <code>pip install 'cgmpy[extra]'</code> command.</p>
+<h2 id="use-cases">Use cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
+<h3 id="ci-gate-on-py_agata">CI gate on <code>py_agata</code><a class="headerlink" href="#ci-gate-on-py_agata" title="Permanent link">&para;</a></h3>
+<p>Use <code>--json</code> in continuous integration to assert that <code>py_agata</code> is
+available before running AGATA-dependent tests:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">if</span><span class="w"> </span>!<span class="w"> </span>cgmpy-info<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import json,sys; sys.exit(0 if json.load(sys.stdin)[&#39;optional_dependencies&#39;][&#39;py_agata&#39;][&#39;status&#39;]==&#39;installed&#39; else 1)&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;py_agata is not installed; skipping AGATA tests&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">0</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">fi</span>
+</span></code></pre></div>
+<h3 id="diagnose-a-user-support-ticket">Diagnose a user support ticket<a class="headerlink" href="#diagnose-a-user-support-ticket" title="Permanent link">&para;</a></h3>
+<p>When a user reports "AGATA does not work", the first thing to ask is the
+output of <code>cgmpy-info</code>. It shows in one glance whether <code>py_agata</code> is
+present, which Python is active, and which CGMPy version is running.</p>
+<h3 id="confirm-a-fresh-dev-environment">Confirm a fresh dev environment<a class="headerlink" href="#confirm-a-fresh-dev-environment" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;cgmpy[dev,docs,agata]&#39;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cgmpy-info<span class="w">            </span><span class="c1"># should list every optional dep as installed</span>
+</span></code></pre></div>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Status: Accepted</li>
-<li>Date: 2026-06-02</li>
-<li>Deciders: @javierpa95</li>
-</ul>
-<h2 id="context-and-problem-statement">Context and Problem Statement<a class="headerlink" href="#context-and-problem-statement" title="Permanent link">&para;</a></h2>
-<p>CGMPy is developed by a solo maintainer who uses AI coding assistants
-(OpenCode, Cursor, Copilot) extensively. Early sessions showed a
-recurring problem: the AI would make changes outside its area of
-competence (e.g., modifying security-sensitive code while working on
-a plotting feature), or would fail to update documentation after
-changing code.</p>
-<p>We need a multi-agent system where each agent has bounded authority
-and clear domain knowledge, but the solo maintainer must remain the
-sole decision-maker and code-committer.</p>
-<h2 id="considered-options">Considered Options<a class="headerlink" href="#considered-options" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Symmetric agents</strong> — every agent can read and edit any file. Trust
-  the AI to stay on task.</li>
-<li><strong>Asymmetric agents (chosen)</strong> — read-only specialists for domain
-  knowledge, a limited set of execution agents for edits, one
-  orchestrator to coordinate.</li>
-<li><strong>Monolithic single-agent</strong> — one agent prompt that covers the entire
-  codebase.</li>
-</ul>
-<h2 id="decision-outcome">Decision Outcome<a class="headerlink" href="#decision-outcome" title="Permanent link">&para;</a></h2>
-<p>Chosen option: <strong>Asymmetric agents</strong>, because:</p>
-<ol>
-<li>The solo maintainer must remain the single point of commit.
-   Execution agents have edit capability but never commit — they
-   produce diffs for human review.</li>
-<li>Read-only specialists (the Guardians: <code>@data-guardian</code>,
-   <code>@metrics-guardian</code>, <code>@plotting-guardian</code>, <code>@agata-integrator</code>,
-   <code>@security-guard</code>) are consulted for domain advice but cannot
-   modify files.</li>
-<li>Execution agents (<code>@test-engineer</code>, <code>@docs-maintainer</code>,
-   <code>@release-manager</code>) can edit files in their domain, but only
-   when delegated by the orchestrator.</li>
-<li>The orchestrator (<code>cgmpy-architect</code>) loads full context and
-   delegates to specialists. It is the only agent authorized to
-   decide PASS/FAIL on the final review.</li>
-</ol>
-<h3 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Good, because domain experts don't accidentally step on each other.</li>
-<li>Good, because security-sensitive decisions are always reviewed by
-  <code>@security-guard</code> before execution.</li>
-<li>Good, because documentation updates are baked into the workflow
-  (docs-maintainer is always looped in after code changes).</li>
-<li>Bad, because the orchestration overhead adds latency (multiple
-  agent calls per task). Acceptable for a solo maintainer working
-  asynchronously.</li>
-</ul>
-<h2 id="pros-and-cons-of-the-options">Pros and Cons of the Options<a class="headerlink" href="#pros-and-cons-of-the-options" title="Permanent link">&para;</a></h2>
-<h3 id="asymmetric-agents-chosen">Asymmetric agents (chosen)<a class="headerlink" href="#asymmetric-agents-chosen" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Good, clear separation of concerns.</li>
-<li>Good, security by design (editors don't touch sensitive areas
-  without consulting the security guard).</li>
-<li>Good, documentation is never forgotten (docs-maintainer is
-  mandatory in the workflow).</li>
-<li>Bad, more files to maintain than a monolithic approach.</li>
-</ul>
-<h3 id="symmetric-agents">Symmetric agents<a class="headerlink" href="#symmetric-agents" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Good, simpler architecture (one agent type, fewer config files).</li>
-<li>Bad, harder to enforce domain boundaries — a plotting agent could
-  accidentally modify security policy.</li>
-<li>Bad, no built-in documentation update enforcement.</li>
-</ul>
-<h3 id="monolithic-single-agent">Monolithic single-agent<a class="headerlink" href="#monolithic-single-agent" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Good, single prompt to maintain.</li>
-<li>Bad, prompt grows unboundedly and becomes ineffective.</li>
-<li>Bad, no specialization — the agent must know everything about
-  everything.</li>
+<li><a href="../../getting-started/installation/">Installation</a> — pip extras and what
+  they provide.</li>
+<li><a href="../loading-data/">Loading data</a> — what to do once CGMPy is installed.</li>
+<li><a href="../../api/data/">API reference → Data</a> — programmatic access to the same
+  information is available via <code>cgmpy.__version__</code> and
+  <code>importlib.util.find_spec()</code>.</li>
 </ul>
 
 
@@ -1961,10 +2187,10 @@ sole decision-maker and code-committer.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

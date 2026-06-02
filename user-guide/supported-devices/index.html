@@ -12,27 +12,31 @@
         <meta name="author" content="Javier Peñate Arrieta">
       
       
-        <link rel="canonical" href="https://javierpa95.github.io/cgmpy/architecture/decisions/0004-agent-harness-asymmetric/">
+        <link rel="canonical" href="https://javierpa95.github.io/cgmpy/user-guide/supported-devices/">
       
       
+        <link rel="prev" href="../loading-data/">
+      
+      
+        <link rel="next" href="../computing-metrics/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>ADR 0004 — Asymmetric agent harness for AI-assisted development - CGMPy — Continuous Glucose Monitoring Analysis</title>
+        <title>Supported Devices - CGMPy — Continuous Glucose Monitoring Analysis</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adr-0004-asymmetric-agent-harness-for-ai-assisted-development" class="md-skip">
+        <a href="#supported-devices" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +98,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-header__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
+    <a href="../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-header__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -114,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ADR 0004 — Asymmetric agent harness for AI-assisted development
+              Supported Devices
             
           </span>
         </div>
@@ -221,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -242,7 +246,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../getting-started/installation/" class="md-tabs__link">
+        <a href="../../getting-started/installation/" class="md-tabs__link">
           
   
   
@@ -260,11 +264,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../user-guide/loading-data/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../loading-data/" class="md-tabs__link">
           
   
   
@@ -286,7 +292,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../api/data/" class="md-tabs__link">
+        <a href="../../api/data/" class="md-tabs__link">
           
   
   
@@ -308,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../development/setup/" class="md-tabs__link">
+        <a href="../../development/setup/" class="md-tabs__link">
           
   
   
@@ -330,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../system-overview/" class="md-tabs__link">
+        <a href="../../architecture/system-overview/" class="md-tabs__link">
           
   
   
@@ -350,7 +356,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../legal/" class="md-tabs__link">
+      <a href="../../legal/" class="md-tabs__link">
         
   
   
@@ -413,7 +419,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-nav__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
+    <a href="../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-nav__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -443,7 +449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -530,7 +536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/installation/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -558,7 +564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -586,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started/data-formats/" class="md-nav__link">
+      <a href="../../getting-started/data-formats/" class="md-nav__link">
         
   
   
@@ -618,8 +624,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -641,19 +649,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -671,7 +682,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -689,7 +700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/loading-data/" class="md-nav__link">
+      <a href="../loading-data/" class="md-nav__link">
         
   
   
@@ -714,10 +725,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../user-guide/supported-devices/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Devices
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -733,6 +771,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dexcom-clarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dexcom Clarity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#freestyle-libreview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FreeStyle Libreview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#medtronic-carelink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Medtronic CareLink
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tandem-tslim-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tandem t:slim (Source)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dont-see-your-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Don't see your device?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -745,7 +869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/computing-metrics/" class="md-nav__link">
+      <a href="../computing-metrics/" class="md-nav__link">
         
   
   
@@ -773,7 +897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/visualization/" class="md-nav__link">
+      <a href="../visualization/" class="md-nav__link">
         
   
   
@@ -801,7 +925,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/pregnancy-analysis/" class="md-nav__link">
+      <a href="../pregnancy-analysis/" class="md-nav__link">
         
   
   
@@ -829,7 +953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/agata-integration/" class="md-nav__link">
+      <a href="../agata-integration/" class="md-nav__link">
         
   
   
@@ -857,7 +981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/cli/" class="md-nav__link">
+      <a href="../cli/" class="md-nav__link">
         
   
   
@@ -954,7 +1078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/data/" class="md-nav__link">
+      <a href="../../api/data/" class="md-nav__link">
         
   
   
@@ -982,7 +1106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/metrics/" class="md-nav__link">
+      <a href="../../api/metrics/" class="md-nav__link">
         
   
   
@@ -1010,7 +1134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/plotting/" class="md-nav__link">
+      <a href="../../api/plotting/" class="md-nav__link">
         
   
   
@@ -1038,7 +1162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/agata/" class="md-nav__link">
+      <a href="../../api/agata/" class="md-nav__link">
         
   
   
@@ -1137,7 +1261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/setup/" class="md-nav__link">
+      <a href="../../development/setup/" class="md-nav__link">
         
   
   
@@ -1165,7 +1289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/architecture/" class="md-nav__link">
+      <a href="../../development/architecture/" class="md-nav__link">
         
   
   
@@ -1193,7 +1317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/testing/" class="md-nav__link">
+      <a href="../../development/testing/" class="md-nav__link">
         
   
   
@@ -1221,7 +1345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/git-workflow/" class="md-nav__link">
+      <a href="../../development/git-workflow/" class="md-nav__link">
         
   
   
@@ -1249,7 +1373,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../development/release-process/" class="md-nav__link">
+      <a href="../../development/release-process/" class="md-nav__link">
         
   
   
@@ -1309,7 +1433,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../architecture/decisions/" class="md-nav__link ">
               
   
   
@@ -1351,7 +1475,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../system-overview/" class="md-nav__link">
+      <a href="../../architecture/system-overview/" class="md-nav__link">
         
   
   
@@ -1388,7 +1512,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../legal/" class="md-nav__link">
+      <a href="../../legal/" class="md-nav__link">
         
   
   
@@ -1676,10 +1800,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#context-and-problem-statement" class="md-nav__link">
+  <a href="#dexcom-clarity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Context and Problem Statement
+        Dexcom Clarity
       
     </span>
   </a>
@@ -1687,10 +1811,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#considered-options" class="md-nav__link">
+  <a href="#freestyle-libreview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Considered Options
+        FreeStyle Libreview
       
     </span>
   </a>
@@ -1698,80 +1822,46 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#decision-outcome" class="md-nav__link">
+  <a href="#medtronic-carelink" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Decision Outcome
+        Medtronic CareLink
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Decision Outcome">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#consequences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Consequences
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pros-and-cons-of-the-options" class="md-nav__link">
+  <a href="#tandem-tslim-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pros and Cons of the Options
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Pros and Cons of the Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#asymmetric-agents-chosen" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Asymmetric agents (chosen)
+        Tandem t:slim (Source)
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#symmetric-agents" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#dont-see-your-device" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Symmetric agents
+        Don't see your device?
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#monolithic-single-agent" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Monolithic single-agent
+        See also
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1792,7 +1882,7 @@
 
 
   
-    <a href="https://github.com/javierpa95/cgmpy/edit/main/docs/architecture/decisions/0004-agent-harness-asymmetric.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/javierpa95/cgmpy/edit/main/docs/user-guide/supported-devices.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
     </a>
@@ -1800,83 +1890,88 @@
   
 
 
-<h1 id="adr-0004-asymmetric-agent-harness-for-ai-assisted-development">ADR 0004 — Asymmetric agent harness for AI-assisted development<a class="headerlink" href="#adr-0004-asymmetric-agent-harness-for-ai-assisted-development" title="Permanent link">&para;</a></h1>
+<h1 id="supported-devices">Supported Devices<a class="headerlink" href="#supported-devices" title="Permanent link">&para;</a></h1>
+<p>CGMPy auto-detects four CGM device export formats. This page lists them and
+explains how to export data from each. If your device is not on the list, see
+the <a href="#dont-see-your-device">Custom format</a> section at the bottom.</p>
+<h2 id="dexcom-clarity">Dexcom Clarity<a class="headerlink" href="#dexcom-clarity" title="Permanent link">&para;</a></h2>
+<p>Dexcom exports CGM data from the <strong>Clarity</strong> web portal.</p>
 <ul>
-<li>Status: Accepted</li>
-<li>Date: 2026-06-02</li>
-<li>Deciders: @javierpa95</li>
+<li><strong>How to export:</strong> Sign in to <a href="https://clarity.dexcom.com">clarity.dexcom.com</a>,
+  open <strong>Reports</strong>, choose <strong>Export</strong>, and download the CSV.</li>
+<li><strong>Column names (header):</strong></li>
+<li><code>Marca temporal (AAAA-MM-DDThh:mm:ss)</code> (timestamp)</li>
+<li><code>Nivel de glucosa (mg/dL)</code> (glucose)</li>
+<li><strong>Loader class:</strong> <code>Dexcom</code></li>
 </ul>
-<h2 id="context-and-problem-statement">Context and Problem Statement<a class="headerlink" href="#context-and-problem-statement" title="Permanent link">&para;</a></h2>
-<p>CGMPy is developed by a solo maintainer who uses AI coding assistants
-(OpenCode, Cursor, Copilot) extensively. Early sessions showed a
-recurring problem: the AI would make changes outside its area of
-competence (e.g., modifying security-sensitive code while working on
-a plotting feature), or would fail to update documentation after
-changing code.</p>
-<p>We need a multi-agent system where each agent has bounded authority
-and clear domain knowledge, but the solo maintainer must remain the
-sole decision-maker and code-committer.</p>
-<h2 id="considered-options">Considered Options<a class="headerlink" href="#considered-options" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dexcom</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">Dexcom</span><span class="p">(</span><span class="s2">&quot;dexcom_clarity_export.csv&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="freestyle-libreview">FreeStyle Libreview<a class="headerlink" href="#freestyle-libreview" title="Permanent link">&para;</a></h2>
+<p>Abbott's FreeStyle Libre / Libre 2 / Libre 3 sensors report through the
+<strong>Libreview</strong> cloud portal.</p>
 <ul>
-<li><strong>Symmetric agents</strong> — every agent can read and edit any file. Trust
-  the AI to stay on task.</li>
-<li><strong>Asymmetric agents (chosen)</strong> — read-only specialists for domain
-  knowledge, a limited set of execution agents for edits, one
-  orchestrator to coordinate.</li>
-<li><strong>Monolithic single-agent</strong> — one agent prompt that covers the entire
-  codebase.</li>
+<li><strong>How to export:</strong> Sign in to <a href="https://www.libreview.com">www.libreview.com</a>,
+  open the <strong>Glucose History</strong> report, and click <strong>Download CSV</strong>.</li>
+<li><strong>Column names (header, row 2):</strong></li>
+<li><code>Sello de tiempo del dispositivo</code> (timestamp)</li>
+<li><code>Historial de glucosa mg/dL</code> (glucose)</li>
+<li><strong>Loader class:</strong> <code>Libreview</code></li>
 </ul>
-<h2 id="decision-outcome">Decision Outcome<a class="headerlink" href="#decision-outcome" title="Permanent link">&para;</a></h2>
-<p>Chosen option: <strong>Asymmetric agents</strong>, because:</p>
-<ol>
-<li>The solo maintainer must remain the single point of commit.
-   Execution agents have edit capability but never commit — they
-   produce diffs for human review.</li>
-<li>Read-only specialists (the Guardians: <code>@data-guardian</code>,
-   <code>@metrics-guardian</code>, <code>@plotting-guardian</code>, <code>@agata-integrator</code>,
-   <code>@security-guard</code>) are consulted for domain advice but cannot
-   modify files.</li>
-<li>Execution agents (<code>@test-engineer</code>, <code>@docs-maintainer</code>,
-   <code>@release-manager</code>) can edit files in their domain, but only
-   when delegated by the orchestrator.</li>
-<li>The orchestrator (<code>cgmpy-architect</code>) loads full context and
-   delegates to specialists. It is the only agent authorized to
-   decide PASS/FAIL on the final review.</li>
-</ol>
-<h3 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Libreview</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">Libreview</span><span class="p">(</span><span class="s2">&quot;libreview_history.csv&quot;</span><span class="p">)</span>  <span class="c1"># header=2 by default</span>
+</span></code></pre></div>
+<h2 id="medtronic-carelink">Medtronic CareLink<a class="headerlink" href="#medtronic-carelink" title="Permanent link">&para;</a></h2>
+<p>Medtronic pumps and sensors upload to the <strong>CareLink</strong> portal.</p>
 <ul>
-<li>Good, because domain experts don't accidentally step on each other.</li>
-<li>Good, because security-sensitive decisions are always reviewed by
-  <code>@security-guard</code> before execution.</li>
-<li>Good, because documentation updates are baked into the workflow
-  (docs-maintainer is always looped in after code changes).</li>
-<li>Bad, because the orchestration overhead adds latency (multiple
-  agent calls per task). Acceptable for a solo maintainer working
-  asynchronously.</li>
+<li><strong>How to export:</strong> Sign in to <a href="https://carelink.minimed.eu">carelink.minimed.eu</a>,
+  open <strong>Reports</strong>, select a date range, and <strong>Export</strong> the CSV.</li>
+<li><strong>Column names (header):</strong></li>
+<li><code>Fecha y hora</code> (timestamp)</li>
+<li><code>Valor del sensor (mg/dL)</code> (glucose)</li>
+<li><strong>Loader class:</strong> <code>MedtronicCarelink</code></li>
 </ul>
-<h2 id="pros-and-cons-of-the-options">Pros and Cons of the Options<a class="headerlink" href="#pros-and-cons-of-the-options" title="Permanent link">&para;</a></h2>
-<h3 id="asymmetric-agents-chosen">Asymmetric agents (chosen)<a class="headerlink" href="#asymmetric-agents-chosen" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">MedtronicCarelink</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">MedtronicCarelink</span><span class="p">(</span><span class="s2">&quot;carelink_export.csv&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="tandem-tslim-source">Tandem t:slim (Source)<a class="headerlink" href="#tandem-tslim-source" title="Permanent link">&para;</a></h2>
+<p>Tandem pumps upload sensor data to the <strong>Tandem Source</strong> platform.</p>
 <ul>
-<li>Good, clear separation of concerns.</li>
-<li>Good, security by design (editors don't touch sensitive areas
-  without consulting the security guard).</li>
-<li>Good, documentation is never forgotten (docs-maintainer is
-  mandatory in the workflow).</li>
-<li>Bad, more files to maintain than a monolithic approach.</li>
+<li><strong>How to export:</strong> Sign in to <a href="https://source.tandemdiabetes.com">source.tandemdiabetes.com</a>,
+  choose a date range, and download the <strong>CSV</strong> report.</li>
+<li><strong>Column names (header):</strong></li>
+<li><code>Timestamp</code> (timestamp)</li>
+<li><code>CGM Glucose Value (mg/dL)</code> (glucose)</li>
+<li><strong>Loader class:</strong> <code>TandemDiabetes</code></li>
 </ul>
-<h3 id="symmetric-agents">Symmetric agents<a class="headerlink" href="#symmetric-agents" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">TandemDiabetes</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">TandemDiabetes</span><span class="p">(</span><span class="s2">&quot;tandem_source_export.csv&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="dont-see-your-device">Don't see your device?<a class="headerlink" href="#dont-see-your-device" title="Permanent link">&para;</a></h2>
+<p>CGMPy falls back to a generic loader that only needs two columns: a timestamp
+and a glucose value. Pass their names explicitly with <code>date_col=</code> and
+<code>glucose_col=</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModularGlucoseData</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">ModularGlucoseData</span><span class="p">(</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;my_export.csv&quot;</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">date_col</span><span class="o">=</span><span class="s2">&quot;Datetime&quot;</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">glucose_col</span><span class="o">=</span><span class="s2">&quot;Sensor Glucose (mg/dL)&quot;</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>For a full list of accepted column aliases, see
+<a href="../../getting-started/data-formats/">Data formats</a>. To request a built-in
+loader for a new device, open an issue on GitHub.</p>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Good, simpler architecture (one agent type, fewer config files).</li>
-<li>Bad, harder to enforce domain boundaries — a plotting agent could
-  accidentally modify security policy.</li>
-<li>Bad, no built-in documentation update enforcement.</li>
-</ul>
-<h3 id="monolithic-single-agent">Monolithic single-agent<a class="headerlink" href="#monolithic-single-agent" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Good, single prompt to maintain.</li>
-<li>Bad, prompt grows unboundedly and becomes ineffective.</li>
-<li>Bad, no specialization — the agent must know everything about
-  everything.</li>
+<li><a href="../loading-data/">Loading data</a> — the full loading pipeline.</li>
+<li><a href="../../getting-started/data-formats/">Data formats</a> — required columns and
+  aliases.</li>
+<li><a href="../../api/data/">API reference → Data</a> — every loader and method.</li>
 </ul>
 
 
@@ -1961,10 +2056,10 @@ sole decision-maker and code-committer.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

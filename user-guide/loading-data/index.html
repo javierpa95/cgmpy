@@ -18,7 +18,7 @@
         <link rel="prev" href="../../getting-started/data-formats/">
       
       
-        <link rel="next" href="../computing-metrics/">
+        <link rel="next" href="../supported-devices/">
       
       
         
@@ -641,6 +641,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -850,6 +854,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#columnnotfounderror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ColumnNotFoundError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidcsvformaterror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InvalidCSVFormatError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devicedetectionerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DeviceDetectionError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emptydataerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EmptyDataError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#agatanotinstallederror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AgataNotInstalledError
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -864,6 +940,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported-devices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Devices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -968,6 +1072,34 @@
     
   
     AGATA Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command-line Interface
   
 
     
@@ -1873,6 +2005,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#columnnotfounderror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ColumnNotFoundError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidcsvformaterror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InvalidCSVFormatError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devicedetectionerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DeviceDetectionError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emptydataerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EmptyDataError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#agatanotinstallederror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AgataNotInstalledError
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1910,7 +2114,9 @@
 
 <h1 id="loading-data">Loading Data<a class="headerlink" href="#loading-data" title="Permanent link">&para;</a></h1>
 <p>CGMPy provides several ways to ingest CGM data, from a one-line helper to
-fully controlled per-device loaders.</p>
+fully controlled per-device loaders. See
+<a href="../supported-devices/">Supported devices</a> for the list of auto-detected
+formats.</p>
 <h2 id="one-line-loader">One-line loader<a class="headerlink" href="#one-line-loader" title="Permanent link">&para;</a></h2>
 <p>The <code>GlucoseAnalysis</code> facade takes a path and does everything:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlucoseAnalysis</span>
@@ -2016,8 +2222,80 @@ fully controlled per-device loaders.</p>
 </span></code></pre></div>
 <p>The Parquet writer preserves dtypes, uses snappy compression, and is
 ~10× faster to re-read than CSV.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p>All CGMPy-raised errors inherit from <code>cgmpy.errors.CGMPyError</code>. The
+subclasses below are the ones you will encounter most often in the loading
+path.</p>
+<h3 id="columnnotfounderror"><code>ColumnNotFoundError</code><a class="headerlink" href="#columnnotfounderror" title="Permanent link">&para;</a></h3>
+<p>Your CSV is missing the time column (or whichever column CGMPy expected for
+the auto-detected device). Either it is not a recognized device export, or
+you need to pass <code>date_col=...</code> and <code>glucose_col=...</code> to <code>ModularGlucoseData</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">CGMPyError</span><span class="p">,</span> <span class="n">ColumnNotFoundError</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModularGlucoseData</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">ModularGlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">except</span> <span class="n">ColumnNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">ModularGlucoseData</span><span class="p">(</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        <span class="s2">&quot;export.csv&quot;</span><span class="p">,</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="n">date_col</span><span class="o">=</span><span class="s2">&quot;Datetime&quot;</span><span class="p">,</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        <span class="n">glucose_col</span><span class="o">=</span><span class="s2">&quot;Sensor Glucose (mg/dL)&quot;</span><span class="p">,</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="p">)</span>
+</span></code></pre></div>
+<h3 id="invalidcsvformaterror"><code>InvalidCSVFormatError</code><a class="headerlink" href="#invalidcsvformaterror" title="Permanent link">&para;</a></h3>
+<p>The CSV could not be parsed. Try specifying <code>delimiter=';'</code> (some locales
+export with semicolons), or check that the file is not corrupted / not
+actually a text file saved with the <code>.csv</code> extension.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidCSVFormatError</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">ModularGlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">except</span> <span class="n">InvalidCSVFormatError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot parse </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="devicedetectionerror"><code>DeviceDetectionError</code><a class="headerlink" href="#devicedetectionerror" title="Permanent link">&para;</a></h3>
+<p>We could not auto-detect the device. The exception message lists the
+columns that were found. Pass the loader class explicitly
+(e.g. <code>Dexcom("file.csv")</code>), or use <code>ModularGlucoseData</code> with
+<code>date_col=</code> / <code>glucose_col=</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dexcom</span><span class="p">,</span> <span class="n">DeviceDetectionError</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModularGlucoseData</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">loader</span> <span class="o">=</span> <span class="n">ModularGlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="k">except</span> <span class="n">DeviceDetectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found columns: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">columns_found</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">Dexcom</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>  <span class="c1"># try Dexcom explicitly</span>
+</span></code></pre></div>
+<h3 id="emptydataerror"><code>EmptyDataError</code><a class="headerlink" href="#emptydataerror" title="Permanent link">&para;</a></h3>
+<p>No rows remained after filtering. Check that your <code>start_date</code> /
+<code>end_date</code> range actually overlaps with the file, and that the file is
+not itself empty.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmptyDataError</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">jan</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-01-31&quot;</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">except</span> <span class="n">EmptyDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Empty after: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">context</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="agatanotinstallederror"><code>AgataNotInstalledError</code><a class="headerlink" href="#agatanotinstallederror" title="Permanent link">&para;</a></h3>
+<p>You need <code>py_agata</code> for the AGATA comparison. Install the optional
+<code>[agata]</code> extra:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;cgmpy[agata]&#39;</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgataNotInstalledError</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">analysis</span><span class="o">.</span><span class="n">run_agata_comparison</span><span class="p">()</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">except</span> <span class="n">AgataNotInstalledError</span><span class="p">:</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run: pip install &#39;cgmpy[agata]&#39;&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>For the full error hierarchy, see <code>cgmpy.errors</code> in the
+<a href="../../api/data/#exceptions">API reference</a>.</p>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
+<li><a href="../supported-devices/">Supported devices</a> — auto-detected formats.</li>
 <li><a href="../../getting-started/data-formats/">Data formats</a> — required columns and aliases.</li>
 <li><a href="../../api/data/">API reference → Data</a> — every class and method.</li>
 </ul>
