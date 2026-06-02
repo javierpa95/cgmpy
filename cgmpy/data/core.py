@@ -210,6 +210,11 @@ class ModularGlucoseData:
         # Step 2: Rename columns
         t2 = time.time()
         data = self.processor.rename_columns(raw_data, date_col, glucose_col)
+        # After renaming, the columns are always "time" and "glucose".
+        # Update the instance attributes so downstream consumers (e.g.
+        # the AGATA adapter) reference the correct column names.
+        self.date_col = "time"
+        self.glucose_col = "glucose"
         t3 = time.time()
 
         # Step 3: Filter by dates
