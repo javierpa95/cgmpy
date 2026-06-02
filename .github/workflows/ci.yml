@@ -62,7 +62,11 @@ jobs:
         run: bandit -r cgmpy/ -ll
 
       - name: pip-audit
-        run: pip-audit || echo "::warning::pip-audit found issues; see https://github.com/javierpa95/cgmpy/security/dependabot"
+        # Block on known-vulnerable dependencies. CGMPy handles medical
+        # data; a "warning" here is not a soft signal. If a transitive
+        # dependency is flagged, fix it (pin a safe version, replace,
+        # or open an issue) — do not silence the failure.
+        run: pip-audit
 
   # ------------------------------------------------------------------
   # Test matrix (multi-OS, multi-Python)
