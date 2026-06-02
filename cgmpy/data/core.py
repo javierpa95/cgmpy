@@ -138,7 +138,7 @@ class ModularGlucoseData:
         if isinstance(target_type, GlucoseTargets):
             self.targets = target_type
         else:
-            self.targets = get_targets(target_type)
+            self.targets = get_targets(target_type)  # type: ignore[assignment]
 
         # Initialize modules
         self.loader = DataLoader(self.logger)
@@ -161,7 +161,7 @@ class ModularGlucoseData:
         )
 
         # Dictionary to store operation logs
-        self.logs = {}
+        self.logs: dict[str, Any] = {}
 
     def _setup_logger(self) -> logging.Logger:
         """
@@ -464,6 +464,6 @@ class ModularGlucoseData:
 
         # Refresh trimesters if PregnancyData
         if hasattr(self, "_split_trimesters"):
-            new_instance.trimesters = new_instance._split_trimesters()
+            new_instance.trimesters = new_instance._split_trimesters()  # type: ignore[attr-defined]
 
         return new_instance
