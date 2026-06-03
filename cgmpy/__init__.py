@@ -49,6 +49,6 @@ __all__ = [
 
 
 # Package info
-__version__ = "0.5.2"
+__version__ = "0.6.0"
 __author__ = "Javier Peñate Arrieta"
 __description__ = "Modular package for continuous glucose monitoring (CGM) data analysis"
