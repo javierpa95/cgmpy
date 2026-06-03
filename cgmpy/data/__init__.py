@@ -6,7 +6,7 @@ This module provides a modular architecture for glucose data handling:
 - DataProcessor: Data processing and validation
 - DataAnalyzer: Basic data analysis
 - DataExporter: Export to different formats
-- ModularGlucoseData: Main class integrating all modules
+- GlucoseData: Main class integrating all modules
 
 Specialized classes by device:
 - Dexcom: For Dexcom Clarity data
@@ -17,7 +17,7 @@ Specialized classes by device:
 
 # Import main classes
 from .analyzer import DataAnalyzer
-from .core import ModularGlucoseData
+from .core import GlucoseData
 from .exporter import DataExporter
 from .loader import DataLoader
 from .pregnancy_data import PregnancyData, PregnancyDataHandler
@@ -38,10 +38,10 @@ __all__ = [
     "DataExporter",
     "DataLoader",
     "DataProcessor",
+    "GlucoseData",
     "Dexcom",
     "Libreview",
     "MedtronicCarelink",
-    "ModularGlucoseData",
     "PregnancyData",
     "PregnancyDataHandler",
     "TandemDiabetes",

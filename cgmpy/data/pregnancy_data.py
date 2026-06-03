@@ -6,13 +6,13 @@ import datetime
 
 import pandas as pd
 
-from .core import ModularGlucoseData
+from .core import GlucoseData
 
 
-class PregnancyData(ModularGlucoseData):
+class PregnancyData(GlucoseData):
     """
     Class for managing pregnancy-specific data and dates.
-    Inherits from ModularGlucoseData to integrate base loading and processing,
+    Inherits from GlucoseData to integrate base loading and processing,
     adding trimester segmentation.
     """
 
@@ -37,7 +37,7 @@ class PregnancyData(ModularGlucoseData):
         """
         Initializes pregnancy data.
         """
-        # Base initialization of ModularGlucoseData
+        # Base initialization of GlucoseData
         super().__init__(
             data_source=data_source,
             date_col=date_col,
@@ -173,7 +173,7 @@ class PregnancyData(ModularGlucoseData):
 
             trimester_details.append(f"  * {label}: {count} records ({coverage:.1f}% coverage)")
 
-        # Base summary from ModularGlucoseData
+        # Base summary from GlucoseData
         base_summary = super().__str__()
 
         summary = [

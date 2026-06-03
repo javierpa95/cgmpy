@@ -122,7 +122,7 @@ class DeviceDetectionError(DataError):
             f"Found columns: {self.columns_found}. "
             f"Supported auto-detected devices: Dexcom Clarity, FreeStyle "
             f"Libreview, Medtronic CareLink, Tandem Diabetes. "
-            f"Use ModularGlucoseData(file, date_col=..., glucose_col=...) "
+            f"Use GlucoseData(file, date_col=..., glucose_col=...) "
             f"to load a custom format manually."
         )
         super().__init__(msg)

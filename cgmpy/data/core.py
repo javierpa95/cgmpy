@@ -11,13 +11,14 @@ from typing import Any, Union
 import pandas as pd
 
 from ..metrics.targets import GlucoseTargets, get_targets
+from ..metrics.units import GlucoseUnit, convert
 from .analyzer import DataAnalyzer
 from .exporter import DataExporter
 from .loader import DataLoader
 from .processor import DataProcessor
 
 
-class ModularGlucoseData:
+class GlucoseData:
     """
     Refactored main class for modular glucose data management.
 
@@ -31,37 +32,39 @@ class ModularGlucoseData:
     @classmethod
     def from_sources(
         cls,
-        sources: list[Union[str, pd.DataFrame, "ModularGlucoseData"]],
+        sources: list[Union[str, pd.DataFrame, "GlucoseData"]],
         date_col: str = "time",
         glucose_col: str = "glucose",
         delimiter: str | None = None,
         header: int = 0,
         log: bool = False,
         target_type: str = "diabetes",
+        unit: str | GlucoseUnit = GlucoseUnit.MG_DL,
         **kwargs,
-    ) -> "ModularGlucoseData":
+    ) -> "GlucoseData":
         """
         Creates an instance by merging multiple data sources.
 
         This method handles loading, column renaming, and initial merging.
         The constructor will then handle duplicate removal and sorting.
 
-        :param sources: List of sources (paths, DataFrames, or ModularGlucoseData instances)
+        :param sources: List of sources (paths, DataFrames, or GlucoseData instances)
         :param date_col: Default date column name for new sources
         :param glucose_col: Default glucose column name for new sources
         :param delimiter: Delimiter for CSV files
         :param header: Header row for CSV files
         :param log: Whether to enable logging
         :param target_type: Type of glucose targets ('diabetes' or 'pregnancy')
+        :param unit: Glucose unit of the data ('mg/dL' or 'mmol/L')
         :param kwargs: Additional arguments for the constructor
-        :return: A new ModularGlucoseData instance containing all merged data
+        :return: A new GlucoseData instance containing all merged data
         """
         temp_loader = DataLoader()
         temp_processor = DataProcessor()
         all_dfs = []
 
         for source in sources:
-            if isinstance(source, ModularGlucoseData):
+            if isinstance(source, GlucoseData):
                 # If it's another instance, we take its already processed data
                 df = source.get_raw_data()
                 # These are already named 'time' and 'glucose'
@@ -94,6 +97,7 @@ class ModularGlucoseData:
             glucose_col="glucose",
             log=log,
             target_type=target_type,
+            unit=unit,
             **kwargs,
         )
 
@@ -108,6 +112,7 @@ class ModularGlucoseData:
         end_date: str | datetime.datetime | None = None,
         log: bool = False,
         target_type: str = "diabetes",
+        unit: str | GlucoseUnit = GlucoseUnit.MG_DL,
         regularize: bool = False,
         regularize_interval: int = 5,
         regularize_max_gap: int = 30,
@@ -124,6 +129,7 @@ class ModularGlucoseData:
         :param end_date: End date for filtering data (optional)
         :param log: If True, enables detailed performance logs
         :param target_type: Type of glucose targets ('diabetes' or 'pregnancy')
+        :param unit: Glucose unit of the data ('mg/dL' or 'mmol/L')
         """
         # Logging configuration
         self.log = log
@@ -133,6 +139,12 @@ class ModularGlucoseData:
         self.date_col = date_col
         self.glucose_col = glucose_col
         self.target_type = target_type
+        if isinstance(unit, str):
+            self._unit = GlucoseUnit(unit)
+        elif isinstance(unit, GlucoseUnit):
+            self._unit = unit
+        else:
+            self._unit = GlucoseUnit.MG_DL
 
         # Initialize targets
         if isinstance(target_type, GlucoseTargets):
@@ -162,6 +174,58 @@ class ModularGlucoseData:
 
         # Dictionary to store operation logs
         self.logs: dict[str, Any] = {}
+
+    @property
+    def glucose(self) -> pd.Series:
+        """Glucose values as a pandas Series.
+
+        Convenience accessor for ``self.data["glucose"]``.
+
+        Returns:
+            pd.Series: Glucose values in mg/dL.
+        """
+        return self.data["glucose"]
+
+    @property
+    def timestamps(self) -> pd.Series:
+        """Timestamps as a pandas Series.
+
+        Convenience accessor for ``self.data["time"]``.
+
+        Returns:
+            pd.Series: Timestamps of glucose readings.
+        """
+        return self.data["time"]
+
+    @property
+    def unit(self) -> GlucoseUnit:
+        """Glucose unit of the data.
+
+        Returns:
+            GlucoseUnit: The unit of the glucose values.
+        """
+        return self._unit
+
+    @unit.setter
+    def unit(self, value: GlucoseUnit | str):
+        if isinstance(value, str):
+            self._unit = GlucoseUnit(value)
+        elif isinstance(value, GlucoseUnit):
+            self._unit = value
+
+    def glucose_in_unit(self, unit: GlucoseUnit | str = GlucoseUnit.MG_DL) -> pd.Series:
+        """Return glucose values converted to the specified unit.
+
+        Args:
+            unit: Target unit.
+
+        Returns:
+            Glucose values in the requested unit.
+        """
+        target = GlucoseUnit(unit) if isinstance(unit, str) else unit
+        if target == self._unit:
+            return self.glucose
+        return convert(self.glucose, self._unit, target)
 
     def _setup_logger(self) -> logging.Logger:
         """
@@ -379,7 +443,7 @@ class ModularGlucoseData:
         self,
         start_date: str | datetime.datetime,
         end_date: str | datetime.datetime,
-    ) -> "ModularGlucoseData":
+    ) -> "GlucoseData":
         """
         Creates a new instance filtered by date range.
 
@@ -395,7 +459,7 @@ class ModularGlucoseData:
 
     def filter_by_glucose_range(
         self, min_glucose: float, max_glucose: float
-    ) -> "ModularGlucoseData":
+    ) -> "GlucoseData":
         """
         Creates a new instance filtered by glucose range.
 
@@ -411,7 +475,7 @@ class ModularGlucoseData:
 
         return self._create_filtered_instance(filtered_data)
 
-    def regularize(self, interval_mins: int = 5, max_gap_mins: int = 30) -> "ModularGlucoseData":
+    def regularize(self, interval_mins: int = 5, max_gap_mins: int = 30) -> "GlucoseData":
         """
         Regularizes the current instance's data in-place.
         Returns self for method chaining.
@@ -421,7 +485,7 @@ class ModularGlucoseData:
             max_gap_mins: Maximum gap to interpolate.
 
         Returns:
-            ModularGlucoseData: The current instance with uniform frequency.
+            GlucoseData: The current instance with uniform frequency.
         """
         # 1. Use processor to regularize data
         self.data = self.processor.regularize(
@@ -445,12 +509,12 @@ class ModularGlucoseData:
 
         return self
 
-    def _create_filtered_instance(self, filtered_data: pd.DataFrame) -> "ModularGlucoseData":
+    def _create_filtered_instance(self, filtered_data: pd.DataFrame) -> "GlucoseData":
         """
         Creates a new instance (clone) with modified data.
 
         :param filtered_data: DataFrame with filtered or modified data
-        :return: New ModularGlucoseData instance
+        :return: New GlucoseData instance
         """
         new_instance = copy.copy(self)
         new_instance.logs = {}
@@ -467,3 +531,6 @@ class ModularGlucoseData:
             new_instance.trimesters = new_instance._split_trimesters()  # type: ignore[attr-defined]
 
         return new_instance
+
+
+

@@ -10,7 +10,31 @@ import datetime
 import pandas as pd
 
 from ..errors import DeviceDetectionError
-from .core import ModularGlucoseData
+from .core import GlucoseData
+
+
+def _device_str(cls_name: str, info: dict) -> str:
+    """Generate a standardised device info string.
+
+    Args:
+        cls_name: The device class name (e.g. 'Dexcom').
+        info: The info dictionary from :meth:`~cgmpy.data.analyzer.DataAnalyzer.get_basic_info`.
+
+    Returns:
+        Formatted string with device info.
+    """
+    return (
+        f"{cls_name} CGM Device\n"
+        f"====================\n"
+        f"  Records: {info.get('n_records', 'N/A'):,}\n"
+        f"  Start: {info.get('start_date', 'N/A')}\n"
+        f"  End: {info.get('end_date', 'N/A')}\n"
+        f"  Completeness: {info.get('completeness', 'N/A'):.1f}%\n"
+        f"  Typical interval: {info.get('typical_interval', 'N/A')} min\n"
+        f"  Mean glucose: {info.get('mean_glucose', 'N/A')} mg/dL\n"
+        f"  GMI: {info.get('gmi', 'N/A')}%\n"
+    )
+
 
 #: Tuple of device type strings recognised by :func:`detect_device_type` and
 #: :func:`create_specialized_loader`. Used in error messages and for sanity
@@ -18,11 +42,11 @@ from .core import ModularGlucoseData
 SUPPORTED_DEVICES: tuple[str, ...] = ("dexcom", "libreview", "medtronic", "tandem")
 
 
-class Dexcom(ModularGlucoseData):
+class Dexcom(GlucoseData):
     """
     Specialized class for Dexcom device data.
 
-    This class inherits from ModularGlucoseData and automatically configures
+    This class inherits from GlucoseData and automatically configures
     the specific column names for files exported from Dexcom Clarity.
     """
 
@@ -56,22 +80,14 @@ class Dexcom(ModularGlucoseData):
 
     def __str__(self) -> str:
         """Custom representation for Dexcom."""
-        info = self.info()
-        return (
-            f"Dexcom Data: {info['n_records']} readings between "
-            f"{info['start_date']} and {info['end_date']}.\n"
-            f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['completeness']:.1f}%\n"
-            f"Disconnections detected: {info['n_disconnections']}\n"
-            f"Memory usage: {info['memory_usage_mb']:.2f} MB"
-        )
+        return _device_str("Dexcom", self.info())
 
 
-class Libreview(ModularGlucoseData):
+class Libreview(GlucoseData):
     """
     Specialized class for Libreview device data.
 
-    This class inherits from ModularGlucoseData and automatically configures
+    This class inherits from GlucoseData and automatically configures
     the specific column names for files exported from Libreview.
     """
 
@@ -108,22 +124,14 @@ class Libreview(ModularGlucoseData):
 
     def __str__(self) -> str:
         """Custom representation for Libreview."""
-        info = self.info()
-        return (
-            f"Libreview Data: {info['n_records']} readings between "
-            f"{info['start_date']} and {info['end_date']}.\n"
-            f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['completeness']:.1f}%\n"
-            f"Disconnections detected: {info['n_disconnections']}\n"
-            f"Memory usage: {info['memory_usage_mb']:.2f} MB"
-        )
+        return _device_str("Libreview", self.info())
 
 
-class MedtronicCarelink(ModularGlucoseData):
+class MedtronicCarelink(GlucoseData):
     """
     Specialized class for Medtronic CareLink device data.
 
-    This class inherits from ModularGlucoseData and automatically configures
+    This class inherits from GlucoseData and automatically configures
     the specific column names for files exported from CareLink.
     """
 
@@ -157,22 +165,14 @@ class MedtronicCarelink(ModularGlucoseData):
 
     def __str__(self) -> str:
         """Custom representation for Medtronic CareLink."""
-        info = self.info()
-        return (
-            f"Medtronic CareLink Data: {info['n_records']} readings between "
-            f"{info['start_date']} and {info['end_date']}.\n"
-            f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['completeness']:.1f}%\n"
-            f"Disconnections detected: {info['n_disconnections']}\n"
-            f"Memory usage: {info['memory_usage_mb']:.2f} MB"
-        )
+        return _device_str("MedtronicCarelink", self.info())
 
 
-class TandemDiabetes(ModularGlucoseData):
+class TandemDiabetes(GlucoseData):
     """
     Specialized class for Tandem Diabetes device data.
 
-    This class inherits from ModularGlucoseData and automatically configures
+    This class inherits from GlucoseData and automatically configures
     the specific column names for files exported from Tandem.
     """
 
@@ -206,15 +206,7 @@ class TandemDiabetes(ModularGlucoseData):
 
     def __str__(self) -> str:
         """Custom representation for Tandem Diabetes."""
-        info = self.info()
-        return (
-            f"Tandem Diabetes Data: {info['n_records']} readings between "
-            f"{info['start_date']} and {info['end_date']}.\n"
-            f"Typical interval: {info['typical_interval']:.1f} minutes.\n"
-            f"Availability: {info['completeness']:.1f}%\n"
-            f"Disconnections detected: {info['n_disconnections']}\n"
-            f"Memory usage: {info['memory_usage_mb']:.2f} MB"
-        )
+        return _device_str("TandemDiabetes", self.info())
 
 
 def detect_device_type(file_path: str) -> str | None:
