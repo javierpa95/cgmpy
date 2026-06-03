@@ -1,4 +1,5 @@
 """Tests for pure risk metric functions."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,6 +20,7 @@ def test_m_value_constant():
     glucose = pd.Series([90.0, 90.0, 90.0])
     assert m_value(glucose, 90) == 0.0
 
+
 def test_m_value_zero_glucose():
     """Should handle zero glucose without crashing."""
     glucose = pd.Series([0.0, 90.0, 180.0])
@@ -26,15 +28,18 @@ def test_m_value_zero_glucose():
     assert isinstance(result, float)
     assert result >= 0
 
+
 def test_m_value_empty():
     """Should return 0.0 for empty series."""
     assert m_value(pd.Series([], dtype=float), 90) == 0.0
+
 
 def test_j_index_known():
     """J-index: 0.001 * (mean + sd)^2"""
     # mean=100, sd=10 → 0.001 * 110^2 = 12.1
     result = j_index(100.0, 10.0)
     assert result == pytest.approx(12.1)
+
 
 def test_lbgi_hbgi_sanity():
     """LBGI and HBGI should return finite floats."""
@@ -46,16 +51,19 @@ def test_lbgi_hbgi_sanity():
     assert lb >= 0
     assert hb >= 0
 
+
 def test_lbgi_hbgi_zero_glucose():
     """Should handle zero glucose without crashing."""
     glucose = pd.Series([0.0, 100.0, 200.0])
     assert np.isfinite(lbgi(glucose))
     assert np.isfinite(hbgi(glucose))
 
+
 def test_lbgi_hbgi_empty():
     """Should return 0.0 for empty series."""
     assert lbgi(pd.Series([], dtype=float)) == 0.0
     assert hbgi(pd.Series([], dtype=float)) == 0.0
+
 
 def test_grade_returns_dict():
     """GRADE should return dict with expected keys."""
@@ -67,12 +75,14 @@ def test_grade_returns_dict():
     assert "eu_percent" in result
     assert "hyper_percent" in result
 
+
 def test_grade_sums_to_100():
     """Hypo + eu + hyper percentages should sum to ~100%."""
     glucose = pd.Series(np.linspace(40, 300, 100))
     result = grade(glucose)
     total = result["hypo_percent"] + result["eu_percent"] + result["hyper_percent"]
     assert total == pytest.approx(100.0, abs=1.0)
+
 
 def test_gri_returns_dict():
     """GRI should return expected structure."""
@@ -83,24 +93,28 @@ def test_gri_returns_dict():
     assert "components" in result
     assert "derived_metrics" in result
 
+
 def test_adrr_returns_dict():
     """ADRR should return expected structure."""
     from datetime import datetime, timedelta
 
     import pandas as pd
+
     start = datetime(2024, 1, 1, 0, 0)
-    timestamps = pd.Series([start + timedelta(minutes=5*i) for i in range(288)])
+    timestamps = pd.Series([start + timedelta(minutes=5 * i) for i in range(288)])
     glucose = pd.Series(np.linspace(70, 250, 288))
     result = adrr(glucose, timestamps)
     assert isinstance(result, dict)
     assert "adrr" in result
     assert "risk_category" in result
 
+
 def test_backward_compatibility():
     """Pure functions match GlucoseAnalysis results on real data."""
     import pytest
 
     from cgmpy import GlucoseAnalysis, GlucoseData
+
     data = GlucoseAnalysis(GlucoseData("tests/fixtures/synthetic/sine_24h.csv"))
 
     lb_old = data.LBGI()

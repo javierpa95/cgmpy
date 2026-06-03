@@ -20,7 +20,9 @@ if TYPE_CHECKING:
 # ──────────────────────────────────────────────
 
 
-def lability_index(glucose: pd.Series, timestamps: pd.Series, interval: int = 1, period: str = "week") -> dict:
+def lability_index(
+    glucose: pd.Series, timestamps: pd.Series, interval: int = 1, period: str = "week"
+) -> dict:
     """Lability Index.
 
     Args:
@@ -55,7 +57,7 @@ def lability_index(glucose: pd.Series, timestamps: pd.Series, interval: int = 1,
         weekly_li.append(li_week)
 
     mean_li = np.mean(weekly_li) if weekly_li else 0
-    mean_li_mmol = mean_li / (MGDL_TO_MMOLL ** 2)
+    mean_li_mmol = mean_li / (MGDL_TO_MMOLL**2)
     mean_li_por_hora = mean_li / 168
     typical_change_per_hour = math.sqrt(mean_li_por_hora)
 

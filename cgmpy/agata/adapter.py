@@ -8,9 +8,7 @@ from ..data.core import GlucoseData
 from ..errors import EmptyDataError
 
 
-def prepare_data_for_agata(
-    glucose_data: GlucoseData, resample_freq: str = "5min"
-) -> pd.DataFrame:
+def prepare_data_for_agata(glucose_data: GlucoseData, resample_freq: str = "5min") -> pd.DataFrame:
     """Prepare a :class:`~cgmpy.data.core.GlucoseData` for py_agata.
 
     The function aligns the timestamp grid by flooring every measurement to

@@ -259,7 +259,9 @@ def adrr(glucose: pd.Series, timestamps: pd.Series) -> dict[str, Any]:
     :return: Dictionary with ADRR and related statistics.
     :reference: DOI: 10.1177/193229681300700529
     """
-    daily_readings = pd.DataFrame({"time": timestamps, "glucose": glucose}).groupby(timestamps.dt.date)
+    daily_readings = pd.DataFrame({"time": timestamps, "glucose": glucose}).groupby(
+        timestamps.dt.date
+    )
 
     def transform_bg(bg_values):
         return 1.509 * ((np.log(bg_values)) ** 1.084 - 5.381)

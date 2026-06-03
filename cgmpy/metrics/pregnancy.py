@@ -120,6 +120,7 @@ class PregnancyAnalysis:
 
     def summary_by_trimester(self) -> dict[str, Any]:
         """Simplified comparative summary."""
+
         def _trimester_metrics(ta):
             if ta is None:
                 return None

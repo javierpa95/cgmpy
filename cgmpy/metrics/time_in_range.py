@@ -98,6 +98,3 @@ def time_in_range(glucose: pd.Series, low: float, high: float) -> float:
     Kept for backward compatibility with existing code that calls this name.
     """
     return tir(glucose, low, high)
-
-
-

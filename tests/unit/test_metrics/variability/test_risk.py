@@ -38,9 +38,7 @@ def test_m_value_with_custom_reference():
 
 def test_j_index(analysis):
     """J-index should equal 0.001 * (mean + sd) ** 2."""
-    expected = (
-        0.001 * (analysis.data["glucose"].mean() + analysis.data["glucose"].std()) ** 2
-    )
+    expected = 0.001 * (analysis.data["glucose"].mean() + analysis.data["glucose"].std()) ** 2
     assert analysis.j_index() == pytest.approx(expected, rel=1e-4)
 
 

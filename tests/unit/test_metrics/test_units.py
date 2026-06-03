@@ -1,4 +1,5 @@
 """Tests for glucose unit conversion."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -59,12 +60,14 @@ class TestGlucoseDataUnit:
     def test_default_unit(self):
         """GlucoseData should default to mg/dL."""
         from cgmpy import GlucoseData
+
         d = GlucoseData("tests/fixtures/synthetic/sine_24h.csv")
         assert d.unit == GlucoseUnit.MG_DL
 
     def test_glucose_in_unit(self):
         """glucose_in_unit(mg/dL) should equal .glucose."""
         from cgmpy import GlucoseData
+
         d = GlucoseData("tests/fixtures/synthetic/sine_24h.csv")
         result = d.glucose_in_unit(GlucoseUnit.MG_DL)
         assert result.equals(d.glucose)

@@ -457,9 +457,7 @@ class GlucoseData:
         # Create new instance using the constructor
         return self._create_filtered_instance(filtered_data)
 
-    def filter_by_glucose_range(
-        self, min_glucose: float, max_glucose: float
-    ) -> "GlucoseData":
+    def filter_by_glucose_range(self, min_glucose: float, max_glucose: float) -> "GlucoseData":
         """
         Creates a new instance filtered by glucose range.
 
@@ -531,6 +529,3 @@ class GlucoseData:
             new_instance.trimesters = new_instance._split_trimesters()  # type: ignore[attr-defined]
 
         return new_instance
-
-
-

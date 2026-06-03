@@ -108,7 +108,15 @@ def test_sd_daily_mean_constant():
 def test_sd_between_timepoints_returns_dict():
     df = _make_multi_day_df(2)
     result = sd_between_timepoints(df["glucose"], df["time"])
-    for key in ("sd", "mean", "valid_timepoints", "total_timepoints", "median_count", "min_count", "max_count"):
+    for key in (
+        "sd",
+        "mean",
+        "valid_timepoints",
+        "total_timepoints",
+        "median_count",
+        "min_count",
+        "max_count",
+    ):
         assert key in result
     assert isinstance(result["sd"], float | np.floating)
 
@@ -116,7 +124,8 @@ def test_sd_between_timepoints_returns_dict():
 def test_sd_between_timepoints_grouping():
     df = _make_multi_day_df(2)
     result = sd_between_timepoints(
-        df["glucose"], df["time"],
+        df["glucose"],
+        df["time"],
         filter_outliers=False,
         group_by_intervals=True,
         interval_minutes=5,
@@ -323,9 +332,8 @@ def test_backward_compatibility_sd_daily_mean():
     method_result = gm.sd_daily_mean()
     func_result = sd_daily_mean(gm.data["glucose"], gm.data["time"])
     # Both will produce NaN with single-day data; assert matching NaN status
-    assert (
-        func_result["sd"] == method_result["sd"]
-        or (np.isnan(func_result["sd"]) and np.isnan(method_result["sd"]))
+    assert func_result["sd"] == method_result["sd"] or (
+        np.isnan(func_result["sd"]) and np.isnan(method_result["sd"])
     )
 
 

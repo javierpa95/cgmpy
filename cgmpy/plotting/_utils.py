@@ -28,6 +28,14 @@ def add_glucose_zones(
     # Target range (low_threshold - high_threshold)
     ax.axvspan(low_threshold, high_threshold, color="#00ff00", alpha=0.1, label="Target range")
     # Hyperglycemia (high_threshold - very_high_threshold)
-    ax.axvspan(high_threshold, very_high_threshold, color="#ffaa00", alpha=alpha_hyper, label="Hyperglycemia")
+    ax.axvspan(
+        high_threshold,
+        very_high_threshold,
+        color="#ffaa00",
+        alpha=alpha_hyper,
+        label="Hyperglycemia",
+    )
     # Severe hyperglycemia (> very_high_threshold)
-    ax.axvspan(very_high_threshold, 500, color="#ff0000", alpha=alpha_hyper, label="Severe hyperglycemia")
+    ax.axvspan(
+        very_high_threshold, 500, color="#ff0000", alpha=alpha_hyper, label="Severe hyperglycemia"
+    )

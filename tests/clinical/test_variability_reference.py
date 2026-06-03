@@ -173,7 +173,7 @@ class TestCrossMetricConsistency:
 
         tir_val = data.TIR()
         tar_val = data.TAR180()  # above 180
-        tbr_val = data.TBR70()   # below 70
+        tbr_val = data.TBR70()  # below 70
 
         total = tir_val + tar_val + tbr_val
         assert total == pytest.approx(100.0, abs=1.0)
@@ -208,10 +208,12 @@ class TestAGATAParity:
 
         # CGMPy TIR
         from cgmpy.metrics.time_in_range import tir as cgmpy_tir_func
+
         cgmpy_tir = cgmpy_tir_func(data.glucose)
 
         # py_agata needs data prepared for it
         from cgmpy.agata.adapter import prepare_data_for_agata
+
         agata_data = prepare_data_for_agata(data)
 
         # py_agata raises RuntimeWarning on 1-day data (sddm_index ddof=1);

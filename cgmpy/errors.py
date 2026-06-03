@@ -79,6 +79,7 @@ class ColumnNotFoundError(DataError):
         available: list[str] | None = None,
         message: str | None = None,
     ) -> None:
+        """Initialise ColumnNotFoundError with column name and available columns."""
         self.column = column
         self.available = list(available) if available else []
         if message is None:
@@ -98,6 +99,7 @@ class InvalidCSVFormatError(DataError):
     """
 
     def __init__(self, file_path: str, reason: str, hint: str | None = None) -> None:
+        """Initialise InvalidCSVFormatError with file path and parse error."""
         self.file_path = file_path
         self.reason = reason
         msg = f"Cannot parse CSV file '{file_path}': {reason}"
@@ -115,6 +117,7 @@ class DeviceDetectionError(DataError):
     """
 
     def __init__(self, file_path: str, columns_found: list[str] | None = None) -> None:
+        """Initialise DeviceDetectionError with file path and detected columns."""
         self.file_path = file_path
         self.columns_found = list(columns_found) if columns_found else []
         msg = (
@@ -151,6 +154,7 @@ class GlucoseRangeError(DataError):
         max_value: float,
         bounds: tuple[float, float] = (39.0, 600.0),
     ) -> None:
+        """Initialise GlucoseRangeError with summary of out-of-range values."""
         self.n_invalid = n_invalid
         self.total = total
         self.min_value = min_value
@@ -176,6 +180,7 @@ class EmptyDataError(DataError):
     """
 
     def __init__(self, context: str = "data") -> None:
+        """Initialise EmptyDataError with context of where emptiness was detected."""
         self.context = context
         super().__init__(
             f"No data available in {context}. Check that your input file "
@@ -198,6 +203,7 @@ class InsufficientDataError(MetricError):
     """
 
     def __init__(self, metric: str, required: int, actual: int) -> None:
+        """Initialise InsufficientDataError with metric name and counts."""
         self.metric = metric
         self.required = required
         self.actual = actual
@@ -217,6 +223,7 @@ class AgataNotInstalledError(AgataIntegrationError):
     """
 
     def __init__(self) -> None:
+        """Initialise AgataNotInstalledError with installation hint."""
         super().__init__(
             "The 'py_agata' library is required for this functionality. "
             "Install it with: pip install 'cgmpy[agata]'"

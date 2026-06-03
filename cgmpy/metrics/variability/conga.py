@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 # ──────────────────────────────────────────────
 
 
-def conga(glucose: pd.Series, timestamps: pd.Series, hours: int = 4, max_gap_minutes: float | None = None) -> dict:
+def conga(
+    glucose: pd.Series, timestamps: pd.Series, hours: int = 4, max_gap_minutes: float | None = None
+) -> dict:
     """Continuous Overlapping Net Glycemic Action.
 
     Args:
@@ -48,9 +50,9 @@ def conga(glucose: pd.Series, timestamps: pd.Series, hours: int = 4, max_gap_min
     df["time_n_hours_ago"] = df["time"].shift(n_intervals)
     df["glucose_n_hours_ago"] = df["glucose"].shift(n_intervals)
     df["time_diff_minutes"] = (df["time"] - df["time_n_hours_ago"]).dt.total_seconds() / 60.0
-    df["valid_comparison"] = (
-        df["time_diff_minutes"] >= target_diff_minutes - max_gap_minutes
-    ) & (df["time_diff_minutes"] <= target_diff_minutes + max_gap_minutes)
+    df["valid_comparison"] = (df["time_diff_minutes"] >= target_diff_minutes - max_gap_minutes) & (
+        df["time_diff_minutes"] <= target_diff_minutes + max_gap_minutes
+    )
     df["difference"] = np.where(
         df["valid_comparison"], df["glucose"] - df["glucose_n_hours_ago"], np.nan
     )

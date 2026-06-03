@@ -79,10 +79,7 @@ def test_data_completeness_full():
 
 
 def test_data_completeness_empty():
-    assert (
-        data_completeness(pd.Series([], dtype=float), pd.Series([], dtype=object), 5)
-        == 0.0
-    )
+    assert data_completeness(pd.Series([], dtype=float), pd.Series([], dtype=object), 5) == 0.0
 
 
 def test_data_completeness_single_reading():

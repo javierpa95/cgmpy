@@ -73,9 +73,7 @@ class TestSummaryByTrimester:
         assert isinstance(summary, dict)
         assert set(summary.keys()) == {"T1", "T2", "T3"}
 
-    def test_populated_trimester_has_metrics(
-        self, pregnancy_analysis: PregnancyAnalysis
-    ) -> None:
+    def test_populated_trimester_has_metrics(self, pregnancy_analysis: PregnancyAnalysis) -> None:
         """At least one populated trimester contains the simplified-metric keys."""
         summary = pregnancy_analysis.summary_by_trimester()
         populated = [v for v in summary.values() if v is not None]
@@ -88,9 +86,7 @@ class TestSummaryByTrimester:
 class TestCalculateAllMetrics:
     """Tests for `calculate_all_metrics()`."""
 
-    def test_nested_returns_expected_sections(
-        self, pregnancy_analysis: PregnancyAnalysis
-    ) -> None:
+    def test_nested_returns_expected_sections(self, pregnancy_analysis: PregnancyAnalysis) -> None:
         """The nested output has gestation, overall, trimesters sections."""
         result = pregnancy_analysis.calculate_all_metrics(flatten=False)
         assert isinstance(result, dict)
@@ -119,9 +115,7 @@ class TestCalculateAllMetrics:
 class TestPregnancyAnalysisStr:
     """Tests for the `__str__` representation."""
 
-    def test_str_contains_header_and_metrics(
-        self, pregnancy_analysis: PregnancyAnalysis
-    ) -> None:
+    def test_str_contains_header_and_metrics(self, pregnancy_analysis: PregnancyAnalysis) -> None:
         """The string output mentions the gestational diabetes report header."""
         s = str(pregnancy_analysis)
         assert isinstance(s, str)

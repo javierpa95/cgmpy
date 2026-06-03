@@ -93,6 +93,3 @@ def percentile(glucose: pd.Series, p: float) -> float:
         Percentile value in mg/dL.
     """
     return glucose.quantile(p / 100)
-
-
-
