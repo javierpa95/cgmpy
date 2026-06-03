@@ -8,10 +8,70 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pandas as pd
 
+from ..units import MGDL_TO_MMOLL
 from ._base import VariabilityBase
 
 if TYPE_CHECKING:
     pass
+
+
+# ──────────────────────────────────────────────
+# Pure function
+# ──────────────────────────────────────────────
+
+
+def lability_index(glucose: pd.Series, timestamps: pd.Series, interval: int = 1, period: str = "week") -> dict:
+    """Lability Index.
+
+    Args:
+        glucose: Glucose values.
+        timestamps: Corresponding timestamps.
+        interval: Hours between measurements (must be > 0).
+        period: 'week' or 'month'.
+
+    Returns:
+        dict with LI values and statistics.
+
+    Raises:
+        ValueError: If interval <= 0.
+
+    Reference:
+        DOI: 10.2337/diabetes.53.4.955
+    """
+    if interval <= 0:
+        raise ValueError(f"interval must be positive, got {interval}")
+
+    data_copy = pd.DataFrame({"time": timestamps, "glucose": glucose}).copy()
+    data_copy["time_rounded"] = data_copy["time"].dt.floor("h")
+    data_copy["week"] = data_copy["time"].dt.isocalendar().week
+
+    weekly_li = []
+
+    for _week, group in data_copy.groupby("week"):
+        group = group.sort_values("time_rounded")
+        glucose_diffs = group["glucose"].shift(-interval) - group["glucose"]
+        li_values = (glucose_diffs**2) / interval
+        li_week = li_values.dropna().sum()
+        weekly_li.append(li_week)
+
+    mean_li = np.mean(weekly_li) if weekly_li else 0
+    mean_li_mmol = mean_li / (MGDL_TO_MMOLL ** 2)
+    mean_li_por_hora = mean_li / 168
+    typical_change_per_hour = math.sqrt(mean_li_por_hora)
+
+    return {
+        "weekly_values": weekly_li,
+        "mean_li": mean_li,
+        "mean_li_mmol": mean_li_mmol,
+        "std_li": np.std(weekly_li) if len(weekly_li) > 1 else 0,
+        "n_weeks": len(weekly_li),
+        "typical_change_per_hour": typical_change_per_hour,
+    }
+
+
+# ──────────────────────────────────────────────
+# Mixin class (delegates to pure function)
+# ──────────────────────────────────────────────
 
 
 class LabilityMetrics(VariabilityBase):
@@ -19,8 +79,7 @@ class LabilityMetrics(VariabilityBase):
 
     Cross-mixin calls: :meth:`Variability` and :meth:`variability_summary`
     call methods provided by other mixins (e.g. :class:`SDMetrics`,
-    :class:`MODDMetrics`, :class:`RiskMetrics`). These work at runtime
-    because :class:`VariabilityMetrics` inherits from all of them.
+    :class:`MODDMetrics`, :class:`RiskMetrics`).
     """
 
     if TYPE_CHECKING:
@@ -41,50 +100,9 @@ class LabilityMetrics(VariabilityBase):
         def M_Value(self, reference_glucose: int = 90) -> dict: ...
 
     def Lability_index(self, interval: int = 1, period: str = "week") -> dict:
-        """
-        Calculates Lability Index (LI) for a specific time interval.
+        return lability_index(self.data["glucose"], self.data["time"], interval, period)
 
-        :param interval: Number of hours between consecutive measurements.
-        :param period: Time period to calculate LI ('week' or 'month').
-        :return: Dictionary with LI values and statistics.
-
-        DOI: 10.2337/diabetes.53.4.955
-        """
-        # Add timing to see where time is spent
-
-        data_copy = self.data.copy()
-        data_copy["time_rounded"] = data_copy["time"].dt.floor("h")
-        data_copy["week"] = data_copy["time"].dt.isocalendar().week
-
-        weekly_li = []
-
-        for _week, group in data_copy.groupby("week"):
-            group = group.sort_values("time_rounded")
-
-            # Vectorized version within the group
-            glucose_diffs = group["glucose"].shift(-interval) - group["glucose"]
-            li_values = (glucose_diffs**2) / interval
-            li_week = li_values.dropna().sum()
-            weekly_li.append(li_week)
-
-        mean_li = np.mean(weekly_li) if weekly_li else 0
-        mean_li_mmol = mean_li / (18.0**2)
-
-        # Add clinical interpretation
-        mean_li_por_hora = mean_li / 168
-        cambio_tipico_por_hora = math.sqrt(mean_li_por_hora)
-
-        return {
-            "weekly_values": weekly_li,
-            "mean_li": mean_li,
-            "mean_li_mmol": mean_li_mmol,
-            "std_li": np.std(weekly_li) if len(weekly_li) > 1 else 0,
-            "n_weeks": len(weekly_li),
-            # New clinical interpretation fields
-            "cambio_tipico_por_hora": cambio_tipico_por_hora,
-        }
-
-    def Variability(self) -> str:
+    def Variability(self) -> dict[str, Any]:
         """
         Calculates all variability metrics.
         :return: A JSON string with all variability metrics.

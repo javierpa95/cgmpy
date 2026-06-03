@@ -18,7 +18,7 @@ class VariabilityBase:
 
     Subclasses of this class (e.g. :class:`SDMetrics`,
     :class:`MAGEMetrics`) are designed to be combined with
-    :class:`~cgmpy.data.core.ModularGlucoseData` to form a fully
+    :class:`~cgmpy.data.core.GlucoseData` to form a fully
     functional variability-metrics facade.
     """
 
