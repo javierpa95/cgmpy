@@ -19,6 +19,24 @@ if (-not (Test-Path -LiteralPath $distPath) -or -not (Get-ChildItem -LiteralPath
   exit 1
 }
 
+# Stale-dist check
+$DistAgeLimit = 3600  # 1 hour in seconds
+$now = Get-Date
+$stale = $false
+Get-ChildItem -LiteralPath $distPath | ForEach-Object {
+  if ($now.Subtract($_.LastWriteTime).TotalSeconds -gt $DistAgeLimit) {
+    $stale = $true
+  }
+}
+if ($stale) {
+  Write-Warning "dist/ files are older than $($DistAgeLimit / 60) minutes."
+  Write-Warning "Re-run scripts\build-dist.ps1 if you have made changes."
+  $ans = Read-Host "Continue anyway? [y/N]"
+  if ($ans -notmatch '^[Yy]') {
+    exit 0
+  }
+}
+
 # Credentials
 if (-not $env:TEST_PYPI_TOKEN -and -not $env:TWINE_USERNAME) {
   Write-Error "Set TEST_PYPI_TOKEN (or TWINE_USERNAME+TWINE_PASSWORD) in the environment."

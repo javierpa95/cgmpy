@@ -12,7 +12,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No changes yet. The next release will be **v0.6.0** (MAGE deep refactor + deprecation policy + mypy on public API), per `ROADMAP.md`.
+### Added
+- **Pure functions for all metrics** — `cgmpy.metrics.basic.*`, `time_in_range.*`,
+  `variability.*` now expose module-level functions (e.g. `mean(series)`, `tir(series, low, high)`)
+  that are testable, composable, and type-safe. The existing mixin methods delegate to them.
+- **`GlucoseData.glucose` and `GlucoseData.timestamps` properties** — convenient accessors
+  for the underlying data.
+- **`GlucoseAnalysis` by composition** — new facade that wraps a `GlucoseData` instance
+  and provides all metrics + plots via delegation to pure functions.
+- **Caching** — `GlucoseAnalysis` now caches `mean()`, `sd()`, `median()`, `TIR()`, etc.
+  so repeated calls don't recompute.
+- **Shared plotting utilities** — `cgmpy/plotting/_utils.add_glucose_zones()` replaces
+  duplicated code in `agp.py` and `daily_plots.py`.
+- **Internal constants** — `cgmpy/data/_constants.py` with `TIME_COL`, `GLUCOSE_COL`.
+- **Device `__str__` deduplication** — 4 device loaders now share a `_device_str()` helper.
+- **Glucose unit system** — `GlucoseUnit` enum + conversion functions in
+  `cgmpy/metrics/units.py`. Conversion factor standardised to 18.0156.
+- **Clinical reference tests** — 16 new tests for MAGE, MODD, CONGA, LBGI, HBGI, ADRR,
+  cross-metric consistency, and AGATA parity.
+- **Python concepts documentation** — 8 articles in `docs/development/concepts/` explaining
+  pure functions, inheritance vs composition, MRO, dependency injection, facade pattern,
+  deprecation policy, type hints, and caching strategies.
+
+### Changed
+- **`GlucoseData`** is now the primary class name (was `ModularGlucoseData`).
+  `ModularGlucoseData` remains as a backward-compatible alias.
+- **`GRADE()` conversion factor** updated from 18.0 to 18.0156 for precision.
+- **`Lability_index()` conversion factor** updated from 18.0 to 18.0156.
+
+### Deprecated
+- **`GlucoseMetrics`** — use `GlucoseAnalysis(data=GlucoseData(...))` instead.
+  Will be removed in v0.8.0.
+- **`GlucosePlot`** — use `GlucoseAnalysis(data=GlucoseData(...)).plot_*()` instead.
+  Will be removed in v0.8.0.
+- **`_LegacyGlucoseAnalysis`** (the old mixin-based class) — use the new composition-based
+  `GlucoseAnalysis` instead. Will be removed in v0.8.0.
+- **`ModularGlucoseMetrics.all()`** — use `GlucoseAnalysis.report()` instead.
+  Will be removed in v0.8.0.
+- **`ModularGlucosePlot`** — use `GlucoseAnalysis.plot_*()` instead.
+  Will be removed in v0.8.0.
+
+### Fixed
+- Division-by-zero guard in `cv()`.
+- `log(0)` guard in `LBGI()`, `HBGI()`, `M_Value()`.
+- `interval <= 0` guard in `Lability_index()`.
+- `TODO: Check if means are correct` resolved in `calculate_all_cv_metrics()`.
+- Nondeterministic test fixture `variable_glucose_df` now uses seeded RNG.
+- `[Unreleased]` changelog link corrected from v0.3.0 to v0.5.2.
 
 ---
 
@@ -215,7 +261,10 @@ No public API changes. Coverage: 81.18% → 81.66%. Tests: 310 → 329.
 
 ---
 
-[Unreleased]: https://github.com/javierpa95/cgmpy/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/javierpa95/cgmpy/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/javierpa95/cgmpy/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/javierpa95/cgmpy/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/javierpa95/cgmpy/compare/v0.3.0...v0.5.0
 [0.3.0]: https://github.com/javierpa95/cgmpy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/javierpa95/cgmpy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/javierpa95/cgmpy/releases/tag/v0.1.0

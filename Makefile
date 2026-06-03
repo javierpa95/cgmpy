@@ -180,14 +180,8 @@ clean:
 # 📦 Build & Publish
 # ==========================================
 build:
-	@if command -v bash >/dev/null 2>&1 && [ -f scripts/build-dist.sh ]; then \
-		bash scripts/build-dist.sh; \
-	elif -not (Get-Command pwsh -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath 'scripts\build-dist.ps1'); then \
-		pwsh -File scripts/build-dist.ps1; \
-	else \
-		$(PYTHON) -m pip install --upgrade build; \
-		$(PYTHON) -m build; \
-	fi
+	$(PYTHON) -m pip install --upgrade build
+	$(PYTHON) -m build
 
 dist-check:
 	$(PYTHON) -m pip install --upgrade twine

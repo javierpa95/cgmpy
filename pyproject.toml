@@ -86,7 +86,7 @@ cgmpy-info = "cgmpy.cli:main"
 "Repository" = "https://github.com/javierpa95/cgmpy"
 "Issues" = "https://github.com/javierpa95/cgmpy/issues"
 "Changelog" = "https://github.com/javierpa95/cgmpy/blob/main/CHANGELOG.md"
-"Documentation" = "https://github.com/javierpa95/cgmpy/tree/main/docs"
+"Documentation" = "https://javierpa95.github.io/cgmpy/"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -177,6 +177,7 @@ filterwarnings = [
   "error",
   "ignore::DeprecationWarning:matplotlib.*",
   "ignore::DeprecationWarning:seaborn.*",
+  "default:.*deprecated.*:DeprecationWarning",
 ]
 
 # ==========================================
@@ -216,21 +217,16 @@ disallow_untyped_defs = false  # gradual typing — start permissive
 ignore_missing_imports = true
 exclude = ["tests/", "examples/", "build/", "dist/"]
 
-# Per-module overrides for the multi-inheritance pattern:
-# BasicMetrics, VariabilityBase, etc. access ``self.data`` from
-# ModularGlucoseData but mypy cannot resolve cross-class attributes.
-[[tool.mypy.overrides]]
-module = [
-  "cgmpy.metrics.*",
-  "cgmpy.analysis.*",
-  "cgmpy.plotting.*",
-  "cgmpy.agata.metrics",
-]
-ignore_errors = true
+# NOTE: Overrides were previously needed for the multi-inheritance pattern
+# (BasicMetrics mixin accessing self.data). Since the v0.6.0 refactor
+# replaced mixins with pure functions + composition, the overrides have
+# been removed. If mypy reports false positives from pandas/numpy, add
+# per-file ignores rather than blanket module-level ignore_errors.
 
 # ==========================================
 # Bandit (security)
 # ==========================================
 [tool.bandit]
 exclude_dirs = ["tests", "examples"]
-skips = ["B101"]  # assert in tests
+# B101 (assert statement) is only skipped in tests, not in library code.
+# The exclude_dirs already excludes tests/, so no global skip needed.

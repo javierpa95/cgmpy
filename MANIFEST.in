@@ -8,7 +8,6 @@
 # --- Top-level files ----------------------------------------------------
 
 include LICENSE
-include LICENSE.md
 include README.md
 include CHANGELOG.md
 include ROADMAP.md

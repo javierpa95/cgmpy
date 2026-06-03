@@ -116,6 +116,9 @@ site/
 # --- Generated / vendored ---
 node_modules/
 
+# Vendored npm dependencies in opencode agent harness
+.opencode/node_modules/
+
 # --- Temporary ---
 tmp/
 temp/

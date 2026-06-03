@@ -41,5 +41,5 @@ jobs:
           SHA: ${{ steps.release.outputs.sha }}
         run: |
           echo "Released $TAG at $SHA"
-          echo "Run the publish-pypi workflow to push to PyPI:"
-          echo "  gh workflow run publish-pypi.yml -f tag=$TAG"
+          echo "Publishing to PyPI automatically via publish.yml..."
+          echo "  https://github.com/${{ github.repository }}/actions/workflows/publish.yml"

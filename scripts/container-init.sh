@@ -12,7 +12,8 @@ set -euo pipefail
 cd /workspaces/cgmpy
 
 echo "==> Creating .venv with uv"
-uv venv .venv --python 3.11
+# Use the Python version from the devcontainer base image
+uv venv .venv
 
 # shellcheck disable=SC1091
 source .venv/bin/activate

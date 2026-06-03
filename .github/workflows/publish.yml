@@ -1,0 +1,61 @@
+# ==========================================
+# Publish to PyPI
+# ==========================================
+# Triggered automatically when a GitHub Release is published
+# (e.g. by release-please). Builds the package and uploads to PyPI.
+#
+# Prerequisites (one-time setup):
+#   1. Go to https://pypi.org/manage/account/token/
+#   2. Create a token with scope "Entire account" (or project: cgmpy)
+#   3. Add it as a repository secret named PYPI_TOKEN in:
+#      Settings -> Secrets and variables -> Actions -> New repository secret
+# ==========================================
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to publish (e.g. v0.6.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write  # needed for trusted publishing
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Check distribution
+        run: twine check dist/*
+
+      # Uses PyPI token from repository secret.
+      # Alternative: trusted publishing (OIDC) — see PyPI docs.
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: twine upload dist/*

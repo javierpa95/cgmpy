@@ -7,6 +7,7 @@
   // (which is gitignored).
 
   // -------------------- Python interpreter --------------------
+  // Windows path (default). Linux/macOS: change to ${workspaceFolder}/.venv/bin/python
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "python.analysis.autoImportSources": ["cgmpy"],
   "python.analysis.extraPaths": ["${workspaceFolder}"],
@@ -47,11 +48,13 @@
   "ruff.lint.args": ["--config=${workspaceFolder}/pyproject.toml"],
   "ruff.format.args": ["--config=${workspaceFolder}/pyproject.toml"],
   "ruff.importStrategy": "fromEnvironment",
+  // Windows path (default). Linux/macOS: change to ${workspaceFolder}/.venv/bin/python
   "ruff.interpreter": ["${workspaceFolder}/.venv/Scripts/python.exe"],
 
   // -------------------- MyPy (type checker) --------------------
   "mypy-type-checker.args": ["--config-file=${workspaceFolder}/pyproject.toml"],
   "mypy-type-checker.importStrategy": "fromEnvironment",
+  // Windows path (default). Linux/macOS: change to ${workspaceFolder}/.venv/bin/python
   "mypy-type-checker.interpreter": ["${workspaceFolder}/.venv/Scripts/python.exe"],
 
   // -------------------- Testing (pytest) --------------------
