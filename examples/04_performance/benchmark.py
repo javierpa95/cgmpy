@@ -13,7 +13,7 @@ the implementation of a metric.
 The mixin design of CGMPy means a metric method is called directly on the
 data class (e.g. ``gd.mean()``), not on a sub-namespace. We use
 ``GlucoseMetrics`` which combines ``ModularGlucoseData`` with
-``ModularGlucoseMetrics`` so every metric is reachable as a flat method.
+``GlucoseAnalysis`` so every metric is reachable as a method.
 """
 
 from __future__ import annotations

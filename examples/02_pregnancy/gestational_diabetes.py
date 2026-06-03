@@ -2,7 +2,7 @@
 
 Demonstrates:
 - Loading pregnancy-trimester data with `PregnancyData`.
-- Using `GestationalDiabetes` to compute trimester-by-trimester metrics
+- Using `PregnancyAnalysis` to compute trimester-by-trimester metrics
   with the pregnancy TIR cutoffs (63-140 mg/dL, Battelino et al. 2019).
 - Rendering a per-trimester summary via `calculate_all_metrics(flatten=True)`.
 
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cgmpy import GestationalDiabetes
+from cgmpy import PregnancyAnalysis
 
 FIXTURE = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "data" / "pregnancy.csv"
 
@@ -27,13 +27,13 @@ GESTATION_WEEK_AT_DELIVERY = 38
 
 
 def main() -> None:
-    # 1. GestationalDiabetes inherits from PregnancyData, so it expects the
+    # 1. PregnancyAnalysis uses PregnancyData internally, so it expects the
     #    same `delivery_date` and `week` arguments. It automatically:
     #      - filters the DataFrame to the conception → delivery window
     #      - splits the data into first / second / third trimester frames
-    #      - wraps each trimester in a `GlucoseMetrics` instance for
+    #      - wraps each trimester in a `GlucoseAnalysis` instance for
     #        per-trimester analysis.
-    gdm = GestationalDiabetes(
+    gdm = PregnancyAnalysis(
         data_source=str(FIXTURE),
         delivery_date=DELIVERY_DATE,
         week=GESTATION_WEEK_AT_DELIVERY,
