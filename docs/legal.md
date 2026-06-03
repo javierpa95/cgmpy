@@ -8,7 +8,7 @@ locally on the data you provide.
 
 ### Data you provide to CGMPy
 
-When you call `ModularGlucoseData("my_file.csv")`, CGMPy reads the file
+When you call `GlucoseData("my_file.csv")`, CGMPy reads the file
 from your local disk and processes it in memory. **No data ever leaves
 your machine** as a result of using the library.
 

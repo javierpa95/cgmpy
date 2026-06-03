@@ -80,9 +80,9 @@ and a glucose value. Pass their names explicitly with `date_col=` and
 `glucose_col=`:
 
 ```python
-from cgmpy.data import ModularGlucoseData
+from cgmpy import GlucoseData
 
-data = ModularGlucoseData(
+data = GlucoseData(
     "my_export.csv",
     date_col="Datetime",
     glucose_col="Sensor Glucose (mg/dL)",

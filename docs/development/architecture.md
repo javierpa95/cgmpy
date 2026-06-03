@@ -8,7 +8,7 @@ top, a deeper modular structure beneath, each layer independently testable.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Public API (cgmpy/__init__.py)                             │
-│  GlucoseAnalysis, GlucoseData, GlucoseMetrics, GlucosePlot  │
+│  GlucoseAnalysis, GlucoseData                               │
 └──────────────────────────┬──────────────────────────────────┘
                            │
         ┌──────────────────┼────────────────────┐
@@ -74,9 +74,9 @@ CGMPy's main design decisions are recorded as
 - **Modular facade pattern** — public API exposes both the
   high-level `GlucoseAnalysis` and the underlying modular classes, so
   users can choose their level of abstraction.
-- **Backward compatibility** — the v0.2 API (`GlucoseData`,
-  `GlucoseMetrics`, `GlucosePlot`, `Dexcom`, `Libreview`) is preserved
-  through aliases, so existing code continues to work.
+- **Backward compatibility** — deprecated names (`ModularGlucoseData`,
+  `GlucoseMetrics`, `GlucosePlot`, `GestationalDiabetes`, `ModularGlucoseMetrics`)
+  are preserved through aliases with deprecation warnings, so existing code continues to work.
 - **NumPy / pandas first** — every metric is implemented with vectorized
   operations over `pandas.Series`, not Python loops.
 - **AGATA parity** — the `agata` optional dependency is the reference
@@ -94,11 +94,11 @@ CGMPy's main design decisions are recorded as
 | `cgmpy/data/exporter.py`| Parquet / CSV / Excel export.                             |
 | `cgmpy/data/specialized.py` | Vendor-specific loaders.                              |
 | `cgmpy/data/pregnancy_data.py` | Pregnancy-window trimming.                         |
-| `cgmpy/data/core.py`    | `ModularGlucoseData` facade (wires the above).            |
+| `cgmpy/data/core.py`    | `GlucoseData` facade (wires the above).                   |
 | `cgmpy/metrics/basic.py`| Mean, median, GMI, SD, CV, IQR, percentiles.              |
 | `cgmpy/metrics/time_in_range.py` | TIR, TAR (1/2), TBR (1/2).                    |
 | `cgmpy/metrics/variability.py` | CV, MAGE, MODD, CONGA, J-Index, LBGI, HBGI, GRI, ADRR. |
-| `cgmpy/metrics/pregnancy.py` | GestationalDiabetes-specific metrics.                |
+| `cgmpy/metrics/pregnancy.py` | Pregnancy-specific metrics.                          |
 | `cgmpy/metrics/targets.py` | GlucoseTargets dataclass + helpers.                   |
 | `cgmpy/plotting/agp.py` | Ambulatory Glucose Profile.                                |
 | `cgmpy/plotting/daily_plots.py` | Daily trace plots.                            |

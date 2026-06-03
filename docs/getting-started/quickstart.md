@@ -66,35 +66,41 @@ TBR (<70):     7.5 %
 If you need finer control, drop down to the modular classes.
 
 ```python
-from cgmpy.data import ModularGlucoseData
-from cgmpy.metrics import ModularGlucoseMetrics
+from cgmpy import GlucoseData
 from cgmpy.metrics.targets import get_targets
+from cgmpy import GlucoseAnalysis
 
 # Load
-data = ModularGlucoseData(str(CSV_PATH))
+data = GlucoseData(str(CSV_PATH))
 
-# Filter
-filtered = data.filter_by_date_range("2024-01-01", "2024-01-31")
-
-# Compute metrics with custom cutoffs
-targets = get_targets("diabetes")  # or "pregnancy"
-metrics = ModularGlucoseMetrics(data, targets=targets)
-
-print(metrics.time_in_range().tir())  # 64.5
-print(metrics.variability().cv())     # 32.1
-print(metrics.variability().mage())   # 95.4
+# Compute metrics
+analysis = GlucoseAnalysis(data=data)
+print(f"TIR: {analysis.TIR():.1f} %")
+print(f"Mean: {analysis.mean():.1f} mg/dL")
+print(f"GMI: {analysis.gmi():.1f} %")
+print(f"CV: {analysis.cv():.1f} %")
 ```
 
 ## 5. Plot
 
-`AGPPlotter`, `DailyPlotter`, and `StatisticalPlotter` are available
-standalone, or via the facade:
+All plot methods are available on the `GlucoseAnalysis` facade:
 
 ```python
-from cgmpy.plotting import AGPPlotter
+analysis.plot_agp()
+analysis.histogram()
+analysis.plot_time_in_range()
+analysis.plot_comprehensive_dashboard()
+```
 
-plotter = AGPPlotter(data=data)
-plotter.plot_agp(save_path="agp.png")
+For direct access to individual plot functions, import from the
+plotting submodules:
+
+```python
+from cgmpy.plotting import agp, daily_plots, statistical_plots
+
+agp.plot_agp(data.data)
+daily_plots.day_graph(data.data)
+statistical_plots.histogram(data.data)
 ```
 
 ## 6. Cross-validate with AGATA

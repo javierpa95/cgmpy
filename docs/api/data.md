@@ -5,7 +5,7 @@ CGM time series.
 
 ## High-level
 
-::: cgmpy.data.ModularGlucoseData
+::: cgmpy.data.GlucoseData
     options:
       show_root_heading: true
       show_root_toc_entry: true

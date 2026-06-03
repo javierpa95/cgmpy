@@ -24,15 +24,28 @@ The dashboard includes:
 
 ## Modular usage
 
-If you want only one plot, import the relevant plotter:
+If you want only one plot, use `GlucoseAnalysis`:
 
 ```python
-from cgmpy.data import ModularGlucoseData
-from cgmpy.plotting import AGPPlotter, DailyPlotter, StatisticalPlotter
+from cgmpy import GlucoseAnalysis, GlucoseData
 
-data = ModularGlucoseData("data.csv")
-agp = AGPPlotter(data=data)
-agp.plot_agp(save_path="agp.png")
+data = GlucoseData("data.csv")
+analysis = GlucoseAnalysis(data=data)
+analysis.plot_agp()
+```
+
+For direct access to individual plot functions, import from the submodules:
+
+```python
+from cgmpy.plotting import agp, daily_plots, statistical_plots
+
+# Read data first
+from cgmpy import GlucoseData
+data = GlucoseData("data.csv").data
+
+agp.plot_agp(data)
+daily_plots.day_graph(data)
+statistical_plots.histogram(data)
 ```
 
 ### Ambulatory Glucose Profile (AGP)
@@ -42,13 +55,9 @@ The **AGP** is the standard one-page report of CGM data. It overlays the
 target band.
 
 ```python
-agp.plot_agp(
-    save_path="agp.png",
-    target_low=70,
-    target_high=180,
-    show_percentiles=(5, 25, 50, 75, 95),
-    show_target_band=True,
-)
+analysis.plot_agp()
+analysis.generate_week_agp(combined=True)     # one line per weekday
+analysis.generate_week_agp(combined=False)    # one subplot per weekday
 ```
 
 The plot works in **headless mode** (`matplotlib.use("Agg")`) and is
@@ -57,37 +66,31 @@ tested in CI.
 ### Daily traces
 
 ```python
-daily = DailyPlotter(data=data)
-daily.plot_daily_traces(
-    save_path="daily.png",
-    n_rows=4,        # 4 subplots per row
-    target_low=70,
-    target_high=180,
-)
+analysis.plot_daily()                    # single day
+analysis.plot_overlapping_days()         # overlay all days
+analysis.plot_week_boxplots()            # weekly boxplots
+analysis.plot_daily_variations()         # confidence bands
 ```
 
 ### Statistical plots
 
 ```python
-stats = StatisticalPlotter(data=data)
-stats.plot_glucose_histogram(save_path="hist.png")
-stats.plot_tir_breakdown(save_path="tir.png")
+analysis.histogram()                     # glucose histogram
+analysis.plot_time_in_range()             # TIR pie + bar chart
+analysis.plot_distribution_comparison()   # 2x2 statistical summary
+analysis.plot_correlation_matrix()        # time-segment correlation
 ```
 
 ## Customizing
 
-Every plotter accepts a `style` argument (a dict of matplotlib kwargs) so
-you can override colors, fonts, and figure size:
+The plot functions use standard matplotlib. Customise by modifying the
+returned figure before calling ``plt.show()`` or by setting matplotlib
+parameters globally:
 
 ```python
-agp.plot_agp(
-    save_path="agp_brand.png",
-    style={
-        "figure.figsize": (12, 6),
-        "lines.linewidth": 1.5,
-        "axes.facecolor": "#FAFAFA",
-    },
-)
+import matplotlib.pyplot as plt
+plt.rcParams.update({"figure.figsize": (12, 6), "lines.linewidth": 1.5})
+analysis.plot_agp()
 ```
 
 ## Colorblind-safe palettes
@@ -111,12 +114,15 @@ GlucoseAnalysis("data.csv").plot_comprehensive_dashboard("out.png")
 
 ## Saving formats
 
-All plotters accept `save_path` with the format inferred from the
-extension: `.png`, `.pdf`, `.svg`, `.jpg`. PNG is the default for the
-comprehensive dashboard.
+To save any plot to a file, use ``plt.savefig()`` after the plot call:
+
+```python
+analysis.plot_agp()
+import matplotlib.pyplot as plt
+plt.savefig("agp.png")
+```
 
 ## See also
 
 - [Computing metrics](computing-metrics.md) — what the plots show.
 - [API reference → Plotting](../api/plotting.md) — function signatures.
-- [Contributing → Adding a new plot](https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md#adding-a-new-plot) — for contributors.

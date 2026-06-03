@@ -77,14 +77,14 @@ recommended for large datasets (millions of rows) because it is
 ~10× faster to read than CSV.
 
 ```python
-from cgmpy.data import ModularGlucoseData
+from cgmpy import GlucoseData
 
 # Write
-data = ModularGlucoseData("input.csv")
+data = GlucoseData("input.csv")
 data.to_parquet("output.parquet")
 
 # Read
-data2 = ModularGlucoseData("output.parquet")
+data2 = GlucoseData("output.parquet")
 ```
 
 ## DataFrame
@@ -93,7 +93,7 @@ You can also pass a `pandas.DataFrame` directly:
 
 ```python
 import pandas as pd
-from cgmpy import ModularGlucoseData
+from cgmpy import GlucoseData
 
 df = pd.DataFrame(
     {
@@ -101,7 +101,7 @@ df = pd.DataFrame(
         "glucose": [110 + i % 30 for i in range(288)],
     }
 )
-data = ModularGlucoseData(df)
+data = GlucoseData(df)
 ```
 
 ## Units

@@ -66,13 +66,14 @@ Example:
 
 ```python
 import pytest
-from cgmpy.metrics import ModularGlucoseMetrics
+from cgmpy import GlucoseData, GlucoseAnalysis
 
 
 def test_mean_is_close_to_known_value(stable_glucose_df):
     """The mean of a constant-100 trace is exactly 100."""
-    metrics = ModularGlucoseMetrics(stable_glucose_df)
-    assert metrics.basic().mean() == pytest.approx(100.0, abs=1e-6)
+    data = GlucoseData(stable_glucose_df)
+    analysis = GlucoseAnalysis(data=data)
+    assert analysis.mean() == pytest.approx(100.0, abs=1e-6)
 ```
 
 ## Clinical regression tests
@@ -103,9 +104,11 @@ import pytest
 def test_mage_matches_agata(synthetic_cgm):
     """CGMPy MAGE matches AGATA's mage within 1e-6."""
     import agata
-    from cgmpy import ModularGlucoseMetrics
+    from cgmpy import GlucoseData, GlucoseAnalysis
 
-    cgmpy_result = ModularGlucoseMetrics(synthetic_cgm).variability().mage()
+    data = GlucoseData(synthetic_cgm)
+    analysis = GlucoseAnalysis(data=data)
+    cgmpy_result = analysis.mage()
     agata_result = agata.mage(synthetic_cgm)
     assert cgmpy_result == pytest.approx(agata_result, abs=1e-6)
 ```

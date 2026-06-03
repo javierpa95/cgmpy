@@ -15,7 +15,7 @@ software, CGMPy gives you a clean, well-tested foundation.
   regularity.
 - **Compute** the full set of consensus clinical metrics:
   TIR, TAR, TBR, GMI, CV, MAGE, MODD, CONGA, J-Index, LBGI, HBGI, GRI, ADRR.
-- **Analyze pregnancy** with tighter cutoffs and the `GestationalDiabetes`
+- **Analyze pregnancy** with tighter cutoffs and the `PregnancyAnalysis`
   class.
 - **Visualize** Ambulatory Glucose Profiles (AGP), daily traces, and
   statistical dashboards.

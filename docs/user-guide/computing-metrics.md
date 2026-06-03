@@ -25,20 +25,19 @@ The `report` dictionary has the following top-level keys:
 
 ## The modular API
 
-For finer control, use `ModularGlucoseMetrics`:
+For finer control, use `GlucoseAnalysis`:
 
 ```python
-from cgmpy.data import ModularGlucoseData
-from cgmpy.metrics import ModularGlucoseMetrics
+from cgmpy import GlucoseData, GlucoseAnalysis
 
-data = ModularGlucoseData("data.csv")
-metrics = ModularGlucoseMetrics(data)
+data = GlucoseData("data.csv")
+analysis = GlucoseAnalysis(data)
 ```
 
 ### Basic statistics
 
 ```python
-basic = metrics.basic()
+basic = analysis.basic()
 print(basic.mean())     # mg/dL
 print(basic.median())   # mg/dL
 print(basic.gmi())      # Glucose Management Indicator, %
@@ -52,7 +51,7 @@ print(basic.distribution_analysis())  # full dict
 ### Time in range
 
 ```python
-tir = metrics.time_in_range()
+tir = analysis.time_in_range()
 print(tir.tir())    # 70-180 mg/dL (default)
 print(tir.tar1())   # 180-250 mg/dL
 print(tir.tar2())   # > 250 mg/dL
@@ -63,7 +62,7 @@ print(tir.tbr2())   # < 54 mg/dL
 ### Variability
 
 ```python
-v = metrics.variability()
+v = analysis.variability()
 print(v.cv())       # Coefficient of variation
 print(v.sd())       # Standard deviation
 print(v.mage())     # Mean Amplitude of Glycemic Excursions
@@ -98,8 +97,8 @@ t2 = get_targets("pregnancy")
 Pass the target to the metric or the facade:
 
 ```python
-metrics = ModularGlucoseMetrics(data, targets=t2)
-tir_pregnancy = metrics.time_in_range().tir()  # uses 63-140 mg/dL
+analysis = GlucoseAnalysis(data, targets=t2)
+tir_pregnancy = analysis.time_in_range().tir()  # uses 63-140 mg/dL
 ```
 
 ### Available cutoffs

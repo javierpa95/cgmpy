@@ -32,18 +32,18 @@ trimmed = handler.trim_to_pregnancy_window()
 ```
 
 If your data is already filtered, you can use the standard
-`ModularGlucoseData` instead.
+`GlucoseData` instead.
 
 ## Computing gestational diabetes metrics
 
 ```python
-from cgmpy import GestationalDiabetes
+from cgmpy import PregnancyAnalysis
 from cgmpy.metrics.targets import get_targets
 
 # Pregnancy cutoffs (63-140 mg/dL)
 targets = get_targets("pregnancy")
 
-gdm = GestationalDiabetes(data=trimmed, targets=targets)
+gdm = PregnancyAnalysis(data=trimmed, targets=targets)
 metrics = gdm.compute_all()
 
 for name, value in metrics.items():
@@ -64,7 +64,7 @@ Output (example):
 ## Per-meal TIR
 
 Pregnancy recommendations often look at glycemic control **per meal**
-(breakfast, lunch, dinner, snack). `GestationalDiabetes` provides
+(breakfast, lunch, dinner, snack). `PregnancyAnalysis` provides
 `time_in_range_per_meal()`:
 
 ```python
@@ -98,14 +98,16 @@ daytime = gdm.daytime_metrics()      # 06:00 - 00:00
 
 ## Visualization
 
-The `plot_agp` and `plot_daily_traces` plotters accept a `targets`
-argument that switches the target band to pregnancy cutoffs:
+The `plot_agp` and `plot_daily` methods accept pregnancy-target-aware
+data via the `GlucoseAnalysis` facade:
 
 ```python
-from cgmpy.plotting import AGPPlotter
+from cgmpy import GlucoseAnalysis, GlucoseData
+from cgmpy.metrics.targets import get_targets
 
-agp = AGPPlotter(data=trimmed, targets=targets)
-agp.plot_agp(save_path="agp_pregnancy.png")
+data = GlucoseData("data.csv", target_type="pregnancy")
+analysis = GlucoseAnalysis(data=data)
+analysis.plot_agp()
 ```
 
 ## References

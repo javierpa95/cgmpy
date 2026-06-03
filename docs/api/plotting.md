@@ -2,26 +2,32 @@
 
 The plotting layer generates static visualizations of CGM data.
 
-## Plotters
+## Module-level plot functions
 
-::: cgmpy.plotting.agp.AGPPlotter
+::: cgmpy.plotting.agp
     options:
       show_root_heading: true
       members:
         - plot_agp
+        - generate_week_agp
 
-::: cgmpy.plotting.daily_plots.DailyPlotter
+::: cgmpy.plotting.daily_plots
     options:
       show_root_heading: true
       members:
-        - plot_daily_traces
+        - day_graph
+        - plot_overlapping_days
+        - plot_week_boxplots
+        - plot_daily_variations
 
-::: cgmpy.plotting.statistical_plots.StatisticalPlotter
+::: cgmpy.plotting.statistical_plots
     options:
       show_root_heading: true
       members:
-        - plot_glucose_histogram
-        - plot_tir_breakdown
+        - histogram
+        - plot_time_in_range
+        - plot_distribution_comparison
+        - plot_correlation_matrix
 
 ## High-level facade
 
@@ -29,6 +35,18 @@ The plotting layer generates static visualizations of CGM data.
     options:
       show_root_heading: true
       members:
+        - plot_agp
+        - plot_daily
+        - plot_overlapping_days
+        - plot_week_boxplots
+        - plot_daily_variations
+        - histogram
+        - plot_time_in_range
+        - plot_distribution_comparison
+        - plot_correlation_matrix
+        - generate_week_agp
+        - plot_variability_dashboard
+        - plot_glucose_statistics
         - plot_comprehensive_dashboard
         - get_summary_string
         - get_comprehensive_report

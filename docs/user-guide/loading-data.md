@@ -27,20 +27,20 @@ Internally it:
 
 If you want to control the pipeline step by step, use the modular classes.
 
-### `ModularGlucoseData`
+### `GlucoseData`
 
 ```python
-from cgmpy.data import ModularGlucoseData
+from cgmpy import GlucoseData
 
 # From CSV
-data = ModularGlucoseData("data.csv")
+data = GlucoseData("data.csv")
 
 # From Parquet (fast)
-data = ModularGlucoseData("data.parquet")
+data = GlucoseData("data.parquet")
 
 # From a DataFrame
 import pandas as pd
-data = ModularGlucoseData(pd.read_csv("data.csv"))
+data = GlucoseData(pd.read_csv("data.csv"))
 ```
 
 ### `DataLoader` (low-level)
@@ -81,7 +81,7 @@ loader = create_specialized_loader("data.csv")
 ## Filtering
 
 ```python
-data = ModularGlucoseData("data.csv")
+data = GlucoseData("data.csv")
 
 # By date range
 jan = data.filter_by_date_range("2024-01-01", "2024-01-31")
@@ -123,17 +123,16 @@ path.
 
 Your CSV is missing the time column (or whichever column CGMPy expected for
 the auto-detected device). Either it is not a recognized device export, or
-you need to pass `date_col=...` and `glucose_col=...` to `ModularGlucoseData`.
+you need to pass `date_col=...` and `glucose_col=...` to `GlucoseData`.
 
 ```python
-from cgmpy import CGMPyError, ColumnNotFoundError
-from cgmpy.data import ModularGlucoseData
+from cgmpy import CGMPyError, ColumnNotFoundError, GlucoseData
 
 try:
-    data = ModularGlucoseData("export.csv")
+    data = GlucoseData("export.csv")
 except ColumnNotFoundError as e:
     print(f"Missing: {e.column}; available: {e.available}")
-    data = ModularGlucoseData(
+    data = GlucoseData(
         "export.csv",
         date_col="Datetime",
         glucose_col="Sensor Glucose (mg/dL)",
@@ -147,10 +146,10 @@ export with semicolons), or check that the file is not corrupted / not
 actually a text file saved with the `.csv` extension.
 
 ```python
-from cgmpy import InvalidCSVFormatError
+from cgmpy import InvalidCSVFormatError, GlucoseData
 
 try:
-    data = ModularGlucoseData("export.csv", delimiter=";")
+    data = GlucoseData("export.csv", delimiter=";")
 except InvalidCSVFormatError as e:
     print(f"Cannot parse {e.file_path}: {e.reason}")
 ```
@@ -159,15 +158,14 @@ except InvalidCSVFormatError as e:
 
 We could not auto-detect the device. The exception message lists the
 columns that were found. Pass the loader class explicitly
-(e.g. `Dexcom("file.csv")`), or use `ModularGlucoseData` with
+(e.g. `Dexcom("file.csv")`), or use `GlucoseData` with
 `date_col=` / `glucose_col=`.
 
 ```python
-from cgmpy import Dexcom, DeviceDetectionError
-from cgmpy.data import ModularGlucoseData
+from cgmpy import Dexcom, DeviceDetectionError, GlucoseData
 
 try:
-    loader = ModularGlucoseData("export.csv")
+    data = GlucoseData("export.csv")
 except DeviceDetectionError as e:
     print(f"Found columns: {e.columns_found}")
     data = Dexcom("export.csv")  # try Dexcom explicitly

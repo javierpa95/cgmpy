@@ -2,15 +2,39 @@
 
 The metrics layer computes clinical statistics from a CGM time series.
 
-## High-level
+## High-level facade
 
-::: cgmpy.metrics.ModularGlucoseMetrics
-    options:
-      show_root_heading: true
-      members:
-        - basic
-        - time_in_range
-        - variability
+The `GlucoseAnalysis` facade (in `cgmpy.analysis.core`) provides all
+metrics via methods:
+
+```python
+from cgmpy import GlucoseAnalysis
+
+analysis = GlucoseAnalysis("data.csv")
+analysis.mean()
+analysis.TIR()
+analysis.cv()
+analysis.gmi()
+analysis.MAGE()
+# ... see the API reference for the full list.
+```
+
+See `cgmpy.analysis.core.GlucoseAnalysis` for the full method list.
+
+## Pure functions
+
+All metric calculations are also available as standalone functions:
+
+| Module | Functions |
+|--------|-----------|
+| `cgmpy.metrics.basic` | `mean`, `median`, `sd`, `cv`, `gmi`, `percentile` |
+| `cgmpy.metrics.time_in_range` | `tir`, `tar`, `tbr`, `data_completeness` |
+| `cgmpy.metrics.variability.sd` | `sd_global`, `sd_within_day`, `sd_between_timepoints`, ... |
+| `cgmpy.metrics.variability.mage` | `mage_simple`, `mage_baghurst` |
+| `cgmpy.metrics.variability.modd` | `modd` |
+| `cgmpy.metrics.variability.conga` | `conga` |
+| `cgmpy.metrics.variability.lability` | `lability_index` |
+| `cgmpy.metrics.variability.risk` | `j_index`, `lbgi`, `hbgi`, `gri`, `adrr`, `m_value`, `grade` |
 
 ## Targets
 
@@ -25,60 +49,12 @@ The metrics layer computes clinical statistics from a CGM time series.
     options:
       show_root_heading: true
 
-## Basic metrics
-
-::: cgmpy.metrics.basic.BasicMetrics
-    options:
-      show_root_heading: true
-      members:
-        - mean
-        - median
-        - std
-        - cv
-        - gmi
-        - iqr
-        - percentile
-        - distribution_analysis
-
-## Time in range
-
-::: cgmpy.metrics.time_in_range.TimeInRangeMetrics
-    options:
-      show_root_heading: true
-      members:
-        - tir
-        - tar1
-        - tar2
-        - tbr1
-        - tbr2
-
-## Variability
-
-::: cgmpy.metrics.variability.VariabilityMetrics
-    options:
-      show_root_heading: true
-      members:
-        - cv
-        - sd
-        - mage
-        - mage_plus
-        - mage_minus
-        - modd
-        - conga
-        - j_index
-        - lbgi
-        - hbgi
-        - gri
-        - adrr
-
 ## Pregnancy
 
-::: cgmpy.metrics.pregnancy.GestationalDiabetes
+::: cgmpy.metrics.pregnancy.PregnancyAnalysis
     options:
       show_root_heading: true
       members:
-        - compute_all
-        - time_in_range_per_meal
-        - glycemia_risk_index
-        - overnight_metrics
-        - daytime_metrics
+        - summary_by_trimester
+        - all_simplified
+        - calculate_all_metrics

@@ -41,10 +41,10 @@ results = agata.run()
 The most common use case is comparing CGMPy and AGATA on the same data:
 
 ```python
-from cgmpy import AgataAnalysis, GlucoseMetrics
+from cgmpy import AgataAnalysis, GlucoseAnalysis
 
 agata = AgataAnalysis(data_source="data.csv").run()
-cgm = GlucoseMetrics(data_source="data.csv").all()
+cgm = GlucoseAnalysis("data.csv").get_comprehensive_report()
 
 # Compare metric by metric
 print("Mean glucose — AGATA:", agata["variability"]["mean_glucose"])
