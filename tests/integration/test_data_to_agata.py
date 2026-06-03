@@ -4,7 +4,7 @@ This module exercises the full pipeline:
 
 1. Load a device CSV via its specialized loader (``Dexcom``,
    ``Libreview``, ``MedtronicCarelink``, ``TandemDiabetes``).
-2. Hand the resulting ``ModularGlucoseData`` to
+2. Hand the resulting ``GlucoseData`` to
    :func:`cgmpy.agata.adapter.prepare_data_for_agata` for grid alignment.
 3. Call :func:`cgmpy.agata.metrics.analyze_with_agata` to obtain the
    full py_agata analysis.
@@ -48,10 +48,9 @@ pytestmark = [
 import cgmpy.agata.metrics as agata_metrics  # noqa: E402
 from cgmpy import (  # noqa: E402
     Dexcom,
-    GlucoseMetrics,
+    GlucoseData,
     Libreview,
     MedtronicCarelink,
-    ModularGlucoseData,
     TandemDiabetes,
 )
 from cgmpy.agata.adapter import prepare_data_for_agata  # noqa: E402
@@ -174,10 +173,9 @@ class TestSineToAgataPipeline:
     """
 
     def test_sine_full_round_trip(self) -> None:
-        """Load sine_24h.csv via GlucoseMetrics, run py_agata, and check TIR."""
-        # GlucoseMetrics already inherits from ModularGlucoseData so it
-        # satisfies the type contract of analyze_with_agata.
-        data = GlucoseMetrics(data_source=str(SINE_PATH))
+        """Load sine_24h.csv via GlucoseData, run py_agata, and check TIR."""
+        # GlucoseData satisfies the type contract of analyze_with_agata.
+        data = GlucoseData(data_source=str(SINE_PATH))
         results = analyze_with_agata(data)
         assert EXPECTED_TOP_LEVEL_KEYS.issubset(results.keys())
 
@@ -196,7 +194,7 @@ class TestSineToAgataPipeline:
 
     def test_sine_summary_is_flat(self) -> None:
         """The summary=True path also yields a non-empty flat dict."""
-        data = GlucoseMetrics(data_source=str(SINE_PATH))
+        data = GlucoseData(data_source=str(SINE_PATH))
         # Use the AgataAnalysis class which supports summary=True.
         from cgmpy.agata.metrics import AgataAnalysis
 
@@ -238,7 +236,7 @@ class TestAgataErrorPaths:
             analyze_with_agata(data)
 
     def test_empty_modular_glucose_data_raises_empty_data_error(self) -> None:
-        """An empty ``ModularGlucoseData`` raises ``EmptyDataError`` from
+        """An empty ``GlucoseData`` raises ``EmptyDataError`` from
         the adapter — the guard added in v0.5.2.
         """
         empty_df = pd.DataFrame(
@@ -247,7 +245,7 @@ class TestAgataErrorPaths:
                 "glucose": pd.Series(dtype="float64"),
             }
         )
-        gd = ModularGlucoseData(data_source=empty_df)
+        gd = GlucoseData(data_source=empty_df)
         assert len(gd.data) == 0  # sanity check
         with pytest.raises(EmptyDataError):
             prepare_data_for_agata(gd)
@@ -257,7 +255,7 @@ class TestAgataErrorPaths:
         1-row output with non-NaN glucose.
         """
         one_row_df = pd.DataFrame({"time": [datetime(2024, 1, 1, 12, 0)], "glucose": [120.0]})
-        gd = ModularGlucoseData(data_source=one_row_df)
+        gd = GlucoseData(data_source=one_row_df)
         aligned = prepare_data_for_agata(gd)
         assert isinstance(aligned, pd.DataFrame)
         assert len(aligned) == 1

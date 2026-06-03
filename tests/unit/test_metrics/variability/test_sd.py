@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cgmpy import GlucoseMetrics
+from cgmpy import GlucoseAnalysis, GlucoseData
 
 
 def _make_multi_day_df(n_days: int) -> pd.DataFrame:
@@ -20,47 +20,48 @@ def _make_multi_day_df(n_days: int) -> pd.DataFrame:
     return pd.DataFrame({"time": times, "glucose": glucose})
 
 
+@pytest.fixture
+def analysis(stable_glucose_df):
+    return GlucoseAnalysis(GlucoseData(data_source=stable_glucose_df))
+
+
 def test_sd_total_returns_dict(stable_glucose_df):
     """sd_total should return a dict with 'sd' and 'mean' matching the raw series."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.sd_total()
+    ga = GlucoseAnalysis(GlucoseData(data_source=stable_glucose_df))
+    result = ga.sd_total()
     assert isinstance(result, dict)
     assert "sd" in result and "mean" in result
     assert result["sd"] == pytest.approx(stable_glucose_df["glucose"].std())
     assert result["mean"] == pytest.approx(stable_glucose_df["glucose"].mean())
 
 
-def test_sd_within_day_default_and_threshold(stable_glucose_df):
+def test_sd_within_day_default_and_threshold(analysis):
     """sd_within_day should return the same value as sdw() and respect min_count_threshold."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    default = gm.sd_within_day()
+    default = analysis.sd_within_day()
     assert "sd" in default
-    assert default["sd"] == pytest.approx(gm.sdw())
+    assert default["sd"] == pytest.approx(analysis.sdw())
     # Custom threshold should be accepted without error and return a numeric SD.
-    custom = gm.sd_within_day(min_count_threshold=0.9)
+    custom = analysis.sd_within_day(min_count_threshold=0.9)
     assert isinstance(custom["sd"], float)
 
 
-def test_sdw_returns_float(stable_glucose_df):
+def test_sdw_returns_float(analysis):
     """sdw() should return only the simplified float value."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    val = gm.sdw()
+    val = analysis.sdw()
     assert isinstance(val, float)
     assert val >= 0.0
 
 
-def test_sd_within_day_segment(stable_glucose_df):
+def test_sd_within_day_segment(analysis):
     """sd_within_day_segment should return sd/mean for a time window."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.sd_within_day_segment("08:00", 8)
+    result = analysis.sd_within_day_segment("08:00", 8)
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)
 
 
-def test_sd_between_timepoints_default(stable_glucose_df):
+def test_sd_between_timepoints_default(analysis):
     """sd_between_timepoints should return a dict with sd/mean plus statistics."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.sd_between_timepoints()
+    result = analysis.sd_between_timepoints()
     for key in (
         "sd",
         "mean",
@@ -74,19 +75,18 @@ def test_sd_between_timepoints_default(stable_glucose_df):
     assert isinstance(result["sd"], float)
 
 
-def test_sd_between_timepoints_with_grouping(stable_glucose_df):
-    """agrupar_por_intervalos=True branch returns a valid result.
+def test_sd_between_timepoints_with_grouping(analysis):
+    """group_by_intervals=True branch returns a valid result.
 
     Bug fixed in v0.5.1: the implementation referenced
     ``df.groupby(["day", "interval"])`` but ``df["day"]`` was only created
     in the non-grouped branch. The call now adds ``df["day"]`` before the
     groupby and returns a well-formed dict.
     """
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.sd_between_timepoints(
+    result = analysis.sd_between_timepoints(
         filter_outliers=False,
-        agrupar_por_intervalos=True,
-        intervalo_minutos=5,
+        group_by_intervals=True,
+        interval_minutes=5,
     )
     assert isinstance(result, dict)
     assert "sd" in result
@@ -96,8 +96,8 @@ def test_sd_between_timepoints_with_grouping(stable_glucose_df):
 def test_sd_between_timepoints_segment():
     """Use a multi-day dataset so the segment has repeated timestamps."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_between_timepoints_segment("00:00", 8)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_between_timepoints_segment("00:00", 8)
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)
 
@@ -105,8 +105,8 @@ def test_sd_between_timepoints_segment():
 def test_sd_within_series_1h():
     """sd_within_series(hours=1) should return a finite SD and metadata."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_within_series(hours=1)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_within_series(hours=1)
     assert "sd" in result
     assert "windows_analyzed" in result
     assert result["windows_analyzed"] > 0
@@ -116,8 +116,8 @@ def test_sd_within_series_1h():
 def test_sd_within_series_24h():
     """sd_within_series(hours=24) should return a finite SD on multi-day data."""
     df = _make_multi_day_df(3)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_within_series(hours=24)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_within_series(hours=24)
     assert result["sd"] >= 0.0
     assert isinstance(result["sd"], float | np.floating)
 
@@ -125,8 +125,8 @@ def test_sd_within_series_24h():
 def test_sd_daily_mean():
     """sd_daily_mean should return sd/mean of daily means across multiple days."""
     df = _make_multi_day_df(3)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_daily_mean()
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_daily_mean()
     assert "sd" in result and "mean" in result
     assert "valid_days" in result and "total_days" in result
     assert result["valid_days"] >= 2
@@ -136,8 +136,8 @@ def test_sd_daily_mean():
 def test_sd_same_timepoint_default():
     """sd_same_timepoint should aggregate per-time-point between-day SDs."""
     df = _make_multi_day_df(3)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_same_timepoint()
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_same_timepoint()
     assert "sd" in result and "mean" in result
     assert "total_timepoints" in result
     assert isinstance(result["sd"], float | np.floating)
@@ -146,16 +146,16 @@ def test_sd_same_timepoint_default():
 def test_sd_same_timepoint_no_filter():
     """filter_outliers=False should keep every time point in the result."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_same_timepoint(filter_outliers=False)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_same_timepoint(filter_outliers=False)
     assert isinstance(result["sd"], float | np.floating)
 
 
 def test_sd_same_timepoint_adjusted():
     """sd_same_timepoint_adjusted should adjust values by daily mean and return sd/mean."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_same_timepoint_adjusted()
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_same_timepoint_adjusted()
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)
 
@@ -163,17 +163,16 @@ def test_sd_same_timepoint_adjusted():
 def test_sd_interaction():
     """sd_interaction should return the SDI value plus the global mean."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_interaction()
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_interaction()
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)
     assert result["mean"] == pytest.approx(df["glucose"].mean(), rel=1e-3)
 
 
-def test_sd_segment_day(stable_glucose_df):
+def test_sd_segment_day(analysis):
     """sd_segment should return sd/mean for a defined time window (day)."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.sd_segment("08:00", 8)
+    result = analysis.sd_segment("08:00", 8)
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)
 
@@ -181,23 +180,22 @@ def test_sd_segment_day(stable_glucose_df):
 def test_sd_segment_crosses_midnight():
     """A segment that crosses midnight (e.g. 22:00-06:00) should be handled."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_segment("22:00", 8)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_segment("22:00", 8)
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)
 
 
-def test_calculate_all_sd_metrics_returns_full_dict(stable_glucose_df):
+def test_calculate_all_sd_metrics_returns_full_dict(analysis):
     """calculate_all_sd_metrics should return a dict with all SD keys."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.calculate_all_sd_metrics()
+    result = analysis.calculate_all_sd_metrics()
     expected = {
         "SDT",
         "SDw",
         "SDhh:mm",
-        "Noche",
+        "SDNight",
         "Day",
-        "Tarde",
+        "SDEvening",
         "SDws_1h",
         "SDws_6h",
         "SDws_24h",
@@ -214,15 +212,15 @@ def test_calculate_all_sd_metrics_returns_full_dict(stable_glucose_df):
 def test_calculate_all_cv_metrics_returns_percentages():
     """calculate_all_cv_metrics should return percentage values (CV * 100)."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.calculate_all_cv_metrics()
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.calculate_all_cv_metrics()
     expected = {
         "CVT",
         "CVw",
         "CVhh:mm",
-        "CVNoche",
+        "CVNight",
         "CVDay",
-        "CVTarde",
+        "CVEvening",
         "CVSDws_1h",
         "CVSDws_6h",
         "CVSDws_24h",
@@ -238,10 +236,9 @@ def test_calculate_all_cv_metrics_returns_percentages():
         assert -500.0 < v < 500.0, f"{k} = {v} is not a plausible CV percentage"
 
 
-def test_sd_between_timepoints_no_filter(stable_glucose_df):
+def test_sd_between_timepoints_no_filter(analysis):
     """filter_outliers=False should retain every time point (cover the 'else' branch)."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    result = gm.sd_between_timepoints(filter_outliers=False)
+    result = analysis.sd_between_timepoints(filter_outliers=False)
     assert "sd" in result
     assert isinstance(result["sd"], float | np.floating)
 
@@ -253,8 +250,8 @@ def test_sd_within_day_segment_empty_returns_zero():
     n = 144  # 12 hours
     times = [start + timedelta(minutes=5 * i) for i in range(n)]
     df = pd.DataFrame({"time": times, "glucose": [120.0] * n})
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.sd_within_day_segment("00:00", 6)  # No data covers 00:00-06:00
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.sd_within_day_segment("00:00", 6)  # No data covers 00:00-06:00
     assert result["sd"] == 0.0
     assert result["mean"] == 0.0
 
@@ -262,8 +259,8 @@ def test_sd_within_day_segment_empty_returns_zero():
 def test_sd_segment_end_at_midnight():
     """A segment that ends exactly at 00:00 (e.g. 16:00 + 8h) should be handled."""
     df = _make_multi_day_df(2)
-    gm = GlucoseMetrics(data_source=df)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
     # 16:00 + 8h = 24:00 (== 00:00 next day); exercises the end_min==0 branch.
-    result = gm.sd_segment("16:00", 8)
+    result = ga.sd_segment("16:00", 8)
     assert "sd" in result and "mean" in result
     assert isinstance(result["sd"], float | np.floating)

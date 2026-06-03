@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 from cgmpy.agata.adapter import prepare_data_for_agata  # noqa: E402
-from cgmpy.data.core import ModularGlucoseData  # noqa: E402
+from cgmpy.data.core import GlucoseData  # noqa: E402
 from cgmpy.errors import EmptyDataError  # noqa: E402
 
 
@@ -44,14 +44,14 @@ class TestAdapterEdgeCases:
 
     def test_empty_glucose_data_raises(self) -> None:
         """An empty input must raise EmptyDataError, not a pandas error."""
-        gd = ModularGlucoseData(data_source=_empty_glucose_df())
+        gd = GlucoseData(data_source=_empty_glucose_df())
         assert len(gd.data) == 0  # sanity check on the fixture
         with pytest.raises(EmptyDataError):
             prepare_data_for_agata(gd)
 
     def test_single_row_does_not_crash(self) -> None:
         """A single-row input yields a 1-row DataFrame with non-NaN glucose."""
-        gd = ModularGlucoseData(data_source=_single_row_glucose_df())
+        gd = GlucoseData(data_source=_single_row_glucose_df())
         result = prepare_data_for_agata(gd)
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 1

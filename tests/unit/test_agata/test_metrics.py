@@ -28,7 +28,7 @@ from cgmpy.agata.metrics import (  # noqa: E402
     analyze_with_agata,
     summarize_agata_results,
 )
-from cgmpy.data.core import ModularGlucoseData  # noqa: E402
+from cgmpy.data.core import GlucoseData  # noqa: E402
 
 EXPECTED_TOP_LEVEL_KEYS = {
     "variability",
@@ -55,14 +55,14 @@ class TestAnalyzeWithAgata:
 
     def test_returns_dict_with_top_level_sections(self, week_glucose_df: pd.DataFrame) -> None:
         """The full analysis returns the expected top-level sections."""
-        gd = ModularGlucoseData(data_source=week_glucose_df)
+        gd = GlucoseData(data_source=week_glucose_df)
         results = analyze_with_agata(gd)
         assert isinstance(results, dict)
         assert EXPECTED_TOP_LEVEL_KEYS.issubset(results.keys())
 
     def test_variability_section_has_metrics(self, week_glucose_df: pd.DataFrame) -> None:
         """The variability section exposes mean/median/std glucose."""
-        gd = ModularGlucoseData(data_source=week_glucose_df)
+        gd = GlucoseData(data_source=week_glucose_df)
         results = analyze_with_agata(gd)
         var = results["variability"]
         assert "mean_glucose" in var
@@ -71,7 +71,7 @@ class TestAnalyzeWithAgata:
 
     def test_diabetes_target_is_default(self, week_glucose_df: pd.DataFrame) -> None:
         """The default `glycemic_target='diabetes'` runs without error."""
-        gd = ModularGlucoseData(data_source=week_glucose_df)
+        gd = GlucoseData(data_source=week_glucose_df)
         results = analyze_with_agata(gd, glycemic_target="diabetes")
         assert isinstance(results, dict)
 
@@ -104,7 +104,7 @@ class TestAgataAnalysisClass:
     def test_inherits_modular_glucose_data(self, week_glucose_df: pd.DataFrame) -> None:
         """`AgataAnalysis` inherits the data-handling facade."""
         analyzer = AgataAnalysis(data_source=week_glucose_df)
-        assert isinstance(analyzer, ModularGlucoseData)
+        assert isinstance(analyzer, GlucoseData)
         assert len(analyzer.data) > 0
 
 
@@ -113,10 +113,10 @@ class TestAnalyzeOneArm:
 
     def test_returns_dict_for_arm_of_two(self, week_glucose_df: pd.DataFrame) -> None:
         """A two-subject arm analysis returns a dict with the expected sections."""
-        gd1 = ModularGlucoseData(data_source=week_glucose_df.copy())
+        gd1 = GlucoseData(data_source=week_glucose_df.copy())
         df2 = week_glucose_df.copy()
         df2["time"] = df2["time"] + pd.Timedelta(days=14)
-        gd2 = ModularGlucoseData(data_source=df2)
+        gd2 = GlucoseData(data_source=df2)
         results = analyze_one_arm([gd1, gd2])
         assert isinstance(results, dict)
         # `analyze_one_arm` reports aggregated stats, no per-subject `events`.
@@ -130,10 +130,10 @@ class TestAnalyzeOneArm:
         flattened values are dicts of summary statistics (mean, median, prc_25, ...).
         We only assert top-level flatness and the presence of variability_ keys.
         """
-        gd1 = ModularGlucoseData(data_source=week_glucose_df.copy())
+        gd1 = GlucoseData(data_source=week_glucose_df.copy())
         df2 = week_glucose_df.copy()
         df2["time"] = df2["time"] + pd.Timedelta(days=14)
-        gd2 = ModularGlucoseData(data_source=df2)
+        gd2 = GlucoseData(data_source=df2)
         summary = AgataAnalysis.analyze_one_arm([gd1, gd2], summary=True)
         assert isinstance(summary, dict)
         assert any(k.startswith("variability_") for k in summary)
@@ -145,7 +145,7 @@ class TestSummarizeAgataResults:
 
     def test_flattens_nested_dict(self, week_glucose_df: pd.DataFrame) -> None:
         """The flat summary has prefixed keys matching the nested categories."""
-        gd = ModularGlucoseData(data_source=week_glucose_df)
+        gd = GlucoseData(data_source=week_glucose_df)
         nested = analyze_with_agata(gd)
         flat = summarize_agata_results(nested)
         assert isinstance(flat, dict)

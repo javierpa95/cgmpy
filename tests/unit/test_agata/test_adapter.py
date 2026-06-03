@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 from cgmpy.agata.adapter import prepare_data_for_agata  # noqa: E402
-from cgmpy.data.core import ModularGlucoseData  # noqa: E402
+from cgmpy.data.core import GlucoseData  # noqa: E402
 
 
 @pytest.fixture
@@ -49,27 +49,27 @@ class TestPrepareDataForAgata:
         self, one_day_glucose_df: pd.DataFrame
     ) -> None:
         """The adapter returns a DataFrame with `t` and `glucose` columns."""
-        gd = ModularGlucoseData(data_source=one_day_glucose_df)
+        gd = GlucoseData(data_source=one_day_glucose_df)
         result = prepare_data_for_agata(gd)
         assert isinstance(result, pd.DataFrame)
         assert list(result.columns) == ["t", "glucose"]
 
     def test_time_column_is_datetime(self, one_day_glucose_df: pd.DataFrame) -> None:
         """The `t` column is datetime-typed."""
-        gd = ModularGlucoseData(data_source=one_day_glucose_df)
+        gd = GlucoseData(data_source=one_day_glucose_df)
         result = prepare_data_for_agata(gd)
         assert pd.api.types.is_datetime64_any_dtype(result["t"])
 
     def test_homogeneous_5min_grid(self, one_day_glucose_df: pd.DataFrame) -> None:
         """The result is on a homogeneous 5-minute grid."""
-        gd = ModularGlucoseData(data_source=one_day_glucose_df)
+        gd = GlucoseData(data_source=one_day_glucose_df)
         result = prepare_data_for_agata(gd)
         deltas = result["t"].diff().dropna().dt.total_seconds() / 60
         assert (deltas == 5.0).all()
 
     def test_unaligned_data_is_floored_to_grid(self, unaligned_glucose_df: pd.DataFrame) -> None:
         """Unaligned timestamps are floored to the 5-minute grid."""
-        gd = ModularGlucoseData(data_source=unaligned_glucose_df)
+        gd = GlucoseData(data_source=unaligned_glucose_df)
         result = prepare_data_for_agata(gd)
         # All minutes in the floored grid are multiples of 5
         minutes = result["t"].dt.minute.unique()
@@ -77,14 +77,14 @@ class TestPrepareDataForAgata:
 
     def test_custom_resample_freq(self, one_day_glucose_df: pd.DataFrame) -> None:
         """A non-default resample frequency is honored."""
-        gd = ModularGlucoseData(data_source=one_day_glucose_df)
+        gd = GlucoseData(data_source=one_day_glucose_df)
         result = prepare_data_for_agata(gd, resample_freq="15min")
         deltas = result["t"].diff().dropna().dt.total_seconds() / 60
         assert (deltas == 15.0).all()
 
     def test_preserves_glucose_range(self, one_day_glucose_df: pd.DataFrame) -> None:
         """Glucose values in the result fall within the original range (modulo NaNs)."""
-        gd = ModularGlucoseData(data_source=one_day_glucose_df)
+        gd = GlucoseData(data_source=one_day_glucose_df)
         result = prepare_data_for_agata(gd)
         non_null = result["glucose"].dropna()
         original = one_day_glucose_df["glucose"]

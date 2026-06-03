@@ -27,9 +27,9 @@ import pytest
 
 from cgmpy import (
     Dexcom,
+    GlucoseData,
     Libreview,
     MedtronicCarelink,
-    ModularGlucoseData,
     TandemDiabetes,
 )
 from cgmpy.data.loader import DataLoader
@@ -423,8 +423,8 @@ class TestSpecializedExceptions:
 class TestEndToEndErrorFlow:
     """Smoke tests that the new exception types flow up through the facade."""
 
-    def test_modular_glucose_data_missing_column_raises_invalid_csv(self, tmp_path: Path) -> None:
-        """Constructing a ``ModularGlucoseData`` with a bad ``date_col``
+    def test_glucose_data_missing_column_raises_invalid_csv(self, tmp_path: Path) -> None:
+        """Constructing a ``GlucoseData`` with a bad ``date_col``
         surfaces ``InvalidCSVFormatError`` from the loader.
 
         The loader rejects unknown ``usecols`` before the processor's
@@ -436,9 +436,9 @@ class TestEndToEndErrorFlow:
         csv = tmp_path / "ok.csv"
         csv.write_text("ts,bg\n2024-01-01 00:00:00,120\n", encoding="utf-8")
         with pytest.raises(InvalidCSVFormatError):
-            ModularGlucoseData(str(csv), date_col="time", glucose_col="bg")
+            GlucoseData(str(csv), date_col="time", glucose_col="bg")
 
-    def test_modular_glucose_data_dataframe_with_missing_column_raises_column_not_found(
+    def test_glucose_data_dataframe_with_missing_column_raises_column_not_found(
         self,
     ) -> None:
         """When the input is an in-memory DataFrame the loader is bypassed,
@@ -454,12 +454,12 @@ class TestEndToEndErrorFlow:
             }
         )
         with pytest.raises(ColumnNotFoundError):
-            ModularGlucoseData(data_source=df, date_col="time", glucose_col="bg")
+            GlucoseData(data_source=df, date_col="time", glucose_col="bg")
 
     def test_strict_glucose_range_flows_via_processor(self) -> None:
         """End-to-end: the ``strict_glucose_range`` flag is exposed on
         ``DataProcessor.process_data`` (the only place where the strict
-        gate is implemented). At the ``ModularGlucoseData`` / ``Dexcom``
+        gate is implemented). At the ``GlucoseData`` / ``Dexcom``
         constructor level the legacy warn-only behaviour is preserved.
         """
         loader = DataLoader()
@@ -501,7 +501,7 @@ class TestEndToEndErrorFlow:
         [Dexcom, Libreview, MedtronicCarelink, TandemDiabetes],
     )
     def test_all_device_loaders_load_constant_120_fixture(
-        self, device_cls: type[ModularGlucoseData]
+        self, device_cls: type[GlucoseData]
     ) -> None:
         """Smoke: every specialized loader opens its 288-row constant-120
         fixture without raising.

@@ -26,7 +26,8 @@ import pytest
 
 from cgmpy import (
     Dexcom,
-    GlucoseMetrics,
+    GlucoseAnalysis,
+    GlucoseData,
     Libreview,
     MedtronicCarelink,
     TandemDiabetes,
@@ -47,9 +48,9 @@ SINE_PATH = FIXTURES_SYNTHETIC / "sine_24h.csv"
 
 
 # ----------------------------------------------------------- helpers
-def _metrics_for_dataframe(df: pd.DataFrame) -> GlucoseMetrics:
-    """Wrap a cleaned DataFrame (with ``time``/``glucose`` cols) into ``GlucoseMetrics``."""
-    return GlucoseMetrics(data_source=df)
+def _metrics_for_dataframe(df: pd.DataFrame) -> GlucoseAnalysis:
+    """Wrap a cleaned DataFrame (with ``time``/``glucose`` cols) into ``GlucoseAnalysis``."""
+    return GlucoseAnalysis(data=GlucoseData(data_source=df))
 
 
 # =================================================================== sine
@@ -63,19 +64,19 @@ class TestSine24hMetrics:
     """
 
     @pytest.fixture
-    def sine_metrics(self) -> GlucoseMetrics:
-        """The GlucoseMetrics object built from the sine-24h CSV."""
-        return GlucoseMetrics(data_source=str(SINE_PATH))
+    def sine_metrics(self) -> GlucoseAnalysis:
+        """The GlucoseAnalysis object built from the sine-24h CSV."""
+        return GlucoseAnalysis(data=str(SINE_PATH))
 
-    def test_n_records(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_n_records(self, sine_metrics: GlucoseAnalysis) -> None:
         """The sine CSV contains exactly 288 rows (24 h x 12 readings/h)."""
         assert len(sine_metrics.data) == 288
 
-    def test_mean_is_120(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_mean_is_120(self, sine_metrics: GlucoseAnalysis) -> None:
         """Mean glucose = 120.0 mg/dL (exact, by symmetry of ``sin`` over 2 full periods)."""
         assert sine_metrics.mean() == pytest.approx(120.0, abs=0.01)
 
-    def test_sd_sample_is_21_2501280996(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_sd_sample_is_21_2501280996(self, sine_metrics: GlucoseAnalysis) -> None:
         """Sample SD (ddof=1) = 21.2501280996 mg/dL (pandas default).
 
         The "theoretical" SD of ``30 * sin(2*pi*t/720)`` is ``30/sqrt(2) =
@@ -84,31 +85,31 @@ class TestSine24hMetrics:
         """
         assert sine_metrics.sd() == pytest.approx(21.250128099634388, abs=0.01)
 
-    def test_cv_is_17_708_percent(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_cv_is_17_708_percent(self, sine_metrics: GlucoseAnalysis) -> None:
         """CV = sd / mean * 100 ≈ 17.708 %."""
         assert sine_metrics.cv() == pytest.approx(17.7084401, abs=0.01)
 
-    def test_min_is_90(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_min_is_90(self, sine_metrics: GlucoseAnalysis) -> None:
         """Minimum = 120 - 30 = 90 mg/dL."""
         assert sine_metrics.data["glucose"].min() == pytest.approx(90.0, abs=0.01)
 
-    def test_max_is_150(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_max_is_150(self, sine_metrics: GlucoseAnalysis) -> None:
         """Maximum = 120 + 30 = 150 mg/dL."""
         assert sine_metrics.data["glucose"].max() == pytest.approx(150.0, abs=0.01)
 
-    def test_tir_is_100_percent(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_tir_is_100_percent(self, sine_metrics: GlucoseAnalysis) -> None:
         """TIR (70-180) = 100 % because every value lies in [90, 150]."""
         assert sine_metrics.TIR() == pytest.approx(100.0, abs=0.01)
 
-    def test_tar_total_is_0(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_tar_total_is_0(self, sine_metrics: GlucoseAnalysis) -> None:
         """TAR (>180) = 0 % because max is 150 mg/dL."""
         assert sine_metrics.TAR_total() == pytest.approx(0.0, abs=0.01)
 
-    def test_tbr_total_is_0(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_tbr_total_is_0(self, sine_metrics: GlucoseAnalysis) -> None:
         """TBR (<70) = 0 % because min is 90 mg/dL."""
         assert sine_metrics.TBR_total() == pytest.approx(0.0, abs=0.01)
 
-    def test_gmi_is_6_18(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_gmi_is_6_18(self, sine_metrics: GlucoseAnalysis) -> None:
         """GMI = ``round(3.31 + 0.02392 * mean, 2)`` = 6.18 % (Beck 2019).
 
         Not the older ``eA1c = (mean + 46.7) / 28.7 = 5.81 %`` — CGMPy uses
@@ -116,11 +117,11 @@ class TestSine24hMetrics:
         """
         assert sine_metrics.gmi() == pytest.approx(6.18, abs=0.01)
 
-    def test_data_completeness_is_100_percent(self, sine_metrics: GlucoseMetrics) -> None:
+    def test_data_completeness_is_100_percent(self, sine_metrics: GlucoseAnalysis) -> None:
         """288 expected vs. 288 real at 5-min interval → 100 % completeness.
 
         Note: ``data_completeness`` returns an ``int`` (already rounded),
-        not a float, so we assert exact equality.
+        not a float, so we assert exactly equality.
         """
         assert sine_metrics.data_completeness() == 100
 

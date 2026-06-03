@@ -208,33 +208,36 @@ class TestSpecializedClassStrings:
         d = Dexcom(str(f))
         _patch_info(d)
         out = str(d)
-        assert "Dexcom Data" in out
-        assert "readings between" in out
-        assert "Memory usage" in out
+        assert "Dexcom CGM Device" in out
+        assert "Records:" in out
+        assert "Completeness:" in out
 
     def test_libreview_str(self, tmp_path: Path) -> None:
         f = _write_libreview_csv(tmp_path / "lv.csv")
         d = Libreview(str(f), header=2)
         _patch_info(d)
         out = str(d)
-        assert "Libreview Data" in out
-        assert "readings between" in out
+        assert "Libreview CGM Device" in out
+        assert "Records:" in out
+        assert "Completeness:" in out
 
     def test_medtronic_str(self, tmp_path: Path) -> None:
         f = _write_medtronic_csv(tmp_path / "mt.csv")
         d = MedtronicCarelink(str(f))
         _patch_info(d)
         out = str(d)
-        assert "Medtronic CareLink Data" in out
-        assert "readings between" in out
+        assert "MedtronicCarelink CGM Device" in out
+        assert "Records:" in out
+        assert "Completeness:" in out
 
     def test_tandem_str(self, tmp_path: Path) -> None:
         f = _write_tandem_csv(tmp_path / "td.csv")
         d = TandemDiabetes(str(f))
         _patch_info(d)
         out = str(d)
-        assert "Tandem Diabetes Data" in out
-        assert "readings between" in out
+        assert "TandemDiabetes CGM Device" in out
+        assert "Records:" in out
+        assert "Completeness:" in out
 
 
 class TestSpecializedClassLoad:

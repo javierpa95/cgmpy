@@ -10,7 +10,7 @@ import math
 import pandas as pd
 import pytest
 
-from cgmpy import GlucoseMetrics
+from cgmpy import GlucoseAnalysis, GlucoseData
 
 # ---------------------------------------------------------------------------
 # Synthetic 24h dataset
@@ -46,16 +46,16 @@ SYNTHETIC_GLUCOSE = [
 ]
 
 
-def _build_synthetic_24h() -> GlucoseMetrics:
-    """Build a GlucoseMetrics instance with a known 24h dataset."""
+def _build_synthetic_24h() -> GlucoseAnalysis:
+    """Build a GlucoseAnalysis instance with a known 24h dataset."""
     start = pd.Timestamp("2024-01-01 00:00:00")
     timestamps = pd.date_range(start=start, periods=24, freq="1h")
     df = pd.DataFrame({"time": timestamps, "glucose": SYNTHETIC_GLUCOSE})
-    return GlucoseMetrics(data_source=df)
+    return GlucoseAnalysis(GlucoseData(data_source=df))
 
 
 @pytest.fixture(scope="module")
-def synthetic_24h() -> GlucoseMetrics:
+def synthetic_24h() -> GlucoseAnalysis:
     return _build_synthetic_24h()
 
 
@@ -163,13 +163,12 @@ def test_tbr_total_matches_hand_computed(synthetic_24h):
 
 
 def test_data_completeness(synthetic_24h):
-    """24 hourly readings over a 23h span yield >100% by the library's algorithm.
+    """24 hourly readings over a 23h span yield 100% data completeness.
 
-    The library computes expected_data = total_minutes / typical_interval.
     With timestamps 00:00 to 23:00 (23h = 1380 min) and 60-min interval,
-    expected_data = 23, but real_data = 24, so percentage = 24/23 * 100 = 104.
+    expected_readings = 1380 / 60 + 1 = 24, real_data = 24 → 100%.
     """
-    assert synthetic_24h.data_completeness() == 104
+    assert synthetic_24h.data_completeness() == 100
 
 
 def test_n_records_is_24(synthetic_24h):

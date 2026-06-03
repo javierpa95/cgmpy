@@ -19,8 +19,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cgmpy import GlucosePlot
-from cgmpy.plotting.agp import AGPPlotter
+from cgmpy import GlucoseAnalysis, GlucoseData
+from cgmpy.plotting import agp as agp_module
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -28,21 +28,15 @@ from cgmpy.plotting.agp import AGPPlotter
 
 
 @pytest.fixture
-def gp_24h(glucose_24h_df) -> GlucosePlot:
-    """Single-day GlucosePlot instance."""
-    return GlucosePlot(data_source=glucose_24h_df)
+def gp_24h(glucose_24h_df):
+    """Single-day GlucoseAnalysis instance."""
+    return GlucoseAnalysis(GlucoseData(data_source=glucose_24h_df))
 
 
 @pytest.fixture
-def gp_7day(glucose_7day_df) -> GlucosePlot:
-    """7-day GlucosePlot instance spanning every weekday."""
-    return GlucosePlot(data_source=glucose_7day_df)
-
-
-@pytest.fixture
-def agp_mixin(gp_24h) -> AGPPlotter:
-    """Expose the AGPPlotter mixin for helper-level unit tests."""
-    return gp_24h
+def gp_7day(glucose_7day_df):
+    """7-day GlucoseAnalysis instance spanning every weekday."""
+    return GlucoseAnalysis(GlucoseData(data_source=glucose_7day_df))
 
 
 @pytest.fixture(autouse=True)
@@ -53,7 +47,7 @@ def _close_figures():
 
 
 # ---------------------------------------------------------------------------
-# Public API
+# Public API (via GlucoseAnalysis)
 # ---------------------------------------------------------------------------
 
 
@@ -73,15 +67,13 @@ def test_plot_agp_with_custom_smoothing(gp_24h, monkeypatch):
 
 
 def test_plot_agp_axes_have_zones_and_lines(gp_24h, monkeypatch):
-    """The created axes must contain 3 axhspan zones + 2 reference lines."""
+    """The created axes must contain zone patches."""
     monkeypatch.setattr(plt, "show", lambda: None)
     gp_24h.plot_agp()
     fig = plt.gcf()
     assert len(fig.axes) == 1
     ax = fig.axes[0]
-    # 3 zones (axhspan adds 2 Patches per call) + 2 reference lines
     assert len(ax.patches) >= 3
-    assert len(ax.lines) >= 2
 
 
 def test_plot_agp_configures_titles_and_legend(gp_24h, monkeypatch):
@@ -138,8 +130,8 @@ def test_generate_week_agp_separate_creates_seven_subplots(gp_7day, monkeypatch)
 def test_generate_week_agp_combined_with_two_days(glucose_2day_df, monkeypatch):
     """Combined week plot with only 2 unique days should still succeed."""
     monkeypatch.setattr(plt, "show", lambda: None)
-    gp = GlucosePlot(data_source=glucose_2day_df)
-    gp.generate_week_agp(combined=True)
+    ga = GlucoseAnalysis(GlucoseData(data_source=glucose_2day_df))
+    ga.generate_week_agp(combined=True)
     assert len(plt.get_fignums()) == 1
 
 
@@ -148,36 +140,32 @@ def test_generate_week_agp_combined_with_two_days(glucose_2day_df, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_add_glucose_zones_helper(agp_mixin):
-    """``_add_glucose_zones`` should add 3 spans + 2 horizontal lines."""
+def test_add_glucose_zones_helper():
+    """``add_glucose_zones`` should add 5 zones."""
+    from cgmpy.plotting._utils import add_glucose_zones
+
     fig, ax = plt.subplots()
-    agp_mixin._add_glucose_zones(ax)
-    # Each axhspan adds 1 Patch; 3 zones expected.
-    assert len(ax.patches) == 3
-    # Two reference lines (70 and 180).
-    assert len(ax.lines) == 2
+    add_glucose_zones(ax)
+    assert len(ax.patches) == 5
 
 
-def test_configure_agp_plot_helper(agp_mixin):
+def test_configure_agp_plot_helper():
     """``_configure_agp_plot`` must apply title, labels, ticks, grid, ylim."""
     fig, ax = plt.subplots()
-    # The legend call inside _configure_agp_plot requires labelled artists.
     ax.plot([0, 24], [100, 100], label="dummy")
-    agp_mixin._configure_agp_plot(ax, "Custom Title")
+    agp_module._configure_agp_plot(ax, "Custom Title")
     assert ax.get_title() == "Custom Title"
     assert ax.get_xlabel() == "Time of Day"
     assert ax.get_ylabel() == "Glucose Level (mg/dL)"
     assert ax.get_ylim() == (0, 400)
-    # 9 ticks every 3h from 0..24 inclusive
     xticks = ax.get_xticks()
     assert list(xticks) == [0, 3, 6, 9, 12, 15, 18, 21, 24]
     assert ax.get_legend() is not None
     assert ax.grid is not None
 
 
-def test_plot_percentiles_helper(agp_mixin):
+def test_plot_percentiles_helper():
     """``_plot_percentiles`` should add 1 line + 2 fill_between collections."""
-    # Build a tiny synthetic percentile DataFrame.
     idx = np.arange(0, 24, 0.5)
     percentiles = pd.DataFrame(
         {
@@ -190,14 +178,12 @@ def test_plot_percentiles_helper(agp_mixin):
         index=idx,
     )
     fig, ax = plt.subplots()
-    agp_mixin._plot_percentiles(ax, percentiles)
-    # 1 line for median
+    agp_module._plot_percentiles(ax, percentiles)
     assert len(ax.lines) == 1
-    # 2 fill_between collections (IQR + 5-95%)
     assert len(ax.collections) == 2
 
 
-def test_calculate_day_percentiles_returns_three_columns(agp_mixin):
+def test_calculate_day_percentiles_returns_three_columns():
     """``_calculate_day_percentiles`` returns DataFrame with columns 0.25/0.5/0.75."""
     df = pd.DataFrame(
         {
@@ -205,12 +191,12 @@ def test_calculate_day_percentiles_returns_three_columns(agp_mixin):
             "glucose": [100, 110, 120, 105, 115, 125],
         }
     )
-    out = agp_mixin._calculate_day_percentiles(df, smoothing_window=3)
+    out = agp_module._calculate_day_percentiles(df, smoothing_window=3)
     assert list(out.columns) == [0.25, 0.5, 0.75]
     assert len(out) == 3
 
 
-def test_calculate_full_day_percentiles_returns_five_columns(agp_mixin):
+def test_calculate_full_day_percentiles_returns_five_columns():
     """``_calculate_full_day_percentiles`` returns columns 0.05..0.95."""
     df = pd.DataFrame(
         {
@@ -218,12 +204,12 @@ def test_calculate_full_day_percentiles_returns_five_columns(agp_mixin):
             "glucose": [100, 110, 120, 105, 115, 125, 95, 108, 122],
         }
     )
-    out = agp_mixin._calculate_full_day_percentiles(df, smoothing_window=3)
+    out = agp_module._calculate_full_day_percentiles(df, smoothing_window=3)
     assert list(out.columns) == [0.05, 0.25, 0.5, 0.75, 0.95]
     assert len(out) == 3
 
 
-def test_calculate_day_percentiles_smoothing_window_one(agp_mixin):
+def test_calculate_day_percentiles_smoothing_window_one():
     """smoothing_window=1 must still work and not raise."""
     df = pd.DataFrame(
         {
@@ -231,5 +217,5 @@ def test_calculate_day_percentiles_smoothing_window_one(agp_mixin):
             "glucose": [100, 105, 110, 115, 120],
         }
     )
-    out = agp_mixin._calculate_day_percentiles(df, smoothing_window=1)
+    out = agp_module._calculate_day_percentiles(df, smoothing_window=1)
     assert out.loc[0.0, 0.5] == pytest.approx(100.0)

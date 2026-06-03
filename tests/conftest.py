@@ -17,11 +17,16 @@ def stable_glucose_df():
 
 @pytest.fixture
 def variable_glucose_df():
-    """Generates a highly variable glucose DataFrame with highs and lows."""
+    """Generates a highly variable glucose DataFrame with highs and lows.
+
+    Uses a seeded RNG (``default_rng(42)``) so results are deterministic
+    across runs.
+    """
     start_time = datetime(2024, 1, 1, 12, 0)
     times = [start_time + timedelta(minutes=5 * i) for i in range(288)]
+    rng = np.random.default_rng(42)
     # Create a pattern with significant swings
-    glucose = 120 + 50 * np.sin(np.linspace(0, 4 * np.pi, 288)) + np.random.normal(0, 5, 288)
+    glucose = 120 + 50 * np.sin(np.linspace(0, 4 * np.pi, 288)) + rng.normal(0, 5, 288)
     return pd.DataFrame({"time": times, "glucose": glucose})
 
 

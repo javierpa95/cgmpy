@@ -6,7 +6,7 @@ regressing.
 
 Bug #1: GlucosePlot missing metrics (StatisticalPlotter AttributeError on gmi)
 Bug #2: MAGE_Baghurst IndexError on small datasets
-Bug #3: sd_between_timepoints(agrupar_por_intervalos=True) KeyError 'day'
+Bug #3: sd_between_timepoints(group_by_intervals=True) KeyError 'day'
 Bug #4: specialized.py.__str__ key mismatch (data_completeness vs completeness)
 Bug #5: analysis/core.py calls methods not in MRO
 Bug #6: analysis/core.py reads legacy time-statistics keys
@@ -63,36 +63,27 @@ class TestBug1GlucosePlotMetrics:
     calls self.gmi() / self.TIR() / self.TBR() / self.TAR() — these used to
     raise AttributeError on a plain GlucosePlot."""
 
-    def test_glucose_plot_inherits_gmi(self):
-        from cgmpy import GlucosePlot
-
-        assert "gmi" in GlucosePlot.__dict__ or any(
-            "gmi" in c.__dict__ for c in GlucosePlot.__mro__
-        )
-
-    def test_glucose_plot_inherits_tir(self):
-        from cgmpy import GlucosePlot
-
-        assert any("TIR" in c.__dict__ for c in GlucosePlot.__mro__)
-
     def test_generate_statistics_text_runs(self):
-        from cgmpy import GlucosePlot
+        from cgmpy.plotting.statistical_plots import _generate_statistics_text
+        from cgmpy.data.core import GlucoseData
+        from cgmpy.analysis.core import GlucoseAnalysis
 
-        gp = GlucosePlot(_make_oscillating_dataset())
-        # Pull the private method out — it's what plot_distribution_comparison
-        # calls; before the fix it raised AttributeError on gmi.
-        text = gp._generate_statistics_text()
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
+        glucose = ga.glucose
+        tir_val = ga.TIR()
+        tbr_val = ga.TBR(70)
+        tar_val = ga.TAR(180)
+        gmi_val = ga.gmi()
+        text = _generate_statistics_text(glucose, tir_val, tbr_val, tar_val, gmi_val)
         assert "GMI" in text
         assert "TIR" in text
 
     def test_plot_time_in_range_runs(self):
-        from cgmpy import GlucosePlot
-
-        gp = GlucosePlot(_make_oscillating_dataset())
         import matplotlib.pyplot as plt
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
-        # Just call the data-fetching part; we don't want a window popup.
-        sizes = [gp.TIR(), gp.TBR70(), gp.TBR55(), gp.TAR180(), gp.TAR250()]
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
+        sizes = [ga.TIR(), ga.TBR70(), ga.TBR55(), ga.TAR180(), ga.TAR250()]
         assert all(s is not None for s in sizes)
         plt.close("all")
 
@@ -104,11 +95,11 @@ class TestBug2MAGEBaghurstSmallDatasets:
 
     @pytest.mark.parametrize("approach", [1, 2, 3])
     def test_mage_baghurst_returns_dict_on_tiny_dataset(self, approach):
-        from cgmpy import GlucoseMetrics
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
         # Only 4 points: not enough to form any turning points
-        gd = GlucoseMetrics(_make_small_dataset(n=4, value=100.0))
-        result = gd.MAGE_Baghurst(approach=approach)
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_small_dataset(n=4, value=100.0)))
+        result = ga.MAGE_Baghurst(approach=approach)
         assert isinstance(result, dict)
         assert "MAGE_avg" in result
         assert "num_excursions" in result
@@ -116,42 +107,42 @@ class TestBug2MAGEBaghurstSmallDatasets:
         assert result["MAGE_avg"] == 0.0
 
     def test_mage_baghurst_returns_dict_on_constant_glucose(self):
-        from cgmpy import GlucoseMetrics
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
         # Constant glucose → no excursions, but enough points to attempt
         # the algorithm.
-        gd = GlucoseMetrics(_make_small_dataset(n=288, value=100.0))
-        result = gd.MAGE_Baghurst(approach=2)
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_small_dataset(n=288, value=100.0)))
+        result = ga.MAGE_Baghurst(approach=2)
         assert isinstance(result, dict)
         assert result["num_excursions"] == 0
 
 
 # --------------------------------------------------------------------- Bug #3
 class TestBug3SDBetweenTimepointsGrouping:
-    """Bug #3: sd_between_timepoints(agrupar_por_intervalos=True) raised
+    """Bug #3: sd_between_timepoints(group_by_intervals=True) raised
     KeyError 'day' because df['day'] was never created."""
 
     def test_grouping_path_runs(self):
-        from cgmpy import GlucoseMetrics
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
-        gd = GlucoseMetrics(_make_oscillating_dataset())
-        result = gd.sd_between_timepoints(agrupar_por_intervalos=True)
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
+        result = ga.sd_between_timepoints(group_by_intervals=True)
         assert "sd" in result
         assert "valid_timepoints" in result
         assert result["valid_timepoints"] > 0
 
     def test_grouping_path_with_custom_interval(self):
-        from cgmpy import GlucoseMetrics
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
-        gd = GlucoseMetrics(_make_oscillating_dataset())
-        result = gd.sd_between_timepoints(agrupar_por_intervalos=True, intervalo_minutos=15)
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
+        result = ga.sd_between_timepoints(group_by_intervals=True, interval_minutes=15)
         assert result["valid_timepoints"] > 0
 
     def test_non_grouping_path_still_works(self):
-        from cgmpy import GlucoseMetrics
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
-        gd = GlucoseMetrics(_make_oscillating_dataset())
-        result = gd.sd_between_timepoints(agrupar_por_intervalos=False)
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
+        result = ga.sd_between_timepoints(group_by_intervals=False)
         assert "sd" in result
 
 
@@ -220,14 +211,14 @@ class TestBug4SpecializedStrKey:
 
         # Before the fix this raised KeyError: 'data_completeness'.
         text = str(loader)
-        assert "Availability:" in text
+        assert "Completeness:" in text
         # The value can be >100% on short synthetic datasets because
         # expected_data is rounded down (e.g. int(55/5) = 11 for 12 points),
         # so just check the section is present and well-formed.
-        availability_line = next(line for line in text.split("\n") if "Availability:" in line)
-        assert "%" in availability_line
+        completeness_line = next(line for line in text.split("\n") if "Completeness:" in line)
+        assert "%" in completeness_line
         # And the value parses as a float.
-        float(availability_line.split("Availability: ")[1].rstrip("%"))
+        float(completeness_line.split("Completeness: ")[1].rstrip("%"))
 
 
 # --------------------------------------------------------------------- Bugs #5 + #6
@@ -236,9 +227,9 @@ class TestBug5And6AnalysisCoreMethods:
     get_summary_string referenced methods and dict keys that don't exist."""
 
     def test_comprehensive_report_keys(self):
-        from cgmpy import GlucoseAnalysis
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
-        ga = GlucoseAnalysis(_make_oscillating_dataset())
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
         report = ga.get_comprehensive_report()
         assert "basic_metrics" in report
         assert "GMI" in report["basic_metrics"]
@@ -248,9 +239,9 @@ class TestBug5And6AnalysisCoreMethods:
         assert "mage_avg" in report["variability_metrics"]
 
     def test_summary_string_runs(self):
-        from cgmpy import GlucoseAnalysis
+        from cgmpy import GlucoseAnalysis, GlucoseData
 
-        ga = GlucoseAnalysis(_make_oscillating_dataset())
+        ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
         text = ga.get_summary_string()
         # Should not raise; spot-check the 4 sections
         assert "DATA:" in text

@@ -175,7 +175,7 @@ class TestAgataNotInstalledError:
 
         # `analyze_with_agata` checks `Agata is None` *before* preparing
         # data, so even an empty DataFrame would trigger the error first.
-        gd = agata_metrics.ModularGlucoseData  # use the symbol from the module
+        gd = agata_metrics.GlucoseData  # use the symbol from the module
         # Build a minimal data wrapper (using a fresh DataFrame).
         obj = gd(data_source=tiny_glucose_df)
 
@@ -189,7 +189,7 @@ class TestAgataNotInstalledError:
         """
         if _PY_AGATA_AVAILABLE:
             pytest.skip("py_agata is installed; this test only runs without it")
-        gd = agata_metrics.ModularGlucoseData
+        gd = agata_metrics.GlucoseData
         obj = gd(data_source=tiny_glucose_df)
         with pytest.raises(AgataNotInstalledError):
             analyze_with_agata(obj)
@@ -203,7 +203,7 @@ class TestAgataNotInstalledError:
         if not _PY_AGATA_AVAILABLE:
             pytest.skip("py_agata is not installed; cannot test the monkey-patch path")
         monkeypatch.setattr(agata_metrics, "Agata", None)
-        gd = agata_metrics.ModularGlucoseData
+        gd = agata_metrics.GlucoseData
         obj = gd(data_source=tiny_glucose_df)
         with pytest.raises(AgataNotInstalledError):
             analyze_with_agata(obj)

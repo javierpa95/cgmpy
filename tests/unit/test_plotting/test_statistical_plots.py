@@ -6,10 +6,6 @@ Covers:
 - ``plot_distribution_comparison`` (public, default + custom ranges)
 - ``plot_correlation_matrix`` (public, default + custom segments)
 - Helper: ``_generate_statistics_text``.
-
-Note: ``StatisticalPlotter`` calls ``self.TIR()`` / ``self.TBR()`` / ``self.gmi()``,
-which are not part of ``GlucosePlot``'s MRO. We mix in ``ModularGlucoseMetrics``
-via a test-only subclass.
 """
 
 from __future__ import annotations
@@ -21,20 +17,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pytest
 
-from cgmpy import GlucosePlot, ModularGlucoseMetrics
-from cgmpy.plotting.statistical_plots import StatisticalPlotter
-
-# ---------------------------------------------------------------------------
-# Test-only subclass that gives the plotters access to metric methods.
-# ---------------------------------------------------------------------------
-
-
-class _GlucosePlotWithMetrics(
-    GlucosePlot,
-    ModularGlucoseMetrics,
-):
-    pass
-
+from cgmpy import GlucoseAnalysis, GlucoseData
+from cgmpy.plotting import statistical_plots as stat_module
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -43,17 +27,12 @@ class _GlucosePlotWithMetrics(
 
 @pytest.fixture
 def gp_24h(glucose_24h_df):
-    return _GlucosePlotWithMetrics(data_source=glucose_24h_df)
+    return GlucoseAnalysis(GlucoseData(data_source=glucose_24h_df))
 
 
 @pytest.fixture
 def gp_7day(glucose_7day_df):
-    return _GlucosePlotWithMetrics(data_source=glucose_7day_df)
-
-
-@pytest.fixture
-def stat_mixin(gp_24h) -> StatisticalPlotter:
-    return gp_24h
+    return GlucoseAnalysis(GlucoseData(data_source=glucose_7day_df))
 
 
 @pytest.fixture(autouse=True)
@@ -96,7 +75,6 @@ def test_histogram_has_three_zones(gp_24h, monkeypatch):
     monkeypatch.setattr(plt, "show", lambda: None)
     gp_24h.histogram()
     ax = plt.gcf().axes[0]
-    # 3 axvspan patches plus many bar patches
     assert len(ax.patches) >= 3
 
 
@@ -131,9 +109,7 @@ def test_plot_time_in_range_standard_bar_chart_y_labels(gp_24h, monkeypatch):
     gp_24h.plot_time_in_range(pregnancy=False)
     ax_bar = plt.gcf().axes[1]
     yticklabels = [t.get_text() for t in ax_bar.get_yticklabels()]
-    # Should include the TIR label
     assert any("TIR" in t for t in yticklabels)
-    # And the number of bars equals the number of y-tick labels
     assert len(ax_bar.patches) == len(yticklabels)
     assert len(yticklabels) >= 1
 
@@ -233,7 +209,6 @@ def test_plot_correlation_matrix_default_creates_figure(gp_7day, monkeypatch):
     gp_7day.plot_correlation_matrix()
     assert len(plt.get_fignums()) == 1
     ax = plt.gcf().axes[0]
-    # heatmap renders a QuadMesh — accessible via collections
     assert len(ax.collections) >= 1
 
 
@@ -272,9 +247,26 @@ def test_plot_correlation_matrix_24hour_segment(gp_7day, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_generate_statistics_text_contains_all_fields(stat_mixin):
+@pytest.fixture
+def glucose_series(glucose_24h_df):
+    return glucose_24h_df["glucose"]
+
+
+@pytest.fixture
+def metric_values(glucose_24h_df):
+    g = glucose_24h_df["glucose"]
+    tir_val = ((g >= 70) & (g <= 180)).sum() / len(g) * 100
+    tbr_val = (g < 70).sum() / len(g) * 100
+    tar_val = (g > 180).sum() / len(g) * 100
+    mean_val = g.mean()
+    gmi_val = round(3.31 + (0.02392 * mean_val), 2)
+    return tir_val, tbr_val, tar_val, gmi_val
+
+
+def test_generate_statistics_text_contains_all_fields(glucose_series, metric_values):
     """The generated statistics string must contain all key fields."""
-    text = stat_mixin._generate_statistics_text()
+    tir_val, tbr_val, tar_val, gmi_val = metric_values
+    text = stat_module._generate_statistics_text(glucose_series, tir_val, tbr_val, tar_val, gmi_val)
     for field in (
         "DESCRIPTIVE STATISTICS",
         "Mean:",
@@ -295,17 +287,16 @@ def test_generate_statistics_text_contains_all_fields(stat_mixin):
         assert field in text, f"Missing field: {field!r}"
 
 
-def test_generate_statistics_text_values_match_data(stat_mixin):
+def test_generate_statistics_text_values_match_data(glucose_series, metric_values):
     """Mean, SD and CV in the text should match the source data."""
     import re
 
-    text = stat_mixin._generate_statistics_text()
-    g = stat_mixin.data["glucose"]
-    expected_mean = g.mean()
-    expected_std = g.std()
+    tir_val, tbr_val, tar_val, gmi_val = metric_values
+    text = stat_module._generate_statistics_text(glucose_series, tir_val, tbr_val, tar_val, gmi_val)
+    expected_mean = glucose_series.mean()
+    expected_std = glucose_series.std()
     expected_cv = expected_std / expected_mean * 100
 
-    # Match "Mean:           <num> mg/dL"
     mean_m = re.search(r"Mean:\s+([\d.]+)\s*mg/dL", text)
     std_m = re.search(r"Std Dev:\s+([\d.]+)\s*mg/dL", text)
     cv_m = re.search(r"CV:\s+([\d.]+)\s*%", text)

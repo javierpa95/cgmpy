@@ -4,13 +4,17 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cgmpy import GlucoseMetrics
+from cgmpy import GlucoseAnalysis, GlucoseData
 
 
-def test_mage_simple(variable_glucose_df):
+@pytest.fixture
+def analysis(variable_glucose_df):
+    return GlucoseAnalysis(GlucoseData(data_source=variable_glucose_df))
+
+
+def test_mage_simple(analysis):
     """MAGE() should return a non-negative float on variable data."""
-    gm = GlucoseMetrics(data_source=variable_glucose_df)
-    val = gm.MAGE()
+    val = analysis.MAGE()
     assert isinstance(val, float)
     assert val >= 0.0
     assert np.isfinite(val)
@@ -18,15 +22,14 @@ def test_mage_simple(variable_glucose_df):
 
 def test_mage_simple_constant_returns_zero(stable_glucose_df):
     """Constant glucose has no peaks/nadirs, so MAGE() should be 0."""
-    gm = GlucoseMetrics(data_source=stable_glucose_df)
-    val = gm.MAGE()
+    ga = GlucoseAnalysis(GlucoseData(data_source=stable_glucose_df))
+    val = ga.MAGE()
     assert val == 0.0
 
 
-def test_mage_baghurst_approach_1(variable_glucose_df):
+def test_mage_baghurst_approach_1(analysis):
     """MAGE_Baghurst(approach=1) should return the documented dictionary."""
-    gm = GlucoseMetrics(data_source=variable_glucose_df)
-    result = gm.MAGE_Baghurst(threshold_sd=1, approach=1, plot=False)
+    result = analysis.MAGE_Baghurst(threshold_sd=1, approach=1, plot=False)
     expected_keys = {
         "MAGE+",
         "MAGE-",
@@ -34,15 +37,16 @@ def test_mage_baghurst_approach_1(variable_glucose_df):
         "SD_used",
         "threshold",
         "num_excursions",
+        "turning_points",
     }
     assert set(result.keys()) == expected_keys
-    # SD_used should equal gm.sd() (within rounding).
-    assert result["SD_used"] == pytest.approx(gm.sd(), abs=0.5)
+    # SD_used should equal analysis.sd() (within rounding).
+    assert result["SD_used"] == pytest.approx(analysis.sd(), abs=0.5)
     # threshold should equal SD_used (threshold_sd=1).
     assert result["threshold"] == pytest.approx(result["SD_used"], abs=0.5)
 
 
-def test_mage_baghurst_approach_2_no_indexerror(variable_glucose_df):
+def test_mage_baghurst_approach_2_no_indexerror(analysis):
     """MAGE_Baghurst(approach=2) must not raise IndexError on real CGM data.
 
     Bug fixed in v0.5.1: the implementation indexed
@@ -50,8 +54,7 @@ def test_mage_baghurst_approach_2_no_indexerror(variable_glucose_df):
     was non-empty, which could happen for monotonically-tending data.
     The function now returns a well-formed dict in every case.
     """
-    gm = GlucoseMetrics(data_source=variable_glucose_df)
-    result = gm.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
+    result = analysis.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
     assert isinstance(result, dict)
     assert "MAGE_avg" in result
     assert "num_excursions" in result
@@ -68,8 +71,8 @@ def test_mage_baghurst_handles_tiny_dataset():
             "glucose": [100, 100, 100, 100],
         }
     )
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.MAGE_Baghurst(threshold_sd=1, approach=1, plot=False)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.MAGE_Baghurst(threshold_sd=1, approach=1, plot=False)
     assert isinstance(result, dict)
     assert result["num_excursions"] == 0
     assert result["MAGE_avg"] == 0.0
@@ -87,16 +90,15 @@ def test_mage_baghurst_handles_constant_data():
             "glucose": [120] * 288,
         }
     )
-    gm = GlucoseMetrics(data_source=df)
-    result = gm.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
+    ga = GlucoseAnalysis(GlucoseData(data_source=df))
+    result = ga.MAGE_Baghurst(threshold_sd=1, approach=2, plot=False)
     assert result["num_excursions"] == 0
     assert result["MAGE_avg"] == 0.0
 
 
-def test_mage_baghurst_approach_3(variable_glucose_df):
+def test_mage_baghurst_approach_3(analysis):
     """MAGE_Baghurst(approach=3) should also return the documented dictionary."""
-    gm = GlucoseMetrics(data_source=variable_glucose_df)
-    result = gm.MAGE_Baghurst(threshold_sd=1, approach=3, plot=False)
+    result = analysis.MAGE_Baghurst(threshold_sd=1, approach=3, plot=False)
     assert "MAGE+" in result and "MAGE-" in result
     assert "MAGE_avg" in result
     assert isinstance(result["num_excursions"], int)

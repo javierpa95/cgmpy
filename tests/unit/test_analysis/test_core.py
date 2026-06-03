@@ -10,8 +10,14 @@ import pandas as pd
 import pytest
 
 from cgmpy.analysis.core import GlucoseAnalysis
+from cgmpy.data.core import GlucoseData
 
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "data"
+
+
+def _gd(df_or_path: str | pd.DataFrame, **kwargs) -> GlucoseData:
+    """Helper: wrap data in :class:`GlucoseData` for the new constructor."""
+    return GlucoseData(df_or_path, **kwargs)
 
 
 @pytest.fixture
@@ -29,35 +35,29 @@ class TestGlucoseAnalysisInit:
     """Constructor tests for the GlucoseAnalysis facade."""
 
     def test_init_with_dataframe(self, stable_glucose_df: pd.DataFrame) -> None:
-        """`GlucoseAnalysis(data_source=df)` constructs successfully."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        """`GlucoseAnalysis(data=GlucoseData(df))` constructs successfully."""
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         assert ga is not None
         assert not ga.data.empty
         assert "time" in ga.data.columns
         assert "glucose" in ga.data.columns
 
     def test_init_with_csv_file(self) -> None:
-        """`GlucoseAnalysis` loads a CSV file end-to-end."""
-        ga = GlucoseAnalysis(data_source=str(FIXTURES / "dm.csv"))
+        """`GlucoseAnalysis(data=GlucoseData(...))` loads a CSV file end-to-end."""
+        ga = GlucoseAnalysis(data=_gd(str(FIXTURES / "dm.csv")))
         assert ga is not None
         assert len(ga.data) > 0
 
     def test_init_with_date_range(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`start_date` / `end_date` filter the loaded data."""
-        ga = GlucoseAnalysis(
-            data_source=two_day_glucose_df,
+        gd = _gd(
+            two_day_glucose_df,
             start_date="2024-01-01 00:00",
             end_date="2024-01-01 23:55",
         )
+        ga = GlucoseAnalysis(data=gd)
         assert ga.data["time"].min() >= pd.Timestamp("2024-01-01 00:00")
         assert ga.data["time"].max() <= pd.Timestamp("2024-01-01 23:55")
-
-    def test_inherits_modular_glucose_data(self, stable_glucose_df: pd.DataFrame) -> None:
-        """GlucoseAnalysis inherits the data-handling facade."""
-        from cgmpy.data.core import ModularGlucoseData
-
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
-        assert isinstance(ga, ModularGlucoseData)
 
 
 class TestGlucoseAnalysisInfo:
@@ -65,7 +65,7 @@ class TestGlucoseAnalysisInfo:
 
     def test_info_returns_expected_keys(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`info()` returns a dict with the canonical keys."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         info = ga.info()
         assert isinstance(info, dict)
         for key in ("n_records", "start_date", "end_date", "typical_interval", "completeness"):
@@ -73,12 +73,12 @@ class TestGlucoseAnalysisInfo:
 
     def test_info_record_count(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`info()['n_records']` matches len(data)."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         assert ga.info()["n_records"] == len(ga.data)
 
     def test_get_data_quality_metrics(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`get_data_quality_metrics()` returns the expected dict."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         quality = ga.get_data_quality_metrics()
         assert isinstance(quality, dict)
         for key in ("total_gaps", "mean_interval", "min_glucose", "max_glucose"):
@@ -86,7 +86,7 @@ class TestGlucoseAnalysisInfo:
 
     def test_typical_interval_is_five_minutes(self, two_day_glucose_df: pd.DataFrame) -> None:
         """5-min sampling resolves to a 5-minute typical interval."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         assert ga.get_typical_interval() == pytest.approx(5.0, abs=0.1)
 
 
@@ -95,7 +95,7 @@ class TestGlucoseAnalysisMetrics:
 
     def test_time_statistics_returns_dict(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`time_statistics()` returns a dict with TIR/TBR/TAR keys."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         stats = ga.time_statistics()
         assert isinstance(stats, dict)
         assert "TIR" in stats
@@ -104,7 +104,7 @@ class TestGlucoseAnalysisMetrics:
 
     def test_time_range_summary(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`time_range_summary()` returns the standard + pregnancy ranges."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         summary = ga.time_range_summary()
         assert isinstance(summary, dict)
         assert "standard_ranges" in summary
@@ -112,13 +112,13 @@ class TestGlucoseAnalysisMetrics:
 
     def test_tir_is_percentage(self, two_day_glucose_df: pd.DataFrame) -> None:
         """TIR returns a value in [0, 100]."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         tir = ga.TIR()
         assert 0.0 <= tir <= 100.0
 
     def test_stable_glucose_has_high_tir(self, stable_glucose_df: pd.DataFrame) -> None:
         """A constant glucose of 100 mg/dL yields TIR == 100."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         assert ga.TIR() == pytest.approx(100.0)
 
 
@@ -127,23 +127,22 @@ class TestGlucoseAnalysisDataAccess:
 
     def test_get_raw_data_returns_copy(self, stable_glucose_df: pd.DataFrame) -> None:
         """`get_raw_data()` returns a DataFrame copy, not a view."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         raw = ga.get_raw_data()
         assert isinstance(raw, pd.DataFrame)
-        # Mutating the copy must not mutate the underlying data
         raw.loc[raw.index[0], "glucose"] = 999.0
         assert ga.data.loc[ga.data.index[0], "glucose"] != 999.0
 
     def test_get_glucose_values_is_series(self, stable_glucose_df: pd.DataFrame) -> None:
         """`get_glucose_values()` returns a pandas Series."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         values = ga.get_glucose_values()
         assert isinstance(values, pd.Series)
         assert len(values) == len(ga.data)
 
     def test_get_timestamps_is_series(self, stable_glucose_df: pd.DataFrame) -> None:
         """`get_timestamps()` returns a pandas Series of timestamps."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         ts = ga.get_timestamps()
         assert isinstance(ts, pd.Series)
         assert pd.api.types.is_datetime64_any_dtype(ts)
@@ -154,12 +153,11 @@ class TestGlucoseAnalysisFilter:
 
     def test_filter_by_date_range(self, two_day_glucose_df: pd.DataFrame) -> None:
         """`filter_by_date_range()` returns a new instance restricted to the range."""
-        ga = GlucoseAnalysis(data_source=two_day_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(two_day_glucose_df))
         filtered = ga.filter_by_date_range("2024-01-01 06:00", "2024-01-01 18:00")
         assert isinstance(filtered, GlucoseAnalysis)
         assert filtered.data["time"].min() >= pd.Timestamp("2024-01-01 06:00")
         assert filtered.data["time"].max() <= pd.Timestamp("2024-01-01 18:00")
-        # Original is untouched
         assert len(ga.data) == len(two_day_glucose_df)
 
 
@@ -191,7 +189,7 @@ class TestFlattenReport:
 
     def test_flatten_simple_report(self, stable_glucose_df: pd.DataFrame) -> None:
         """A nested report is flattened with `section_key` keys."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         report = {
             "basic_info": {"n_records": 288, "completeness": 100.0},
             "basic_metrics": {"GMI": 5.7, "Mean": 100.0},
@@ -205,7 +203,7 @@ class TestFlattenReport:
 
     def test_flatten_preserves_scalar_sections(self, stable_glucose_df: pd.DataFrame) -> None:
         """Non-dict values at the top level pass through unchanged."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         report = {"basic_info": {"n_records": 10}, "total_count": 42}
         flat = ga._flatten_report(report)
         assert flat.iloc[0]["total_count"] == 42
@@ -229,7 +227,7 @@ class TestReportBuilders:
         self, stable_glucose_df: pd.DataFrame
     ) -> None:
         """`get_comprehensive_report()` returns the documented section keys."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         self._patch_missing_helpers(ga)
         report = ga.get_comprehensive_report()
         assert isinstance(report, dict)
@@ -243,24 +241,14 @@ class TestReportBuilders:
             assert key in report
 
     def test_get_summary_string_contains_key_metrics(self, stable_glucose_df: pd.DataFrame) -> None:
-        """`get_summary_string()` renders the report header for the populated sections.
-
-        Bug fixed in v0.5.1: the function used to read legacy keys
-        (``TIR_tight``, ``TBR70`` ...) from `time_statistics()` and raise
-        ``KeyError``. It now calls the individual time-in-range methods
-        directly. The helper that patches in basic_statistics_summary /
-        calculate_all_variability_metrics is no longer required, but we keep
-        the fixture for stability.
-        """
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        """`get_summary_string()` renders the report header for the populated sections."""
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         self._patch_missing_helpers(ga)
         text = ga.get_summary_string()
-        # Header lines from the four sections must be present.
         assert "DATA:" in text
         assert "BASIC METRICS:" in text
         assert "TIME IN RANGE:" in text
         assert "VARIABILITY:" in text
-        # The legacy keys are now rendered as labels, not as dict lookups.
         assert "TIR tight" in text
         assert "TBR70" in text
         assert "TBR55" in text
@@ -271,7 +259,7 @@ class TestReportBuilders:
         """`export_report(format='json')` writes a valid JSON file."""
         import json
 
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         self._patch_missing_helpers(ga)
         out = tmp_path / "report.json"
         ga.export_report(str(out), format="json")
@@ -281,7 +269,7 @@ class TestReportBuilders:
 
     def test_export_report_csv(self, stable_glucose_df: pd.DataFrame, tmp_path) -> None:
         """`export_report(format='csv')` writes a flat CSV via `_flatten_report`."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         self._patch_missing_helpers(ga)
         out = tmp_path / "report.csv"
         ga.export_report(str(out), format="csv")
@@ -293,7 +281,7 @@ class TestReportBuilders:
         self, stable_glucose_df: pd.DataFrame, tmp_path
     ) -> None:
         """An unsupported format raises ValueError."""
-        ga = GlucoseAnalysis(data_source=stable_glucose_df)
+        ga = GlucoseAnalysis(data=_gd(stable_glucose_df))
         self._patch_missing_helpers(ga)
         out = tmp_path / "report.xyz"
         with pytest.raises(ValueError, match="Unsupported format"):
