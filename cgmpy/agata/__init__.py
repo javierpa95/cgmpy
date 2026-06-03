@@ -8,7 +8,7 @@ cgmpy data using the external py_agata library, acting as a bridge
 between the two.
 
 Public Functions:
-- prepare_data_for_agata: Adapts a ModularGlucoseData object to the format required by py_agata.
+- prepare_data_for_agata: Adapts a GlucoseData object to the format required by py_agata.
 - analyze_with_agata: Runs the full analysis pipeline using py_agata.
 """
 

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ..data.core import ModularGlucoseData
+from ..data.core import GlucoseData
 from ..errors import EmptyDataError
 
 
 def prepare_data_for_agata(
-    glucose_data: ModularGlucoseData, resample_freq: str = "5min"
+    glucose_data: GlucoseData, resample_freq: str = "5min"
 ) -> pd.DataFrame:
-    """Prepare a :class:`~cgmpy.data.core.ModularGlucoseData` for py_agata.
+    """Prepare a :class:`~cgmpy.data.core.GlucoseData` for py_agata.
 
     The function aligns the timestamp grid by flooring every measurement to
     ``resample_freq`` (default ``"5min"``), then re-emits the data on a
@@ -47,7 +47,7 @@ def prepare_data_for_agata(
 
     # Guard 1: nothing to do if the input has zero rows.
     if len(df) == 0:
-        raise EmptyDataError(context="input ModularGlucoseData")
+        raise EmptyDataError(context="input GlucoseData")
 
     # Ensure the date column is of datetime type
     df[date_col] = pd.to_datetime(df[date_col])

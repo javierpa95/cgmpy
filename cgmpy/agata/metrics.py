@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..data.core import ModularGlucoseData
+from ..data.core import GlucoseData
 from ..errors import AgataNotInstalledError
 from .adapter import prepare_data_for_agata
 
@@ -24,13 +24,13 @@ except ImportError:
 
 
 def analyze_one_arm(
-    data_list: list[ModularGlucoseData], glycemic_target: str = "diabetes", **kwargs
+    data_list: list[GlucoseData], glycemic_target: str = "diabetes", **kwargs
 ) -> dict:
     """
     Analyzes a group (arm) of glucose data using the py_agata library.
 
     Args:
-        data_list (list[ModularGlucoseData]): List of ModularGlucoseData objects to analyze.
+        data_list (list[GlucoseData]): List of GlucoseData objects to analyze.
         glycemic_target (str): The glycemic target to use.
 
     Returns:
@@ -53,9 +53,9 @@ def analyze_one_arm(
 
 
 def analyze_with_agata(
-    glucose_data: ModularGlucoseData, glycemic_target: str = "diabetes", **kwargs
+    glucose_data: GlucoseData, glycemic_target: str = "diabetes", **kwargs
 ) -> dict:
-    """Analyze a single :class:`ModularGlucoseData` using ``py_agata``.
+    """Analyze a single :class:`GlucoseData` using ``py_agata``.
 
     Raises:
         AgataNotInstalledError: If ``py_agata`` is not installed.
@@ -107,10 +107,10 @@ def summarize_agata_results(results: dict) -> dict:
 
 
 # --- NEW CLASS ---
-class AgataAnalysis(ModularGlucoseData):
+class AgataAnalysis(GlucoseData):
     """Object-oriented bridge to the ``py_agata`` analysis pipeline.
 
-    Inherits from :class:`~cgmpy.data.core.ModularGlucoseData` so it can
+    Inherits from :class:`~cgmpy.data.core.GlucoseData` so it can
     be constructed in exactly the same way (file path, DataFrame, etc.),
     and exposes :meth:`run` / :meth:`analyze_one_arm` to drive the
     py_agata analysis.
@@ -127,9 +127,9 @@ class AgataAnalysis(ModularGlucoseData):
         Initializes the Agata analysis.
 
         Args:
-            *args: Positional arguments for ModularGlucoseData.
+            *args: Positional arguments for GlucoseData.
             glycemic_target (str): The glycemic target ('diabetes' or 'pregnancy').
-            **kwargs: Other arguments for ModularGlucoseData.
+            **kwargs: Other arguments for GlucoseData.
         """
         super().__init__(*args, **kwargs)
         self.glycemic_target = glycemic_target
@@ -167,16 +167,16 @@ class AgataAnalysis(ModularGlucoseData):
     @classmethod
     def analyze_one_arm(
         cls,
-        data_list: list[ModularGlucoseData],
+        data_list: list[GlucoseData],
         glycemic_target: str = "diabetes",
         summary: bool = False,
         **kwargs,
     ) -> dict:
         """
-        Analyzes a group (arm) of ModularGlucoseData objects.
+        Analyzes a group (arm) of GlucoseData objects.
 
         Args:
-            data_list (list[ModularGlucoseData]): List of objects to analyze.
+            data_list (list[GlucoseData]): List of objects to analyze.
             glycemic_target (str): The glycemic target to use.
             summary (bool): If True, returns a flat summary.
 
