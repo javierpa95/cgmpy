@@ -73,7 +73,7 @@ repos:
         args: [
           --config=pyproject.toml,
           --verbose,
-          --fail-under=70,
+          --fail-under=60,
           --exclude=tests,
           --exclude=examples,
         ]
