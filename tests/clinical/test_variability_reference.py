@@ -5,17 +5,16 @@ synthetic data. See tests/fixtures/synthetic/README.md for the dataset
 description.
 """
 
-import numpy as np
-import pandas as pd
-import pytest
 from pathlib import Path
 
-from cgmpy import GlucoseAnalysis, GlucoseData
-from cgmpy.metrics.variability.modd import modd
-from cgmpy.metrics.variability.conga import conga
-from cgmpy.metrics.variability.risk import lbgi, hbgi, adrr
-from cgmpy.metrics.variability.mage import mage_simple
+import pandas as pd
+import pytest
 
+from cgmpy import GlucoseAnalysis, GlucoseData
+from cgmpy.metrics.variability.conga import conga
+from cgmpy.metrics.variability.mage import mage_simple
+from cgmpy.metrics.variability.modd import modd
+from cgmpy.metrics.variability.risk import adrr, hbgi, lbgi
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "synthetic" / "sine_24h.csv"
 

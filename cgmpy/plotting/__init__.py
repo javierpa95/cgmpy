@@ -10,5 +10,4 @@ This module contains the functions for:
 
 from . import agp, daily_plots, mage_excursions, statistical_plots
 
-
 __all__ = ["agp", "daily_plots", "mage_excursions", "statistical_plots"]

@@ -10,7 +10,6 @@ This module contains metrics related to time in different ranges:
 
 import pandas as pd
 
-
 # =============================================================================
 # Pure functions
 # =============================================================================

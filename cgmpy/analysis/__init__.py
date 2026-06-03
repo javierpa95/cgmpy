@@ -12,4 +12,4 @@ This module contains the classes and functions for:
 from ..metrics.pregnancy import PregnancyAnalysis
 from .core import GlucoseAnalysis
 
-__all__ = ["PregnancyAnalysis", "GlucoseAnalysis"]
+__all__ = ["GlucoseAnalysis", "PregnancyAnalysis"]

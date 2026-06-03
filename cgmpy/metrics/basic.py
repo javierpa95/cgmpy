@@ -10,7 +10,6 @@ This module contains fundamental metrics for glucose data analysis:
 
 import pandas as pd
 
-
 # ---------------------------------------------------------------------------
 # Pure functions
 # ---------------------------------------------------------------------------

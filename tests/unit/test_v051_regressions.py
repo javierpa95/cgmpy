@@ -64,9 +64,9 @@ class TestBug1GlucosePlotMetrics:
     raise AttributeError on a plain GlucosePlot."""
 
     def test_generate_statistics_text_runs(self):
-        from cgmpy.plotting.statistical_plots import _generate_statistics_text
-        from cgmpy.data.core import GlucoseData
         from cgmpy.analysis.core import GlucoseAnalysis
+        from cgmpy.data.core import GlucoseData
+        from cgmpy.plotting.statistical_plots import _generate_statistics_text
 
         ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))
         glucose = ga.glucose
@@ -80,6 +80,7 @@ class TestBug1GlucosePlotMetrics:
 
     def test_plot_time_in_range_runs(self):
         import matplotlib.pyplot as plt
+
         from cgmpy import GlucoseAnalysis, GlucoseData
 
         ga = GlucoseAnalysis(GlucoseData(data_source=_make_oscillating_dataset()))

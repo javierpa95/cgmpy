@@ -1,10 +1,18 @@
 """Tests for pure risk metric functions."""
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
+
 from cgmpy.metrics.variability.risk import (
-    m_value, j_index, grade, lbgi, hbgi, gri, adrr,
+    adrr,
+    grade,
+    gri,
+    hbgi,
+    j_index,
+    lbgi,
+    m_value,
 )
+
 
 def test_m_value_constant():
     """M-Value should be 0 when all values equal the reference."""
@@ -77,8 +85,9 @@ def test_gri_returns_dict():
 
 def test_adrr_returns_dict():
     """ADRR should return expected structure."""
-    import pandas as pd
     from datetime import datetime, timedelta
+
+    import pandas as pd
     start = datetime(2024, 1, 1, 0, 0)
     timestamps = pd.Series([start + timedelta(minutes=5*i) for i in range(288)])
     glucose = pd.Series(np.linspace(70, 250, 288))
@@ -89,22 +98,23 @@ def test_adrr_returns_dict():
 
 def test_backward_compatibility():
     """Pure functions match GlucoseAnalysis results on real data."""
-    from cgmpy import GlucoseAnalysis, GlucoseData
     import pytest
+
+    from cgmpy import GlucoseAnalysis, GlucoseData
     data = GlucoseAnalysis(GlucoseData("tests/fixtures/synthetic/sine_24h.csv"))
-    
+
     lb_old = data.LBGI()
     lb_new = lbgi(data.glucose)
     assert lb_old == pytest.approx(lb_new)
-    
+
     hb_old = data.HBGI()
     hb_new = hbgi(data.glucose)
     assert hb_old == pytest.approx(hb_new)
-    
+
     m_old = data.M_Value()
     m_new = m_value(data.glucose)
     assert m_old == pytest.approx(m_new)
-    
+
     j_old = data.j_index()
     j_new = j_index(data.mean(), data.sd())
     assert j_old == pytest.approx(j_new)

@@ -11,7 +11,6 @@ This module contains the functions to calculate:
 from .targets import GlucoseTargets, get_targets
 from .validation import ValidationReport, validate_glucose_range
 
-
 __all__ = [
     "ValidationReport",
     "validate_glucose_range",

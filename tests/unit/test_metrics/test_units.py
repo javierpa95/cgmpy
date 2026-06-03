@@ -1,10 +1,15 @@
 """Tests for glucose unit conversion."""
-import pandas as pd
 import numpy as np
-from cgmpy.metrics.units import (
-    GlucoseUnit, to_mg_per_dl, to_mmol_per_l, convert, MGDL_TO_MMOLL,
-)
+import pandas as pd
 import pytest
+
+from cgmpy.metrics.units import (
+    MGDL_TO_MMOLL,
+    GlucoseUnit,
+    convert,
+    to_mg_per_dl,
+    to_mmol_per_l,
+)
 
 
 class TestGlucoseUnit:
@@ -58,7 +63,8 @@ class TestGlucoseDataUnit:
         assert d.unit == GlucoseUnit.MG_DL
 
     def test_glucose_in_unit(self):
-        """glucose_in_unit(mg/dL) should match .glucose."""
+        """glucose_in_unit(mg/dL) should equal .glucose."""
         from cgmpy import GlucoseData
         d = GlucoseData("tests/fixtures/synthetic/sine_24h.csv")
-        assert d.glucose_in_unit(GlucoseUnit.MG_DL) is d.glucose
+        result = d.glucose_in_unit(GlucoseUnit.MG_DL)
+        assert result.equals(d.glucose)

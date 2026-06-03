@@ -11,7 +11,6 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 
-
 MGDL_TO_MMOLL = 18.0156
 
 

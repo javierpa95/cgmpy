@@ -1,11 +1,13 @@
 """Tests for pure MODD, CONGA, and Lability functions."""
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
 import pytest
-from cgmpy.metrics.variability.modd import modd
+
 from cgmpy.metrics.variability.conga import conga
 from cgmpy.metrics.variability.lability import lability_index
+from cgmpy.metrics.variability.modd import modd
 
 # --- MODD ---
 

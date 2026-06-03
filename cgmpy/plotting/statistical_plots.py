@@ -92,11 +92,11 @@ def plot_time_in_range(
 
     non_zero_data = [
         (label, size, color)
-        for label, size, color in zip(labels, sizes, colors)
+        for label, size, color in zip(labels, sizes, colors, strict=False)
         if size > 0
     ]
     if non_zero_data:
-        labels, sizes, colors = map(list, zip(*non_zero_data))
+        labels, sizes, colors = map(list, zip(*non_zero_data, strict=False))
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
 
