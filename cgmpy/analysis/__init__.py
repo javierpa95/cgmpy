@@ -9,7 +9,7 @@ This module contains the classes and functions for:
 """
 
 # Imports from the new refactored locations
-from ..metrics.pregnancy import GestationalDiabetes
+from ..metrics.pregnancy import PregnancyAnalysis
 from .core import GlucoseAnalysis
 
-__all__ = ["GestationalDiabetes", "GlucoseAnalysis"]
+__all__ = ["PregnancyAnalysis", "GlucoseAnalysis"]
