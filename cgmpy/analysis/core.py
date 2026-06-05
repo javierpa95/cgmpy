@@ -83,6 +83,11 @@ class GlucoseAnalysis:
     def targets(self) -> GlucoseTargets:
         return self._data.targets
 
+    @targets.setter
+    def targets(self, value: GlucoseTargets) -> None:
+        self._data.targets = value
+        self.clear_cache()  # metrics depend on targets
+
     @property
     def data(self) -> pd.DataFrame:
         """Raw glucose DataFrame (passthrough to :attr:`GlucoseData.data`)."""
