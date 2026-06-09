@@ -2,222 +2,222 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://javierpa95.github.io/cgmpy/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/legal/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/api/agata/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/api/data/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/api/metrics/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/api/plotting/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/architecture/system-overview/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/architecture/decisions/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/architecture/decisions/0001-record-architecture-decisions/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/architecture/decisions/0002-pyproject-toml-config/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/architecture/decisions/0003-facade-mixin-pattern/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/architecture/decisions/0004-agent-harness-asymmetric/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/architecture/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/git-workflow/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/release-process/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/setup/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/testing/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/caching-strategies/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/dependency-injection/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/deprecation-policy/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/facade-pattern/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/inheritance-vs-composition/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/mro-diamond-problem/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/pure-functions/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/development/concepts/type-hints-for-science/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/getting-started/data-formats/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/getting-started/installation/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/getting-started/quickstart/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/learning-path.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/learning-path/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-ci-cd.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-ci-cd/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-conventional-commits.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-conventional-commits/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-makefile.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-makefile/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-mkdocs.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-mkdocs/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-mypy.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-mypy/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-pre-commit.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-pre-commit/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-pytest.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-pytest/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-release-please.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-release-please/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-ruff.es/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/learning/what-is-ruff/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/agata-integration/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/cli/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/computing-metrics/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/loading-data/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/pregnancy-analysis/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/supported-devices/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
     <url>
          <loc>https://javierpa95.github.io/cgmpy/user-guide/visualization/</loc>
-         <lastmod>2026-06-03</lastmod>
+         <lastmod>2026-06-09</lastmod>
     </url>
 </urlset>
