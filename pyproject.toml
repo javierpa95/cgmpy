@@ -187,7 +187,6 @@ filterwarnings = [
 branch = true
 source = ["cgmpy"]
 omit = [
-  "cgmpy/_version.py",
   "tests/*",
   "examples/*",
 ]
