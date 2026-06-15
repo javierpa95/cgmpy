@@ -13,7 +13,7 @@ from typing import Any
 import pandas as pd
 
 from ..metrics.targets import GlucoseTargets, get_targets
-from ..metrics.units import GlucoseUnit, convert
+from ..metrics.units import GlucoseUnit, convert, to_mg_per_dl
 from .analyzer import DataAnalyzer
 from .exporter import DataExporter
 from .loader import DataLoader
@@ -145,12 +145,16 @@ class GlucoseData:
         self.date_col = date_col
         self.glucose_col = glucose_col
         self.target_type = target_type
+        # CGMPy computes everything in mg/dL. Remember the unit the data was
+        # provided in, but the stored values are normalized to mg/dL (below)
+        # so every metric is correct regardless of the input unit.
         if isinstance(unit, str):
-            self._unit = GlucoseUnit(unit)
+            self._source_unit = GlucoseUnit(unit)
         elif isinstance(unit, GlucoseUnit):
-            self._unit = unit
+            self._source_unit = unit
         else:
-            self._unit = GlucoseUnit.MG_DL
+            self._source_unit = GlucoseUnit.MG_DL
+        self._unit = GlucoseUnit.MG_DL
 
         # Initialize targets
         self.targets: GlucoseTargets
@@ -179,6 +183,13 @@ class GlucoseData:
             regularize_max_gap,
         )
 
+        # Normalize glucose to mg/dL (the canonical internal unit) so all
+        # downstream metrics and plots are unit-safe.
+        if self._source_unit != GlucoseUnit.MG_DL:
+            self.data["glucose"] = to_mg_per_dl(self.data["glucose"])
+            if self.log:
+                self.logger.info("Converted glucose from %s to mg/dL.", self._source_unit.value)
+
         # Dictionary to store operation logs
         self.logs: dict[str, Any] = {}
 
@@ -206,22 +217,31 @@ class GlucoseData:
 
     @property
     def unit(self) -> GlucoseUnit:
-        """Glucose unit of the data.
+        """Internal storage unit of the glucose values (always mg/dL).
+
+        Data is normalized to mg/dL on load so every metric is unit-safe.
+        Use :meth:`glucose_in_unit` to obtain values in another unit, and
+        :attr:`source_unit` to see the unit the data was provided in.
 
         Returns:
-            GlucoseUnit: The unit of the glucose values.
+            GlucoseUnit: Always ``GlucoseUnit.MG_DL``.
         """
         return self._unit
 
-    @unit.setter
-    def unit(self, value: GlucoseUnit | str):
-        if isinstance(value, str):
-            self._unit = GlucoseUnit(value)
-        elif isinstance(value, GlucoseUnit):
-            self._unit = value
+    @property
+    def source_unit(self) -> GlucoseUnit:
+        """The unit the data was originally provided in.
+
+        Returns:
+            GlucoseUnit: The input unit (``mg/dL`` unless ``mmol/L`` was given).
+        """
+        return self._source_unit
 
     def glucose_in_unit(self, unit: GlucoseUnit | str = GlucoseUnit.MG_DL) -> pd.Series:
         """Return glucose values converted to the specified unit.
+
+        Internally the data is stored in mg/dL; this converts that canonical
+        series to the requested unit.
 
         Args:
             unit: Target unit.

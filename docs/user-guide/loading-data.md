@@ -43,6 +43,21 @@ import pandas as pd
 data = GlucoseData(pd.read_csv("data.csv"))
 ```
 
+### Glucose units (mg/dL vs mmol/L)
+
+CGMPy computes every metric in **mg/dL**. If your data is in **mmol/L**, pass
+`unit="mmol/L"` and it is converted to mg/dL on load, so all metrics are
+correct:
+
+```python
+# mmol/L data (common outside the US) is normalized to mg/dL internally
+data = GlucoseData("data_mmol.csv", unit="mmol/L")
+
+data.unit          # GlucoseUnit.MG_DL  (canonical internal unit)
+data.source_unit   # GlucoseUnit.MMOLL  (what you provided)
+data.glucose_in_unit("mmol/L")  # view the values back in mmol/L
+```
+
 ### `DataLoader` (low-level)
 
 For maximum control, use `DataLoader` directly:
