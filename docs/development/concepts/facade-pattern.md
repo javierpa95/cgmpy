@@ -37,7 +37,7 @@ analysis.mean()        # -> float
 analysis.TIR()         # -> float
 analysis.MAGE()        # -> float
 analysis.plot_agp()    # -> plt.Figure
-analysis.report()      # -> dict  (everything in one call)
+analysis.get_comprehensive_report()  # -> dict  (everything in one call)
 ```
 
 The user learns one class. Everything else is an implementation detail.

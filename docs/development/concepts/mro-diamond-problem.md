@@ -1,5 +1,11 @@
 # MRO and the Diamond Problem
 
+> **Note.** The `ModularGlucoseData` / `*Metrics` mixin hierarchy used as the
+> example below is the **pre-v0.6.0** design and has since been removed in
+> favour of pure functions + composition
+> ([ADR 0005](../../architecture/decisions/0005-pure-functions-composition.md)).
+> It is retained here purely to illustrate the diamond problem.
+
 ## What is MRO (Method Resolution Order)?
 
 When you call `obj.method()`, Python needs to decide **which** `method` to call. In single inheritance this is simple: walk up the chain until you find it. In multiple inheritance, the class hierarchy becomes a directed graph, and Python needs a consistent algorithm to linearise it.

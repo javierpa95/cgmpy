@@ -1,5 +1,11 @@
 # Dependency Injection: Give It What It Needs
 
+> **Note.** The `SDMetrics` mixin used as the "before" example below reflects
+> the **pre-v0.6.0** design and has since been removed; metrics are now pure
+> functions that receive their data as arguments (exactly the dependency-injection
+> idea this article advocates). See
+> [ADR 0005](../../architecture/decisions/0005-pure-functions-composition.md).
+
 Here is a short program. What does it do?
 
 ```python

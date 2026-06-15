@@ -23,12 +23,12 @@ FIXTURE = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "data" / 
 
 def main() -> None:
     try:
-        from cgmpy import AgataAnalysis, GlucoseMetrics
+        from cgmpy import AgataAnalysis, GlucoseAnalysis
     except ImportError:
         print("AGATA is not installed. Run: pip install -e .[agata]")
         return
 
-    print("Computing metrics with AgataAnalysis and GlucoseMetrics...\n")
+    print("Computing metrics with AgataAnalysis and GlucoseAnalysis...\n")
 
     # 1. Run AGATA
     try:
@@ -38,43 +38,53 @@ def main() -> None:
         print(f"AgataAnalysis failed: {exc}")
         agata_results = {}
 
-    # 2. Run CGMPy
+    # 2. Run CGMPy via the GlucoseAnalysis facade. We build a flat dict from
+    #    the public metric methods (the pure-function results behind the facade).
     try:
-        cgm = GlucoseMetrics(data_source=str(FIXTURE))
-        cgm_results = cgm.all()
+        cgm = GlucoseAnalysis(str(FIXTURE))
+        cgm_results = {
+            "Mean": cgm.mean(),
+            "Median": cgm.median(),
+            "Std": cgm.sd(),
+            "CV": cgm.cv(),
+            "GMI": cgm.gmi(),
+            "TIR": cgm.TIR(),
+            "TAR180": cgm.TAR180(),
+            "TBR70": cgm.TBR70(),
+            "LBGI": cgm.LBGI(),
+            "HBGI": cgm.HBGI(),
+            "GRI": cgm.GRI().get("GRI"),
+        }
     except Exception as exc:
-        print(f"GlucoseMetrics failed: {exc}")
+        print(f"GlucoseAnalysis failed: {exc}")
         cgm_results = {}
 
-    # 3. Side-by-side table.
-    # CGMPy uses the same dict structure as `GlucoseMetrics.all()` (see
-    # `cgmpy/metrics/__init__.py`); AGATA nests everything under
-    # `time_in_ranges` (plural). The cgm-side keys are the actual ones
-    # emitted by CGMPy.
+    # 3. Side-by-side table. AGATA nests everything under `time_in_ranges`
+    #    (plural); the cgm-side keys are the flat keys built above.
     metric_map = [
-        ("Mean glucose (mg/dL)", ("variability", "mean_glucose"), ("basic", "Mean")),
-        ("Median glucose (mg/dL)", ("variability", "median_glucose"), ("basic", "Median")),
-        ("Standard deviation", ("variability", "std_glucose"), ("basic", "Std")),
-        ("CV (%)", ("variability", "cv_glucose"), ("basic", "CV")),
-        ("GMI (%)", ("variability", "gmi"), ("basic", "GMI")),
+        ("Mean glucose (mg/dL)", ("variability", "mean_glucose"), ("Mean",)),
+        ("Median glucose (mg/dL)", ("variability", "median_glucose"), ("Median",)),
+        ("Standard deviation", ("variability", "std_glucose"), ("Std",)),
+        ("CV (%)", ("variability", "cv_glucose"), ("CV",)),
+        ("GMI (%)", ("variability", "gmi"), ("GMI",)),
         (
             "Time in target",
             ("time_in_ranges", "time_in_target"),
-            ("time_in_range", "current_targets", "TIR"),
+            ("TIR",),
         ),
         (
             "TAR1 (>180)",
             ("time_in_ranges", "time_in_l1_hyperglycemia"),
-            ("time_in_range", "standard_ranges", "TAR180"),
+            ("TAR180",),
         ),
         (
             "TBR1 (<70)",
             ("time_in_ranges", "time_in_l1_hypoglycemia"),
-            ("time_in_range", "standard_ranges", "TBR70"),
+            ("TBR70",),
         ),
-        ("LBGI", ("risk", "lbgi"), ("variability", "quality_metrics", "lbgi")),
-        ("HBGI", ("risk", "hbgi"), ("variability", "quality_metrics", "hbgi")),
-        ("GRI", ("risk", "gri"), ("variability", "quality_metrics", "gri")),
+        ("LBGI", ("risk", "lbgi"), ("LBGI",)),
+        ("HBGI", ("risk", "hbgi"), ("HBGI",)),
+        ("GRI", ("risk", "gri"), ("GRI",)),
     ]
 
     rows = []

@@ -31,14 +31,14 @@ cgmpy/                  ← Source code (the library itself)
 │   ├── exporter.py       Parquet/CSV/Excel export
 │   ├── specialized.py    Device-specific loaders (Dexcom, Libreview, ...)
 │   ├── pregnancy_data.py Pregnancy-specific data handling
-│   └── core.py           ModularGlucoseData facade
-├── metrics/            📊 Clinical metric calculations
+│   └── core.py           GlucoseData facade
+├── metrics/            📊 Clinical metric calculations (pure functions)
 │   ├── basic.py          Mean, median, GMI, SD, ...
 │   ├── time_in_range.py  TIR, TAR, TBR
-│   ├── variability.py    CV, MAGE, MODD, CONGA, J-Index, ...
-│   ├── pregnancy.py      GestationalDiabetes metrics
+│   ├── variability/      CV, MAGE, MODD, CONGA, J-Index, ... (one file per family)
+│   ├── pregnancy.py      Pregnancy analysis
 │   ├── targets.py        GlucoseTargets dataclass (diabetes/pregnancy)
-│   └── __init__.py       Re-exports + ModularGlucoseMetrics facade
+│   └── __init__.py       Re-exports of the metric pure functions
 ├── plotting/           📈 Visualizations
 │   ├── agp.py            Ambulatory Glucose Profile
 │   ├── daily_plots.py    Daily traces

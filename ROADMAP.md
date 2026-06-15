@@ -105,12 +105,11 @@ Other:
   - `conga.py` (115) — `CONGAMetrics`
   - `lability.py` (130) — `LabilityMetrics` (Lability Index + summaries)
   - `risk.py` (281) — `RiskMetrics` (LBGI, HBGI, GRI, GRADE, ADRR, M-Value, J-Index)
-  - `__init__.py` (187) — composite `VariabilityMetrics` + `calculate_variability_metrics`
-  - `VariabilityMetrics` is re-exported from the package as a multiple-inheritance
-    composite, so the public API (`from cgmpy.metrics.variability import
-    VariabilityMetrics`) is unchanged.
-  - Individual mixins (`SDMetrics`, `MAGEMetrics`, etc.) are also importable
-    for users who only need a subset.
+  - `__init__.py` — re-exports the variability pure functions.
+  - **Update (v0.6.0):** the per-family mixin classes (`SDMetrics`,
+    `MAGEMetrics`, `VariabilityBase`, ...) were removed in favour of pure
+    functions + composition (see ADR 0005). Metrics are now imported as
+    functions, e.g. `from cgmpy.metrics.variability import mage_baghurst`.
 
 - **Test suite expansion** — 42 → 310 tests, 30% → 81% line coverage.
   - `tests/unit/test_metrics/variability/` (47 tests, 4 files)

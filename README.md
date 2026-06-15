@@ -71,19 +71,34 @@ analysis.plot_comprehensive_dashboard()
 
 ### Lower-level modular API
 
+Load and filter data with `GlucoseData`, then switch to pregnancy-specific
+cutoffs on the `GlucoseAnalysis` facade:
+
 ```python
-from cgmpy.data import ModularGlucoseData
-from cgmpy.metrics import ModularGlucoseMetrics
+from cgmpy import GlucoseAnalysis, GlucoseData
 from cgmpy.metrics.targets import get_targets
 
-data = ModularGlucoseData("cgm_data.csv")
-data.filter_by_date_range("2024-01-01", "2024-01-31")
+data = GlucoseData("cgm_data.csv")
+data = data.filter_by_date_range("2024-01-01", "2024-01-31")
 
-# Compute metrics with pregnancy-specific cutoffs
-targets = get_targets("pregnancy")
-metrics = ModularGlucoseMetrics(data, targets=targets)
-print(metrics.time_in_range())
-print(metrics.variability().mage())
+analysis = GlucoseAnalysis(data)
+analysis.targets = get_targets("pregnancy")  # pregnancy-specific cutoffs
+print(analysis.TIR())
+print(analysis.MAGE())
+```
+
+### Pure-function metrics (`scipy.stats`-style)
+
+Every metric is also a standalone pure function over a `pandas.Series`, so you
+can compute them directly on any glucose array without the facade:
+
+```python
+from cgmpy.metrics import tir, gmi, mage_baghurst, lbgi
+
+tir(glucose_series, low=70, high=180)
+gmi(glucose_series.mean())
+mage_baghurst(glucose_series)
+lbgi(glucose_series)
 ```
 
 ---

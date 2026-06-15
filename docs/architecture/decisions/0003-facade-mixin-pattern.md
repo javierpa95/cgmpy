@@ -1,8 +1,15 @@
 # ADR 0003 — Facade + mixin pattern for the public API
 
-* Status: Accepted
+* Status: Superseded by [ADR 0005](0005-pure-functions-composition.md)
 * Date: 2026-06-02
 * Deciders: @javierpa95
+
+> **Superseded (v0.6.0).** The mixin layer described here
+> (`ModularGlucoseData`, `ModularGlucoseMetrics`, the `*Metrics` mixin
+> classes) has been removed. The public API is now **pure functions +
+> composition**: standalone metric functions plus the `GlucoseAnalysis`
+> facade. See [ADR 0005](0005-pure-functions-composition.md). This document
+> is kept for historical context.
 
 ## Context and Problem Statement
 

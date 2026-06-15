@@ -71,12 +71,12 @@ A typical CGMPy session looks like:
 CGMPy's main design decisions are recorded as
 [ADRs](../architecture/decisions/index.md). The most important ones:
 
-- **Modular facade pattern** — public API exposes both the
-  high-level `GlucoseAnalysis` and the underlying modular classes, so
-  users can choose their level of abstraction.
-- **Backward compatibility** — deprecated names (`ModularGlucoseData`,
-  `GlucoseMetrics`, `GlucosePlot`, `GestationalDiabetes`, `ModularGlucoseMetrics`)
-  are preserved through aliases with deprecation warnings, so existing code continues to work.
+- **Pure functions + composition** ([ADR 0005](../architecture/decisions/0005-pure-functions-composition.md))
+  — every metric is a standalone pure function over a `pandas.Series`
+  (importable from `cgmpy.metrics`), and the high-level `GlucoseAnalysis`
+  facade composes them. This superseded the earlier facade + mixin design
+  ([ADR 0003](../architecture/decisions/0003-facade-mixin-pattern.md)); the
+  `Modular*`/`*Metrics` mixin classes were removed in v0.6.0.
 - **NumPy / pandas first** — every metric is implemented with vectorized
   operations over `pandas.Series`, not Python loops.
 - **AGATA parity** — the `agata` optional dependency is the reference

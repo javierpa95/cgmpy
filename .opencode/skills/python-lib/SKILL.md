@@ -57,7 +57,7 @@ def time_in_range(data: GlucoseData, targets: GlucoseTargets) -> float:
 - No wildcard imports.
 - No `from cgmpy import X` inside `cgmpy/` modules — use **relative imports**:
   ```python
-  from .core import ModularGlucoseData
+  from .core import GlucoseData
   from ..utils.date_utils import parse_date
   ```
 - Group long imports with parentheses for readability.
