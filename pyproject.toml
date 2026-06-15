@@ -177,6 +177,11 @@ filterwarnings = [
   "error",
   "ignore::DeprecationWarning:matplotlib.*",
   "ignore::DeprecationWarning:seaborn.*",
+  # Newer matplotlib emits this via seaborn's heatmap (set_bad); third-party,
+  # not ours, so don't let it fail the suite.
+  "ignore:The set_bad function will be deprecated:PendingDeprecationWarning",
+  "ignore::PendingDeprecationWarning:matplotlib.*",
+  "ignore::PendingDeprecationWarning:seaborn.*",
   "default:.*deprecated.*:DeprecationWarning",
 ]
 
@@ -187,7 +192,6 @@ filterwarnings = [
 branch = true
 source = ["cgmpy"]
 omit = [
-  "cgmpy/_version.py",
   "tests/*",
   "examples/*",
 ]

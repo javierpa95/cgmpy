@@ -53,8 +53,9 @@ Chosen option: "[option 1]", because [justification].
 |-----|-----------------------------------------------------------------------------|----------|
 | 0001 | [Record architecture decisions](0001-record-architecture-decisions.md) | Accepted |
 | 0002 | [Single-source configuration with pyproject.toml](0002-pyproject-toml-config.md) | Accepted |
-| 0003 | [Facade + mixin pattern for the public API](0003-facade-mixin-pattern.md) | Accepted |
+| 0003 | [Facade + mixin pattern for the public API](0003-facade-mixin-pattern.md) | Superseded by 0005 |
 | 0004 | [Asymmetric agent harness](0004-agent-harness-asymmetric.md) | Accepted |
+| 0005 | [Pure functions + composition for the public API](0005-pure-functions-composition.md) | Accepted |
 
 ## How to add a new ADR
 

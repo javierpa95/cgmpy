@@ -89,12 +89,18 @@ The decorator preserves the original function's signature, name, and docstring v
 
 ## What CGMPy is deprecating (from this refactor)
 
-| Old (deprecated v0.6.0)        | New (recommended)                | Removed in |
-|--------------------------------|----------------------------------|------------|
-| `GlucoseMetrics`               | `GlucoseAnalysis(GlucoseData(...))` | v0.8.0 |
-| `GlucosePlot`                  | `GlucoseAnalysis.plot_*()`       | v0.8.0 |
-| `ModularGlucoseData`           | `GlucoseData`                    | v0.8.0 |
-| `ModularGlucoseMetrics`        | Internal (not exported)          | v0.8.0 |
+> **Note.** CGMPy is still pre-1.0, so the v0.6.0 refactor **removed** the
+> legacy mixin names below outright instead of keeping deprecation aliases
+> (see [ADR 0005](../../architecture/decisions/0005-pure-functions-composition.md)).
+> The table illustrates how a graceful, post-1.0 deprecation *would* be
+> documented; it does not imply these aliases still exist.
+
+| Old (removed in v0.6.0)        | New (recommended)                |
+|--------------------------------|----------------------------------|
+| `GlucoseMetrics`               | `GlucoseAnalysis(GlucoseData(...))` |
+| `GlucosePlot`                  | `GlucoseAnalysis.plot_*()`       |
+| `ModularGlucoseData`           | `GlucoseData`                    |
+| `ModularGlucoseMetrics`        | `cgmpy.metrics` pure functions   |
 
 ## How users should migrate
 

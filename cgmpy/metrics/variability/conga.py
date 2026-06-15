@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from ._base import VariabilityBase
-
 if TYPE_CHECKING:
     pass
 
@@ -67,19 +65,3 @@ def conga(
         "value": conga_value,
         "n": len(valid_data),
     }
-
-
-# ──────────────────────────────────────────────
-# Mixin class (delegates to pure function)
-# ──────────────────────────────────────────────
-
-
-class CONGAMetrics(VariabilityBase):
-    """Mixin providing CONGA calculation for glucose data."""
-
-    if TYPE_CHECKING:
-        data: pd.DataFrame
-        typical_interval: float
-
-    def CONGA(self, hours: int = 4, max_gap_minutes: float | None = None) -> dict:
-        return conga(self.data["glucose"], self.data["time"], hours, max_gap_minutes)

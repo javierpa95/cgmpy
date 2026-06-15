@@ -1,4 +1,4 @@
-"""Tests for cgmpy.metrics.variability.sd.SDMetrics."""
+"""Tests for SD/CV variability metrics via the GlucoseAnalysis facade."""
 
 from datetime import datetime, timedelta
 

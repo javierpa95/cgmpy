@@ -1,5 +1,11 @@
 # Inheritance vs Composition: Why CGMPy Switched from Mixins to Composition
 
+> **Note.** The mixin classes shown below (`ModularGlucoseData`, `SDMetrics`,
+> `VariabilityBase`, ...) are the **pre-v0.6.0** design and no longer exist in
+> the codebase — they are kept here as the cautionary "before" example. The
+> switch to pure functions + composition is complete; see
+> [ADR 0005](../../architecture/decisions/0005-pure-functions-composition.md).
+
 Imagine you are building a Swiss Army knife. You could forge it as one solid piece of metal — a single, monolithic class that does everything. Or you could design it as a handle that accepts attachable tools. The second approach is composition: the knife *has* tools rather than *being* a single tool.
 
 CGMPy started with the first approach — multiple inheritance with mixins. It worked, but it was brittle. This article explains why we moved to composition, what the diamond problem looks like in practice, and when inheritance is still the right choice.

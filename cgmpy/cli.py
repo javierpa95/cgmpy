@@ -9,7 +9,7 @@ required by the ``[agata]`` and ``[dev]`` extras.
 Typical usage::
 
     $ cgmpy-info
-    CGMPy 0.5.2
+    CGMPy 0.6.0
     Python 3.11.9 on Linux-6.5.0-x86_64-with-glibc2.38
 
     Optional dependencies:
@@ -21,7 +21,7 @@ Typical usage::
 
     $ cgmpy-info --json
     {
-      "cgmpy_version": "0.5.2",
+      "cgmpy_version": "0.6.0",
       ...
     }
 """

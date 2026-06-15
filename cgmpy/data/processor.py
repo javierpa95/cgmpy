@@ -25,7 +25,8 @@ class DataProcessor:
         """
         Initializes the DataProcessor.
 
-        :param logger: Logger to record operations
+        Args:
+            logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
         self._last_validation_report: ValidationReport | None = None
@@ -41,17 +42,22 @@ class DataProcessor:
         """
         Processes glucose data in an optimized way.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :param log_performance: If True, records performance metrics
-        :param strict_glucose_range: If ``True``, raise
-            :class:`GlucoseRangeError` when any glucose value falls outside
-            the physiologically plausible range (39-600 mg/dL). Defaults to
-            ``False`` to preserve the legacy warn-only behaviour.
-        :return: Tuple with processed DataFrame and time differences Series
-        :raises GlucoseRangeError: Only when ``strict_glucose_range=True``
-            and the validation report contains out-of-range values.
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            log_performance: If True, records performance metrics
+            strict_glucose_range: If ``True``, raise
+                :class:`GlucoseRangeError` when any glucose value falls outside
+                the physiologically plausible range (39-600 mg/dL). Defaults to
+                ``False`` to preserve the legacy warn-only behaviour.
+
+        Returns:
+            Tuple with processed DataFrame and time differences Series
+
+        Raises:
+            GlucoseRangeError: Only when ``strict_glucose_range=True``
+                and the validation report contains out-of-range values.
         """
         t_start = time.time()
 
@@ -117,13 +123,16 @@ class DataProcessor:
         """
         Validates that the specified columns exist in the DataFrame.
 
-        :param data: DataFrame to validate
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :raises ColumnNotFoundError: If ``date_col`` or ``glucose_col`` is
-            not present in ``data.columns``. A separate exception is raised
-            for each missing column, with the list of available columns
-            attached for diagnostics.
+        Args:
+            data: DataFrame to validate
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+
+        Raises:
+            ColumnNotFoundError: If ``date_col`` or ``glucose_col`` is
+                not present in ``data.columns``. A separate exception is raised
+                for each missing column, with the list of available columns
+                attached for diagnostics.
         """
         available = list(data.columns)
         if date_col not in data.columns:
@@ -149,10 +158,13 @@ class DataProcessor:
         """
         Determines if the data comes from an optimized Parquet file.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :return: True if it is optimized Parquet
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+
+        Returns:
+            True if it is optimized Parquet
         """
         return (
             pd.api.types.is_datetime64_any_dtype(data[date_col])
@@ -169,11 +181,14 @@ class DataProcessor:
         """
         Processes optimized Parquet data with a fast path.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :param log_performance: If True, records performance metrics
-        :return: Tuple with processed DataFrame and time differences Series
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            log_performance: If True, records performance metrics
+
+        Returns:
+            Tuple with processed DataFrame and time differences Series
         """
         if log_performance:
             self.logger.debug("Detected Parquet source data with optimized types.")
@@ -224,11 +239,14 @@ class DataProcessor:
         """
         Processes data with full validations for CSV and other formats.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :param log_performance: If True, records performance metrics
-        :return: Tuple with processed DataFrame and time differences Series
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            log_performance: If True, records performance metrics
+
+        Returns:
+            Tuple with processed DataFrame and time differences Series
         """
         if log_performance:
             self.logger.debug("Processing data with type conversion and full validations.")
@@ -271,10 +289,13 @@ class DataProcessor:
         """
         Removes rows with null values in key columns.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :return: DataFrame without nulls
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+
+        Returns:
+            DataFrame without nulls
         """
         rows_before = len(data)
         data_cleaned = data.dropna(subset=[date_col, glucose_col])
@@ -291,10 +312,13 @@ class DataProcessor:
         """
         Convert date and glucose columns to correct types.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :return: DataFrame with correct types
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+
+        Returns:
+            DataFrame with correct types
         """
         data_converted = data.copy()
 
@@ -359,10 +383,13 @@ class DataProcessor:
         """
         Finds and resolves duplicates in the date column.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :return: DataFrame without duplicates
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+
+        Returns:
+            DataFrame without duplicates
         """
         mask_duplicates = data.duplicated(subset=[date_col], keep=False)
         n_duplicates = mask_duplicates.sum()
@@ -387,9 +414,12 @@ class DataProcessor:
         """
         Sorts the DataFrame by the date column if it is not already sorted.
 
-        :param data: DataFrame with data
-        :param date_col: Name of the date column
-        :return: Sorted DataFrame
+        Args:
+            data: DataFrame with data
+            date_col: Name of the date column
+
+        Returns:
+            Sorted DataFrame
         """
         if not data[date_col].is_monotonic_increasing:
             self.logger.debug("  - Sorting data by timestamp...")
@@ -402,10 +432,13 @@ class DataProcessor:
         """
         Renames columns to standard names.
 
-        :param data: DataFrame with data
-        :param date_col: Current name of the date column
-        :param glucose_col: Current name of the glucose column
-        :return: DataFrame with renamed columns
+        Args:
+            data: DataFrame with data
+            date_col: Current name of the date column
+            glucose_col: Current name of the glucose column
+
+        Returns:
+            DataFrame with renamed columns
         """
         renamed_data = data.copy()
 
@@ -426,11 +459,14 @@ class DataProcessor:
         """
         Filters data by date range.
 
-        :param data: DataFrame with data
-        :param start_date: Start date
-        :param end_date: End date
-        :param date_col: Name of the date column
-        :return: Filtered DataFrame
+        Args:
+            data: DataFrame with data
+            start_date: Start date
+            end_date: End date
+            date_col: Name of the date column
+
+        Returns:
+            Filtered DataFrame
         """
         filtered_data = data.copy()
 

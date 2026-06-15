@@ -10,16 +10,23 @@ This module contains functions to generate ambulatory profiles:
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
-from ._utils import add_glucose_zones
+from ._constants import GLUCOSE_AXIS_MAX, GLUCOSE_AXIS_MIN
+from ._utils import add_glucose_zones, resolve_axes
 
 
-def plot_agp(data: pd.DataFrame, smoothing_window: int = 15):
-    """Generates and displays the enhanced Ambulatory Glucose Profile (AGP).
+def plot_agp(data: pd.DataFrame, smoothing_window: int = 15, ax: Axes | None = None) -> Figure:
+    """Builds the enhanced Ambulatory Glucose Profile (AGP).
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
         smoothing_window: Smoothing window in minutes (default 15).
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
     data_copy = data.copy()
     data_copy["time_decimal"] = (
@@ -45,7 +52,7 @@ def plot_agp(data: pd.DataFrame, smoothing_window: int = 15):
 
     percentiles = percentiles.sort_index()
 
-    fig, ax = plt.subplots(figsize=(14, 8))
+    fig, ax, created = resolve_axes(ax, figsize=(14, 8))
 
     add_glucose_zones(ax)
 
@@ -53,18 +60,24 @@ def plot_agp(data: pd.DataFrame, smoothing_window: int = 15):
 
     _configure_agp_plot(ax, "Ambulatory Glucose Profile (AGP)")
 
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
-def generate_week_agp(data: pd.DataFrame, smoothing_window: int = 15, combined: bool = True):
-    """Generates the Ambulatory Glucose Profile (AGP) by day of week.
+def generate_week_agp(
+    data: pd.DataFrame, smoothing_window: int = 15, combined: bool = True
+) -> Figure:
+    """Builds the Ambulatory Glucose Profile (AGP) by day of week.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
         smoothing_window: Smoothing window in minutes (default 15).
         combined: If True, displays all days in a single chart.
                  If False, displays a subplot for each day.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
     data_copy = data.copy()
     data_copy["time_decimal"] = (
@@ -73,9 +86,8 @@ def generate_week_agp(data: pd.DataFrame, smoothing_window: int = 15, combined: 
     data_copy["weekday"] = data_copy["time"].dt.day_name()
 
     if combined:
-        _plot_combined_week_agp(data_copy, smoothing_window)
-    else:
-        _plot_separate_week_agp(data_copy, smoothing_window)
+        return _plot_combined_week_agp(data_copy, smoothing_window)
+    return _plot_separate_week_agp(data_copy, smoothing_window)
 
 
 def _plot_percentiles(ax, percentiles):
@@ -120,7 +132,7 @@ def _configure_agp_plot(ax, title: str):
     ax.set_xticks(range(0, 25, 3))
     ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
 
-    ax.set_ylim(0, 400)
+    ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
 
 
 def _plot_combined_week_agp(data_copy, smoothing_window: int):
@@ -177,7 +189,7 @@ def _plot_combined_week_agp(data_copy, smoothing_window: int):
     )
     ax.set_xlabel("Time of Day", fontsize=12)
     ax.set_ylabel("Glucose Level (mg/dL)", fontsize=12)
-    ax.set_ylim(0, 400)
+    ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
     ax.grid(True, linestyle=":", alpha=0.6)
 
     ax.set_xticks(range(0, 25, 3))
@@ -190,8 +202,8 @@ def _plot_combined_week_agp(data_copy, smoothing_window: int):
         fontsize=10,
     )
 
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+    return fig
 
 
 def _plot_separate_week_agp(data_copy, smoothing_window: int):
@@ -230,15 +242,15 @@ def _plot_separate_week_agp(data_copy, smoothing_window: int):
                 pad=10,
             )
             ax.set_ylabel("Glucose (mg/dL)", fontsize=10)
-            ax.set_ylim(0, 400)
+            ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
             ax.grid(True, linestyle=":", alpha=0.6)
 
     axes[-1].set_xlabel("Time of Day", fontsize=12)
     axes[-1].set_xticks(range(0, 25, 3))
     axes[-1].set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
 
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+    return fig
 
 
 def _calculate_day_percentiles(dia_data, smoothing_window: int):

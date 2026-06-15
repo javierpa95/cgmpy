@@ -2,11 +2,13 @@
 Main module for modular glucose data management.
 """
 
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
 import time
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 
@@ -32,7 +34,7 @@ class GlucoseData:
     @classmethod
     def from_sources(
         cls,
-        sources: list[Union[str, pd.DataFrame, "GlucoseData"]],
+        sources: list[str | pd.DataFrame | GlucoseData],
         date_col: str = "time",
         glucose_col: str = "glucose",
         delimiter: str | None = None,
@@ -41,23 +43,26 @@ class GlucoseData:
         target_type: str = "diabetes",
         unit: str | GlucoseUnit = GlucoseUnit.MG_DL,
         **kwargs,
-    ) -> "GlucoseData":
+    ) -> GlucoseData:
         """
         Creates an instance by merging multiple data sources.
 
         This method handles loading, column renaming, and initial merging.
         The constructor will then handle duplicate removal and sorting.
 
-        :param sources: List of sources (paths, DataFrames, or GlucoseData instances)
-        :param date_col: Default date column name for new sources
-        :param glucose_col: Default glucose column name for new sources
-        :param delimiter: Delimiter for CSV files
-        :param header: Header row for CSV files
-        :param log: Whether to enable logging
-        :param target_type: Type of glucose targets ('diabetes' or 'pregnancy')
-        :param unit: Glucose unit of the data ('mg/dL' or 'mmol/L')
-        :param kwargs: Additional arguments for the constructor
-        :return: A new GlucoseData instance containing all merged data
+        Args:
+            sources: List of sources (paths, DataFrames, or GlucoseData instances)
+            date_col: Default date column name for new sources
+            glucose_col: Default glucose column name for new sources
+            delimiter: Delimiter for CSV files
+            header: Header row for CSV files
+            log: Whether to enable logging
+            target_type: Type of glucose targets ('diabetes' or 'pregnancy')
+            unit: Glucose unit of the data ('mg/dL' or 'mmol/L')
+            kwargs: Additional arguments for the constructor
+
+        Returns:
+            A new GlucoseData instance containing all merged data
         """
         temp_loader = DataLoader()
         temp_processor = DataProcessor()
@@ -120,16 +125,17 @@ class GlucoseData:
         """
         Initializes glucose data with modular architecture.
 
-        :param data_source: CSV/Parquet file or DataFrame with data
-        :param date_col: Name of the date/time column
-        :param glucose_col: Name of the glucose values column
-        :param delimiter: Delimiter for CSV files
-        :param header: Header row for CSV files
-        :param start_date: Start date for filtering data (optional)
-        :param end_date: End date for filtering data (optional)
-        :param log: If True, enables detailed performance logs
-        :param target_type: Type of glucose targets ('diabetes' or 'pregnancy')
-        :param unit: Glucose unit of the data ('mg/dL' or 'mmol/L')
+        Args:
+            data_source: CSV/Parquet file or DataFrame with data
+            date_col: Name of the date/time column
+            glucose_col: Name of the glucose values column
+            delimiter: Delimiter for CSV files
+            header: Header row for CSV files
+            start_date: Start date for filtering data (optional)
+            end_date: End date for filtering data (optional)
+            log: If True, enables detailed performance logs
+            target_type: Type of glucose targets ('diabetes' or 'pregnancy')
+            unit: Glucose unit of the data ('mg/dL' or 'mmol/L')
         """
         # Logging configuration
         self.log = log
@@ -147,10 +153,11 @@ class GlucoseData:
             self._unit = GlucoseUnit.MG_DL
 
         # Initialize targets
+        self.targets: GlucoseTargets
         if isinstance(target_type, GlucoseTargets):
             self.targets = target_type
         else:
-            self.targets = get_targets(target_type)  # type: ignore[assignment]
+            self.targets = get_targets(target_type)
 
         # Initialize modules
         self.loader = DataLoader(self.logger)
@@ -231,7 +238,8 @@ class GlucoseData:
         """
         Configures the logger for the class.
 
-        :return: Configured logger
+        Returns:
+            Configured logger
         """
         logger = logging.getLogger(__name__)
 
@@ -260,7 +268,8 @@ class GlucoseData:
         """
         Initializes and processes data using modules.
 
-        :return: Tuple with (data, time_diffs, typical_interval)
+        Returns:
+            Tuple with (data, time_diffs, typical_interval)
         """
         t_start = time.time()
 
@@ -336,7 +345,8 @@ class GlucoseData:
         """
         Returns the typical interval between measurements in minutes.
 
-        :return: Typical interval in minutes
+        Returns:
+            Typical interval in minutes
         """
         return self.typical_interval
 
@@ -344,8 +354,11 @@ class GlucoseData:
         """
         Shows basic file information.
 
-        :param include_disconnections: Whether to include disconnection details
-        :return: Dictionary with basic information
+        Args:
+            include_disconnections: Whether to include disconnection details
+
+        Returns:
+            Dictionary with basic information
         """
         return self.analyzer.get_basic_info(
             self.data, self.time_diffs, self.typical_interval, include_disconnections
@@ -355,7 +368,8 @@ class GlucoseData:
         """
         String representation of the object with basic information.
 
-        :return: String with information summary
+        Returns:
+            String with information summary
         """
         info = self.info()
         return self.analyzer.get_summary_string(info)
@@ -364,7 +378,8 @@ class GlucoseData:
         """
         Calculates data quality metrics.
 
-        :return: Dictionary with quality metrics
+        Returns:
+            Dictionary with quality metrics
         """
         return self.analyzer.get_data_quality_metrics(
             self.data, self.time_diffs, self.typical_interval
@@ -374,7 +389,8 @@ class GlucoseData:
         """
         Returns all stored logs.
 
-        :return: Dictionary with generated logs
+        Returns:
+            Dictionary with generated logs
         """
         if not self.log:
             self.logger.warning(
@@ -410,7 +426,8 @@ class GlucoseData:
         """
         Returns the DataFrame with processed data.
 
-        :return: DataFrame with glucose data
+        Returns:
+            DataFrame with glucose data
         """
         return self.data.copy()
 
@@ -418,7 +435,8 @@ class GlucoseData:
         """
         Returns only glucose values.
 
-        :return: Series with glucose values
+        Returns:
+            Series with glucose values
         """
         return self.data["glucose"].copy()
 
@@ -426,7 +444,8 @@ class GlucoseData:
         """
         Returns only timestamps.
 
-        :return: Series with timestamps
+        Returns:
+            Series with timestamps
         """
         return self.data["time"].copy()
 
@@ -434,7 +453,8 @@ class GlucoseData:
         """
         Returns time differences between measurements.
 
-        :return: Series with time differences
+        Returns:
+            Series with time differences
         """
         return self.time_diffs.copy()
 
@@ -443,13 +463,16 @@ class GlucoseData:
         self,
         start_date: str | datetime.datetime,
         end_date: str | datetime.datetime,
-    ) -> "GlucoseData":
+    ) -> GlucoseData:
         """
         Creates a new instance filtered by date range.
 
-        :param start_date: Start date
-        :param end_date: End date
-        :return: New instance with filtered data
+        Args:
+            start_date: Start date
+            end_date: End date
+
+        Returns:
+            New instance with filtered data
         """
         # Use the processor to filter data
         filtered_data = self.processor.filter_by_dates(self.data, start_date, end_date)
@@ -457,13 +480,16 @@ class GlucoseData:
         # Create new instance using the constructor
         return self._create_filtered_instance(filtered_data)
 
-    def filter_by_glucose_range(self, min_glucose: float, max_glucose: float) -> "GlucoseData":
+    def filter_by_glucose_range(self, min_glucose: float, max_glucose: float) -> GlucoseData:
         """
         Creates a new instance filtered by glucose range.
 
-        :param min_glucose: Minimum glucose value
-        :param max_glucose: Maximum glucose value
-        :return: New instance with filtered data
+        Args:
+            min_glucose: Minimum glucose value
+            max_glucose: Maximum glucose value
+
+        Returns:
+            New instance with filtered data
         """
         mask = (self.data["glucose"] >= min_glucose) & (self.data["glucose"] <= max_glucose)
         filtered_data = self.data[mask].copy()
@@ -473,7 +499,7 @@ class GlucoseData:
 
         return self._create_filtered_instance(filtered_data)
 
-    def regularize(self, interval_mins: int = 5, max_gap_mins: int = 30) -> "GlucoseData":
+    def regularize(self, interval_mins: int = 5, max_gap_mins: int = 30) -> GlucoseData:
         """
         Regularizes the current instance's data in-place.
         Returns self for method chaining.
@@ -507,12 +533,15 @@ class GlucoseData:
 
         return self
 
-    def _create_filtered_instance(self, filtered_data: pd.DataFrame) -> "GlucoseData":
+    def _create_filtered_instance(self, filtered_data: pd.DataFrame) -> GlucoseData:
         """
         Creates a new instance (clone) with modified data.
 
-        :param filtered_data: DataFrame with filtered or modified data
-        :return: New GlucoseData instance
+        Args:
+            filtered_data: DataFrame with filtered or modified data
+
+        Returns:
+            New GlucoseData instance
         """
         new_instance = copy.copy(self)
         new_instance.logs = {}

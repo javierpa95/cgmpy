@@ -10,10 +10,8 @@ Run from the project root:
 Reports timings to stdout. Useful for spotting regressions when you change
 the implementation of a metric.
 
-The mixin design of CGMPy means a metric method is called directly on the
-data class (e.g. ``gd.mean()``), not on a sub-namespace. We use
-``GlucoseMetrics`` which combines ``ModularGlucoseData`` with
-``GlucoseAnalysis`` so every metric is reachable as a method.
+Every metric is reachable as a method on the ``GlucoseAnalysis`` facade
+(e.g. ``analysis.mean()``), which composes the underlying pure functions.
 """
 
 from __future__ import annotations
@@ -24,7 +22,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from cgmpy import GlucoseMetrics
+from cgmpy import GlucoseAnalysis
 
 
 def _make_synthetic(n_days: int = 30, sample_minutes: int = 5) -> pd.DataFrame:
@@ -57,7 +55,7 @@ def main() -> None:
     df = _make_synthetic()
     print(f"  {len(df):,} samples\n")
 
-    gm = GlucoseMetrics(df)
+    gm = GlucoseAnalysis(df)
 
     print("Timing each metric:")
     _time_it("basic.mean", lambda: gm.mean())

@@ -10,10 +10,14 @@ import pandas as pd
 from cgmpy.metrics.time_in_range import tar, tbr, tir
 from cgmpy.metrics.units import MGDL_TO_MMOLL
 
-from ._base import VariabilityBase
-
 if TYPE_CHECKING:
     pass
+
+# GRADE categorisation boundaries (mg/dL). These are fixed by the GRADE
+# definition (Hill et al., Diabet. Med. 2007; DOI 10.1111/j.1464-5491.2007.02119.x),
+# NOT patient-specific targets, so they live as named constants here.
+_GRADE_HYPO_MGDL = 70
+_GRADE_HYPER_MGDL = 140
 
 
 # ──────────────────────────────────────────────
@@ -37,12 +41,17 @@ def m_value(glucose: pd.Series, reference_glucose: int = 90) -> float:
     Formula: M = (1/n) sum |10 * log10(BG/120)|^3 + W/20
     (The correction factor can be omitted when there are more than 24 data points)
 
-    :param glucose: Glucose values.
-    :param reference_glucose: Reference value (default 90 mg/dL - updated from docstring default).
-    :return: M-Value rounded to 2 decimals.
+    Args:
+        glucose: Glucose values.
+        reference_glucose: Reference value (default 90 mg/dL - updated from docstring default).
+
+    Returns:
+        M-Value rounded to 2 decimals.
         Returns 0.0 if no valid glucose values (prevents log10(0)).
-    :reference: 10.1111/j.0954-6820.1965.tb01810.x
-    :reference: 10.2337/db12-1396
+
+    References:
+        10.1111/j.0954-6820.1965.tb01810.x
+        10.2337/db12-1396
     """
     glucose_values = glucose.values
 
@@ -61,10 +70,15 @@ def j_index(mean_glucose: float, sd_glucose: float) -> float:
     """
     Calculates J-index.
 
-    :param mean_glucose: Pre-computed mean glucose.
-    :param sd_glucose: Pre-computed standard deviation of glucose.
-    :return: J-index value.
-    :reference: DOI: 10.1055/s-2007-979906
+    Args:
+        mean_glucose: Pre-computed mean glucose.
+        sd_glucose: Pre-computed standard deviation of glucose.
+
+    Returns:
+        J-index value.
+
+    References:
+        DOI: 10.1055/s-2007-979906
     """
     return 0.001 * (mean_glucose + sd_glucose) ** 2
 
@@ -73,10 +87,15 @@ def grade(glucose: pd.Series, unit: str = "mg/dL") -> dict[str, float]:
     """
     Calculates GRADE (Glycaemic Risk Assessment in Diabetes Engine).
 
-    :param glucose: Glucose values.
-    :param unit: Unit of the glucose data, either "mg/dL" or "mmol/L".
-    :return: Dictionary with GRADE components (score, hypo/eu/hyper percentages).
-    :reference: DOI: 10.1111/j.1464-5491.2007.02119.x
+    Args:
+        glucose: Glucose values.
+        unit: Unit of the glucose data, either "mg/dL" or "mmol/L".
+
+    Returns:
+        Dictionary with GRADE components (score, hypo/eu/hyper percentages).
+
+    References:
+        DOI: 10.1111/j.1464-5491.2007.02119.x
     """
     if len(glucose) == 0:
         return {"grade_score": 0.0, "hypo_percent": 0.0, "eu_percent": 0.0, "hyper_percent": 0.0}
@@ -88,8 +107,8 @@ def grade(glucose: pd.Series, unit: str = "mg/dL") -> dict[str, float]:
     else:
         raise ValueError("The unit must be 'mg/dL' or 'mmol/L'")
 
-    hypo_threshold = 70
-    hyper_threshold = 140
+    hypo_threshold = _GRADE_HYPO_MGDL
+    hyper_threshold = _GRADE_HYPER_MGDL
 
     hypo_mask = glucose_value < hypo_threshold
     eu_mask = (glucose_value >= hypo_threshold) & (glucose_value <= hyper_threshold)
@@ -132,10 +151,15 @@ def lbgi(glucose: pd.Series) -> float:
     """
     Calculates Low Blood Glucose Index (LBGI).
 
-    :param glucose: Glucose values.
-    :return: LBGI value.
+    Args:
+        glucose: Glucose values.
+
+    Returns:
+        LBGI value.
         Returns 0.0 if no valid glucose values (prevents log(0)).
-    :reference: DOI: 10.2337/db12-1396
+
+    References:
+        DOI: 10.2337/db12-1396
     """
     glucose_values = glucose.values
 
@@ -156,10 +180,15 @@ def hbgi(glucose: pd.Series) -> float:
     """
     Calculates High Blood Glucose Index (HBGI).
 
-    :param glucose: Glucose values.
-    :return: HBGI value.
+    Args:
+        glucose: Glucose values.
+
+    Returns:
+        HBGI value.
         Returns 0.0 if no valid glucose values (prevents log(0)).
-    :reference: DOI: 10.2337/db12-1396
+
+    References:
+        DOI: 10.2337/db12-1396
     """
     glucose_values = glucose.values
 
@@ -197,10 +226,15 @@ def gri(glucose: pd.Series, pregnancy: bool = False) -> dict[str, Any]:
     - VHigh: >250 mg/dL
     - High: 140-250 mg/dL
 
-    :param glucose: Glucose values.
-    :param pregnancy: If True, uses specific ranges for pregnancy.
-    :return: Dictionary with GRI and its components.
-    :reference: DOI: 10.1016/j.diabres.2013.03.006 (Standard)
+    Args:
+        glucose: Glucose values.
+        pregnancy: If True, uses specific ranges for pregnancy.
+
+    Returns:
+        Dictionary with GRI and its components.
+
+    References:
+        DOI: 10.1016/j.diabres.2013.03.006 (Standard)
     """
     # NOTE: GRI was originally validated for non-pregnant adults.
     # The use of pregnancy-specific targets here is experimental and NOT clinically validated.
@@ -254,10 +288,15 @@ def adrr(glucose: pd.Series, timestamps: pd.Series) -> dict[str, Any]:
     1. Is equally sensitive to hypoglycemia and hyperglycemia.
     2. Uses logarithmic transformation to normalize the scale.
 
-    :param glucose: Glucose values.
-    :param timestamps: Corresponding timestamps.
-    :return: Dictionary with ADRR and related statistics.
-    :reference: DOI: 10.1177/193229681300700529
+    Args:
+        glucose: Glucose values.
+        timestamps: Corresponding timestamps.
+
+    Returns:
+        Dictionary with ADRR and related statistics.
+
+    References:
+        DOI: 10.1177/193229681300700529
     """
     daily_readings = pd.DataFrame({"time": timestamps, "glucose": glucose}).groupby(
         timestamps.dt.date
@@ -303,51 +342,3 @@ def adrr(glucose: pd.Series, timestamps: pd.Series) -> dict[str, Any]:
             "hyper_risk": round(float(hyper_risk), 2),
         },
     }
-
-
-# ──────────────────────────────────────────────
-# Mixin class (delegates to pure functions)
-# ──────────────────────────────────────────────
-
-
-class RiskMetrics(VariabilityBase):
-    """Mixin providing glycemic risk and quality metrics.
-
-    All methods delegate to module-level pure functions.
-    See :func:`m_value`, :func:`j_index`, :func:`grade`, :func:`lbgi`,
-    :func:`hbgi`, :func:`gri`, and :func:`adrr`.
-    """
-
-    if TYPE_CHECKING:
-        data: pd.DataFrame
-
-        def mean(self) -> float: ...
-        def sd(self) -> float: ...
-
-    def M_Value(self, reference_glucose: int = 90) -> float:
-        """Calculates M-Value. Delegates to :func:`m_value`."""
-        return m_value(self.data["glucose"], reference_glucose)
-
-    def j_index(self) -> float:
-        """Calculates J-index. Delegates to :func:`j_index`."""
-        return j_index(self.mean(), self.sd())
-
-    def GRADE(self, unit: str = "mg/dL") -> dict[str, float]:
-        """Calculates GRADE. Delegates to :func:`grade`."""
-        return grade(self.data["glucose"], unit)
-
-    def LBGI(self) -> float:
-        """Calculates Low Blood Glucose Index (LBGI). Delegates to :func:`lbgi`."""
-        return lbgi(self.data["glucose"])
-
-    def HBGI(self) -> float:
-        """Calculates High Blood Glucose Index (HBGI). Delegates to :func:`hbgi`."""
-        return hbgi(self.data["glucose"])
-
-    def GRI(self, pregnancy: bool = False) -> dict[str, Any]:
-        """Calculates Glucose Risk Index (GRI). Delegates to :func:`gri`."""
-        return gri(self.data["glucose"], pregnancy)
-
-    def ADRR(self) -> dict[str, Any]:
-        """Calculates Average Daily Risk Range (ADRR). Delegates to :func:`adrr`."""
-        return adrr(self.data["glucose"], self.data["time"])

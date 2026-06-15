@@ -12,35 +12,49 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+
+from ._constants import (
+    GLUCOSE_AXIS_MAX,
+    GLUCOSE_AXIS_MIN,
+    GLUCOSE_HIST_MAX,
+    TARGET_HIGH,
+    TARGET_LOW,
+)
+from ._utils import resolve_axes
 
 
-def histogram(data: pd.DataFrame, bin_width: int = 10):
-    """Generates and displays the glucose histogram with fixed intervals.
+def histogram(data: pd.DataFrame, bin_width: int = 10, ax: Axes | None = None) -> Figure:
+    """Builds the glucose histogram with fixed intervals.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
         bin_width: Width of each interval in mg/dL (default 10).
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
-    min_glucose = 0
-    max_glucose = 500
-    bins = range(int(min_glucose), int(max_glucose) + bin_width, bin_width)
+    bins = range(GLUCOSE_AXIS_MIN, GLUCOSE_HIST_MAX + bin_width, bin_width)
 
-    plt.figure(figsize=(12, 8))
+    fig, ax, created = resolve_axes(ax, figsize=(12, 8))
 
-    plt.hist(data["glucose"], bins=bins, edgecolor="black", alpha=0.7)
+    ax.hist(data["glucose"], bins=bins, edgecolor="black", alpha=0.7)
 
-    plt.axvspan(0, 70, color="#ffcccb", alpha=0.3, label="Hypoglycemia")
-    plt.axvspan(70, 180, color="#90ee90", alpha=0.3, label="Target range")
-    plt.axvspan(180, 400, color="#ffcccb", alpha=0.3, label="Hyperglycemia")
+    ax.axvspan(GLUCOSE_AXIS_MIN, TARGET_LOW, color="#ffcccb", alpha=0.3, label="Hypoglycemia")
+    ax.axvspan(TARGET_LOW, TARGET_HIGH, color="#90ee90", alpha=0.3, label="Target range")
+    ax.axvspan(TARGET_HIGH, GLUCOSE_AXIS_MAX, color="#ffcccb", alpha=0.3, label="Hyperglycemia")
 
-    plt.xlabel("Glucose Level (mg/dL)", fontsize=12)
-    plt.ylabel("Frequency", fontsize=12)
-    plt.title(f"Glucose Histogram ({bin_width} mg/dL bins)", fontsize=14)
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    ax.set_xlabel("Glucose Level (mg/dL)", fontsize=12)
+    ax.set_ylabel("Frequency", fontsize=12)
+    ax.set_title(f"Glucose Histogram ({bin_width} mg/dL bins)", fontsize=14)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
 
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
 def plot_time_in_range(
@@ -54,7 +68,7 @@ def plot_time_in_range(
     tbr55: float = 0,
     tar180: float = 0,
     tar250: float = 0,
-):
+) -> Figure:
     """Generates a pie chart of time in range.
 
     Args:
@@ -131,8 +145,8 @@ def plot_time_in_range(
 
     ax2.grid(True, alpha=0.3, axis="x")
 
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+    return fig
 
 
 def plot_distribution_comparison(
@@ -142,7 +156,7 @@ def plot_distribution_comparison(
     tbr_val: float = 0,
     tar_val: float = 0,
     gmi_val: float = 0,
-):
+) -> Figure:
     """Compares the current distribution with target ranges.
 
     Args:
@@ -209,16 +223,24 @@ def plot_distribution_comparison(
         bbox={"boxstyle": "round", "facecolor": "lightgray", "alpha": 0.8},
     )
 
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+    return fig
 
 
-def plot_correlation_matrix(data: pd.DataFrame, time_segments: list[str] | None = None):
-    """Generates a correlation matrix between different time segments.
+def plot_correlation_matrix(
+    data: pd.DataFrame,
+    time_segments: list[str] | None = None,
+    ax: Axes | None = None,
+) -> Figure:
+    """Builds a correlation matrix between different time segments.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
         time_segments: List of time segments to analyze.
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
     if time_segments is None:
         time_segments = ["00:00-06:00", "06:00-12:00", "12:00-18:00", "18:00-24:00"]
@@ -248,7 +270,7 @@ def plot_correlation_matrix(data: pd.DataFrame, time_segments: list[str] | None 
     correlation_df = pd.DataFrame(segment_data)
     correlation_matrix = correlation_df.corr()
 
-    plt.figure(figsize=(10, 8))
+    fig, ax, created = resolve_axes(ax, figsize=(10, 8))
 
     sns.heatmap(
         correlation_matrix,
@@ -258,15 +280,17 @@ def plot_correlation_matrix(data: pd.DataFrame, time_segments: list[str] | None 
         square=True,
         fmt=".3f",
         cbar_kws={"shrink": 0.8},
+        ax=ax,
     )
 
-    plt.title(
+    ax.set_title(
         "Correlation Matrix between Time Segments",
         fontsize=14,
         fontweight="bold",
     )
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
 def _generate_statistics_text(

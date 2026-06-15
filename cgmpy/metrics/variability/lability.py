@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from ..units import MGDL_TO_MMOLL
-from ._base import VariabilityBase
 
 if TYPE_CHECKING:
     pass
@@ -69,82 +68,3 @@ def lability_index(
         "n_weeks": len(weekly_li),
         "typical_change_per_hour": typical_change_per_hour,
     }
-
-
-# ──────────────────────────────────────────────
-# Mixin class (delegates to pure function)
-# ──────────────────────────────────────────────
-
-
-class LabilityMetrics(VariabilityBase):
-    """Mixin providing Lability Index and variability summary calculations.
-
-    Cross-mixin calls: :meth:`Variability` and :meth:`variability_summary`
-    call methods provided by other mixins (e.g. :class:`SDMetrics`,
-    :class:`MODDMetrics`, :class:`RiskMetrics`).
-    """
-
-    if TYPE_CHECKING:
-        data: pd.DataFrame
-        typical_interval: float
-
-        def sd(self) -> float: ...
-        def mean(self) -> float: ...
-        def cv(self) -> float: ...
-        def sd_total(self) -> dict: ...
-        def sd_within_day(self, min_count_threshold: float = 0.5) -> dict: ...
-        def MAGE(self) -> float: ...
-        def MODD(self, days: int = 1) -> dict: ...
-        def CONGA(self, hours: int = 4, max_gap_minutes: float | None = None) -> dict: ...
-        def j_index(self) -> float: ...
-        def LBGI(self) -> float: ...
-        def HBGI(self) -> float: ...
-        def M_Value(self, reference_glucose: int = 90) -> dict: ...
-
-    def Lability_index(self, interval: int = 1, period: str = "week") -> dict:
-        return lability_index(self.data["glucose"], self.data["time"], interval, period)
-
-    def Variability(self) -> dict[str, Any]:
-        """
-        Calculates all variability metrics.
-        :return: A JSON string with all variability metrics.
-        """
-        variability_metrics = {
-            "CONGA1": self.CONGA(hours=1),
-            "CONGA2": self.CONGA(hours=2),
-            "CONGA4": self.CONGA(hours=4),
-            "CONGA6": self.CONGA(hours=6),
-            "CONGA24": self.CONGA(hours=24),
-            "MODD": self.MODD(days=1),
-            "J_index": self.j_index(),
-            "LBGI": self.LBGI(),
-            "HBGI": self.HBGI(),
-            "MAGE": self.MAGE(),
-            "M_value": self.M_Value(),
-            "LI_week": self.Lability_index(interval=1, period="week"),
-        }
-        return variability_metrics
-
-    def variability_summary(self) -> dict[str, Any]:
-        """
-        Complete summary of all variability metrics.
-
-        Returns:
-            dict: Complete summary of variability metrics
-        """
-        return {
-            "basic_variability": {"sd_total": self.sd_total(), "cv": self.cv()},
-            "excursion_metrics": {
-                "mage": self.MAGE(),
-            },
-            "inter_day_variability": {
-                "modd_1day": self.MODD(1),
-                "modd_2days": self.MODD(2),
-            },
-            "intra_day_variability": {
-                "conga_1h": self.CONGA(1),
-                "conga_2h": self.CONGA(2),
-                "conga_4h": self.CONGA(4),
-            },
-            "lability": {"lability_index": self.Lability_index()},
-        }

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`__version__` sync** — `cgmpy.__version__` now returns `"0.6.0"` (was `"0.5.2"`), matching `pyproject.toml`.
+- **`GlucoseAnalysis.targets` setter** — added a property setter that delegates to `GlucoseData.targets` and clears the cache, fixing `AttributeError` in example when switching to pregnancy targets.
+
 ### Added
 - **Pure functions for all metrics** — `cgmpy.metrics.basic.*`, `time_in_range.*`,
   `variability.*` now expose module-level functions (e.g. `mean(series)`, `tir(series, low, high)`)

@@ -18,7 +18,8 @@ class DataExporter:
         """
         Initializes the DataExporter.
 
-        :param logger: Logger to record operations
+        Args:
+            logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
 
@@ -32,10 +33,11 @@ class DataExporter:
         """
         Saves data in optimized Parquet format.
 
-        :param data: DataFrame with data
-        :param file_path: Path where to save the file
-        :param compression: Compression algorithm
-        :param sort: Whether to sort data before saving
+        Args:
+            data: DataFrame with data
+            file_path: Path where to save the file
+            compression: Compression algorithm
+            sort: Whether to sort data before saving
         """
         self.logger.info("Preparing data to save in optimized Parquet format...")
 
@@ -71,11 +73,14 @@ class DataExporter:
         """
         Appends data to an existing Parquet file.
 
-        :param data: DataFrame with new data
-        :param file_path: Path to the Parquet file
-        :param compression: Compression algorithm
-        :param handle_duplicates: Strategy for handling duplicates
-        :return: Number of records added
+        Args:
+            data: DataFrame with new data
+            file_path: Path to the Parquet file
+            compression: Compression algorithm
+            handle_duplicates: Strategy for handling duplicates
+
+        Returns:
+            Number of records added
         """
         if not Path(file_path).exists():
             self.logger.info(f"File {file_path} does not exist. Creating new file...")
@@ -125,8 +130,11 @@ class DataExporter:
         """
         Optimizes data types for efficient storage.
 
-        :param data: DataFrame with data
-        :return: DataFrame with optimized types
+        Args:
+            data: DataFrame with data
+
+        Returns:
+            DataFrame with optimized types
         """
         df_optimized = data.copy()
 
@@ -161,8 +169,11 @@ class DataExporter:
         """
         Removes duplicates based on the time column.
 
-        :param data: DataFrame with data
-        :return: DataFrame without duplicates
+        Args:
+            data: DataFrame with data
+
+        Returns:
+            DataFrame without duplicates
         """
         duplicates = data.duplicated(subset=["time"], keep="first")
         if duplicates.any():
@@ -175,8 +186,11 @@ class DataExporter:
         """
         Prepares new data for insertion.
 
-        :param data: DataFrame with new data
-        :return: Prepared DataFrame
+        Args:
+            data: DataFrame with new data
+
+        Returns:
+            Prepared DataFrame
         """
         new_data = data.copy()
 
@@ -201,10 +215,13 @@ class DataExporter:
         """
         Handles duplicates between existing and new data.
 
-        :param existing_data: DataFrame with existing data
-        :param new_data: DataFrame with new data
-        :param strategy: Strategy for handling duplicates
-        :return: Tuple with processed DataFrames
+        Args:
+            existing_data: DataFrame with existing data
+            new_data: DataFrame with new data
+            strategy: Strategy for handling duplicates
+
+        Returns:
+            Tuple with processed DataFrames
         """
         # Identify duplicates
         combined = pd.concat([existing_data, new_data])
@@ -234,9 +251,10 @@ class DataExporter:
         """
         Logs information about the save operation.
 
-        :param file_path: Path of the saved file
-        :param data: Saved DataFrame
-        :param save_time: Save time
+        Args:
+            file_path: Path of the saved file
+            data: Saved DataFrame
+            save_time: Save time
         """
         file_size = Path(file_path).stat().st_size / 1024 / 1024
         self.logger.info(f"Data saved in Parquet format at: {file_path}")
@@ -256,10 +274,11 @@ class DataExporter:
         """
         Saves data in CSV format.
 
-        :param data: DataFrame with data
-        :param file_path: Path where to save the file
-        :param separator: Field separator
-        :param include_index: Whether to include the index
+        Args:
+            data: DataFrame with data
+            file_path: Path where to save the file
+            separator: Field separator
+            include_index: Whether to include the index
         """
         self.logger.info(f"Saving data in CSV format: {file_path}")
 
@@ -277,9 +296,10 @@ class DataExporter:
         """
         Saves data in Excel format.
 
-        :param data: DataFrame with data
-        :param file_path: Path where to save the file
-        :param sheet_name: Sheet name
+        Args:
+            data: DataFrame with data
+            file_path: Path where to save the file
+            sheet_name: Sheet name
         """
         self.logger.info(f"Saving data in Excel format: {file_path}")
 

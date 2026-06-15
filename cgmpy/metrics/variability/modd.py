@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 import pandas as pd
-
-from ._base import VariabilityBase
 
 if TYPE_CHECKING:
     pass
@@ -51,20 +48,3 @@ def modd(glucose: pd.Series, timestamps: pd.Series, days: int = 1) -> dict:
         "std": float(abs_diffs.std()) if len(abs_diffs) > 1 else 0.0,
         "days": days,
     }
-
-
-# ──────────────────────────────────────────────
-# Mixin class (delegates to pure function)
-# ──────────────────────────────────────────────
-
-
-class MODDMetrics(VariabilityBase):
-    """Mixin providing MODD (Mean Of Daily Differences) calculation."""
-
-    if TYPE_CHECKING:
-        data: pd.DataFrame
-        log: bool
-        logger: logging.Logger
-
-    def MODD(self, days: int = 1) -> dict:
-        return modd(self.data["glucose"], self.data["time"], days)

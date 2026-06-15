@@ -15,7 +15,7 @@ analysis.sd()      # computes sd
 analysis.TIR()     # computes TIR
 analysis.cv()      # computes cv
 analysis.MAGE()    # computes MAGE
-analysis.report()  # computes everything again
+analysis.get_comprehensive_report()  # computes everything again
 ```
 
 The problem is hidden in the call graph. Each method delegates to a pure function that recomputes from scratch:

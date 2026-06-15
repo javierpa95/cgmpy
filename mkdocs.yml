@@ -177,6 +177,7 @@ nav:
           - ADR-0002: architecture/decisions/0002-pyproject-toml-config.md
           - ADR-0003: architecture/decisions/0003-facade-mixin-pattern.md
           - ADR-0004: architecture/decisions/0004-agent-harness-asymmetric.md
+          - ADR-0005: architecture/decisions/0005-pure-functions-composition.md
   - Legal: legal.md
   - Project:
       - Contributing: https://github.com/javierpa95/cgmpy/blob/main/CONTRIBUTING.md

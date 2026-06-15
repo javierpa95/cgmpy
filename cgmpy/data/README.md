@@ -44,15 +44,15 @@ The `cgmpy.data` module has been completely refactored to provide a modular and 
   - Duplicate handling
   - Data type optimization
 
-### 📊 Main Class: `ModularGlucoseData`
+### 📊 Main Class: `GlucoseData`
 
-The `ModularGlucoseData` class (`core.py`) integrates all specialized modules providing a clean and functional interface:
+The `GlucoseData` class (`core.py`) integrates all specialized modules providing a clean and functional interface:
 
 ```python
-from cgmpy.data import ModularGlucoseData
+from cgmpy.data import GlucoseData
 
 # Create instance
-data = ModularGlucoseData('data.csv')
+data = GlucoseData('data.csv')
 
 # Get information
 info = data.info()
@@ -117,7 +117,6 @@ The refactoring maintains **100% backward compatibility**:
 # Existing code still works
 from cgmpy import GlucoseData, Dexcom, Libreview
 
-# GlucoseData is now an alias for ModularGlucoseData
 data = GlucoseData('data.csv')
 info = data.info()
 ```
@@ -148,10 +147,10 @@ info = data.info()
 
 ### Basic Usage
 ```python
-from cgmpy.data import ModularGlucoseData
+from cgmpy.data import GlucoseData
 
 # Load data
-data = ModularGlucoseData('data.csv', log=True)
+data = GlucoseData('data.csv', log=True)
 
 # Get information
 print(data)
@@ -204,8 +203,8 @@ from cgmpy import GlucoseData
 data = GlucoseData('data.csv')
 
 # Now (optional)
-from cgmpy.data import ModularGlucoseData
-data = ModularGlucoseData('data.csv')
+from cgmpy.data import GlucoseData
+data = GlucoseData('data.csv')
 
 # New features
 filtered = data.filter_by_glucose_range(80, 180)
@@ -216,7 +215,7 @@ quality = data.get_data_quality_metrics()
 
 ```python
 # Enable detailed logging
-data = ModularGlucoseData('data.csv', log=True)
+data = GlucoseData('data.csv', log=True)
 
 # Logging shows:
 # - Load times
