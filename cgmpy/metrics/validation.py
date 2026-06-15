@@ -99,13 +99,16 @@ def validate_glucose_range(
 ) -> ValidationReport:
     """Validate that all glucose readings are inside a plausible range.
 
-    :param data: DataFrame with a `glucose` column (mg/dL).
-    :param targets: Optional :class:`GlucoseTargets` used to derive
-        clinically meaningful bounds. If ``None``, absolute physiological
-        extremes (39 - 600 mg/dL) are used.
-    :param warn: When ``True`` (default), warnings are logged at WARNING
-        level. Set to ``False`` for silent validation (e.g. in tests).
-    :return: :class:`ValidationReport` describing the findings.
+    Args:
+        data: DataFrame with a `glucose` column (mg/dL).
+        targets: Optional :class:`GlucoseTargets` used to derive
+            clinically meaningful bounds. If ``None``, absolute physiological
+            extremes (39 - 600 mg/dL) are used.
+        warn: When ``True`` (default), warnings are logged at WARNING
+            level. Set to ``False`` for silent validation (e.g. in tests).
+
+    Returns:
+        :class:`ValidationReport` describing the findings.
     """
     if "glucose" not in data.columns:
         raise ValueError("DataFrame must contain a 'glucose' column")

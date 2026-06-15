@@ -1,4 +1,4 @@
-"""Tests for cgmpy.metrics.variability.mage.MAGEMetrics."""
+"""Tests for MAGE variability metrics via the GlucoseAnalysis facade."""
 
 import numpy as np
 import pandas as pd

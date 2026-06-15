@@ -1,4 +1,4 @@
-"""Tests for cgmpy.metrics.variability.risk.RiskMetrics."""
+"""Tests for glycemic risk metrics via the GlucoseAnalysis facade."""
 
 import numpy as np
 import pandas as pd

@@ -1,28 +1,73 @@
-"""Variability metrics package.
+"""Glycemic variability metrics as pure functions.
 
-This package splits the original ``variability.py`` module into one
-file per metric family (SD, MAGE, MODD, CONGA, Lability, Risk).
+This package splits the variability metrics into one file per metric family
+(SD, MAGE, MODD, CONGA, Lability, Risk). Every metric is a **pure function**
+that takes a glucose ``pandas.Series`` (and timestamps where relevant) and
+returns a value or a dict — the same low-level API style as ``scipy.stats``::
 
-Individual mixin classes are exported for users who only need
-a subset of metrics::
+    from cgmpy.metrics.variability import mage_baghurst, lbgi, conga
 
-    from cgmpy.metrics.variability import SDMetrics, MAGEMetrics
+    mage = mage_baghurst(glucose_series)
+    risk = lbgi(glucose_series)
+
+The high-level :class:`~cgmpy.analysis.core.GlucoseAnalysis` facade composes
+these same functions for users who work from a loaded dataset.
 """
 
-from ._base import VariabilityBase
-from .conga import CONGAMetrics
-from .lability import LabilityMetrics
-from .mage import MAGEMetrics
-from .modd import MODDMetrics
-from .risk import RiskMetrics
-from .sd import SDMetrics
+from .conga import conga
+from .lability import lability_index
+from .mage import (
+    mage_baghurst,
+    mage_baghurst_direct_elimination,
+    mage_baghurst_simplified,
+    mage_baghurst_smoothing,
+    mage_simple,
+)
+from .modd import modd
+from .risk import adrr, grade, gri, hbgi, j_index, lbgi, m_value
+from .sd import (
+    cv_from_sd_mean,
+    cv_global,
+    mean_global,
+    sd_between_timepoints,
+    sd_daily_mean,
+    sd_global,
+    sd_interaction,
+    sd_same_timepoint,
+    sd_same_timepoint_adjusted,
+    sd_segment,
+    sd_within_day,
+    sd_within_series,
+    sdw,
+)
 
 __all__ = [
-    "CONGAMetrics",
-    "LabilityMetrics",
-    "MAGEMetrics",
-    "MODDMetrics",
-    "RiskMetrics",
-    "SDMetrics",
-    "VariabilityBase",
+    "adrr",
+    "conga",
+    "cv_from_sd_mean",
+    "cv_global",
+    "grade",
+    "gri",
+    "hbgi",
+    "j_index",
+    "lability_index",
+    "lbgi",
+    "m_value",
+    "mage_baghurst",
+    "mage_baghurst_direct_elimination",
+    "mage_baghurst_simplified",
+    "mage_baghurst_smoothing",
+    "mage_simple",
+    "mean_global",
+    "modd",
+    "sd_between_timepoints",
+    "sd_daily_mean",
+    "sd_global",
+    "sd_interaction",
+    "sd_same_timepoint",
+    "sd_same_timepoint_adjusted",
+    "sd_segment",
+    "sd_within_day",
+    "sd_within_series",
+    "sdw",
 ]
