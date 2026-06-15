@@ -816,6 +816,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#glucose-units-mgdl-vs-mmoll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glucose units (mg/dL vs mmol/L)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dataloader-low-level" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3146,6 +3157,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#glucose-units-mgdl-vs-mmoll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glucose units (mg/dL vs mmol/L)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dataloader-low-level" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3347,18 +3369,29 @@ formats.</p>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">))</span>
 </span></code></pre></div>
+<h3 id="glucose-units-mgdl-vs-mmoll">Glucose units (mg/dL vs mmol/L)<a class="headerlink" href="#glucose-units-mgdl-vs-mmoll" title="Permanent link">&para;</a></h3>
+<p>CGMPy computes every metric in <strong>mg/dL</strong>. If your data is in <strong>mmol/L</strong>, pass
+<code>unit="mmol/L"</code> and it is converted to mg/dL on load, so all metrics are
+correct:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># mmol/L data (common outside the US) is normalized to mg/dL internally</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;data_mmol.csv&quot;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;mmol/L&quot;</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">data</span><span class="o">.</span><span class="n">unit</span>          <span class="c1"># GlucoseUnit.MG_DL  (canonical internal unit)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">data</span><span class="o">.</span><span class="n">source_unit</span>   <span class="c1"># GlucoseUnit.MMOLL  (what you provided)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">data</span><span class="o">.</span><span class="n">glucose_in_unit</span><span class="p">(</span><span class="s2">&quot;mmol/L&quot;</span><span class="p">)</span>  <span class="c1"># view the values back in mmol/L</span>
+</span></code></pre></div>
 <h3 id="dataloader-low-level"><code>DataLoader</code> (low-level)<a class="headerlink" href="#dataloader-low-level" title="Permanent link">&para;</a></h3>
 <p>For maximum control, use <code>DataLoader</code> directly:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">DataProcessor</span><span class="p">,</span> <span class="n">DataAnalyzer</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">()</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">processor</span> <span class="o">=</span> <span class="n">DataProcessor</span><span class="p">()</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">analyzer</span> <span class="o">=</span> <span class="n">DataAnalyzer</span><span class="p">()</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">raw</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">load_from_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">,</span> <span class="n">time_col</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">glucose_col</span><span class="o">=</span><span class="s2">&quot;glucose&quot;</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">processed</span><span class="p">,</span> <span class="n">diffs</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">process_data</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;glucose&quot;</span><span class="p">)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">interval</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">calculate_typical_interval</span><span class="p">(</span><span class="n">diffs</span><span class="p">)</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Typical interval: </span><span class="si">{</span><span class="n">interval</span><span class="si">}</span><span class="s2"> min&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">DataProcessor</span><span class="p">,</span> <span class="n">DataAnalyzer</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">()</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">processor</span> <span class="o">=</span> <span class="n">DataProcessor</span><span class="p">()</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">analyzer</span> <span class="o">=</span> <span class="n">DataAnalyzer</span><span class="p">()</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">raw</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">load_from_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">,</span> <span class="n">time_col</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">glucose_col</span><span class="o">=</span><span class="s2">&quot;glucose&quot;</span><span class="p">)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">processed</span><span class="p">,</span> <span class="n">diffs</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">process_data</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;glucose&quot;</span><span class="p">)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">interval</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">calculate_typical_interval</span><span class="p">(</span><span class="n">diffs</span><span class="p">)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Typical interval: </span><span class="si">{</span><span class="n">interval</span><span class="si">}</span><span class="s2"> min&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="device-specific-loaders">Device-specific loaders<a class="headerlink" href="#device-specific-loaders" title="Permanent link">&para;</a></h2>
 <table>
@@ -3393,33 +3426,33 @@ formats.</p>
 </tbody>
 </table>
 <p>Auto-detection:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">detect_device_type</span><span class="p">,</span> <span class="n">create_specialized_loader</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">device</span> <span class="o">=</span> <span class="n">detect_device_type</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>  <span class="c1"># &#39;dexcom&#39;, &#39;libreview&#39;, ...</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">loader</span> <span class="o">=</span> <span class="n">create_specialized_loader</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">detect_device_type</span><span class="p">,</span> <span class="n">create_specialized_loader</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">device</span> <span class="o">=</span> <span class="n">detect_device_type</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>  <span class="c1"># &#39;dexcom&#39;, &#39;libreview&#39;, ...</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">loader</span> <span class="o">=</span> <span class="n">create_specialized_loader</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="filtering">Filtering<a class="headerlink" href="#filtering" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># By date range</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">jan</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-01-31&quot;</span><span class="p">)</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># By glucose range (e.g., physiological sanity)</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">normal</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_glucose_range</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># By date range</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">jan</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-01-31&quot;</span><span class="p">)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># By glucose range (e.g., physiological sanity)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">normal</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_glucose_range</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="inspection">Inspection<a class="headerlink" href="#inspection" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># __str__ shows a summary</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">info</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">include_disconnections</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;n_records&quot;</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;typical_interval&quot;</span><span class="p">])</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">quality</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_data_quality_metrics</span><span class="p">()</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">quality</span><span class="p">[</span><span class="s2">&quot;total_gaps&quot;</span><span class="p">],</span> <span class="n">quality</span><span class="p">[</span><span class="s2">&quot;max_gap_hours&quot;</span><span class="p">])</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># __str__ shows a summary</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">info</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">include_disconnections</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;n_records&quot;</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;typical_interval&quot;</span><span class="p">])</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">quality</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_data_quality_metrics</span><span class="p">()</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">quality</span><span class="p">[</span><span class="s2">&quot;total_gaps&quot;</span><span class="p">],</span> <span class="n">quality</span><span class="p">[</span><span class="s2">&quot;max_gap_hours&quot;</span><span class="p">])</span>
 </span></code></pre></div>
 <h2 id="exporting">Exporting<a class="headerlink" href="#exporting" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="s2">&quot;optimized.parquet&quot;</span><span class="p">)</span>  <span class="c1"># recommended for big data</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;cleaned.csv&quot;</span><span class="p">)</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">data</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;report.xlsx&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="s2">&quot;optimized.parquet&quot;</span><span class="p">)</span>  <span class="c1"># recommended for big data</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;cleaned.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">data</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;report.xlsx&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The Parquet writer preserves dtypes, uses snappy compression, and is
 ~10× faster to re-read than CSV.</p>
@@ -3431,64 +3464,64 @@ path.</p>
 <p>Your CSV is missing the time column (or whichever column CGMPy expected for
 the auto-detected device). Either it is not a recognized device export, or
 you need to pass <code>date_col=...</code> and <code>glucose_col=...</code> to <code>GlucoseData</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">CGMPyError</span><span class="p">,</span> <span class="n">ColumnNotFoundError</span><span class="p">,</span> <span class="n">GlucoseData</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">try</span><span class="p">:</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">except</span> <span class="n">ColumnNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>        <span class="s2">&quot;export.csv&quot;</span><span class="p">,</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        <span class="n">date_col</span><span class="o">=</span><span class="s2">&quot;Datetime&quot;</span><span class="p">,</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="n">glucose_col</span><span class="o">=</span><span class="s2">&quot;Sensor Glucose (mg/dL)&quot;</span><span class="p">,</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    <span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">CGMPyError</span><span class="p">,</span> <span class="n">ColumnNotFoundError</span><span class="p">,</span> <span class="n">GlucoseData</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">except</span> <span class="n">ColumnNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        <span class="s2">&quot;export.csv&quot;</span><span class="p">,</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        <span class="n">date_col</span><span class="o">=</span><span class="s2">&quot;Datetime&quot;</span><span class="p">,</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="n">glucose_col</span><span class="o">=</span><span class="s2">&quot;Sensor Glucose (mg/dL)&quot;</span><span class="p">,</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="p">)</span>
 </span></code></pre></div>
 <h3 id="invalidcsvformaterror"><code>InvalidCSVFormatError</code><a class="headerlink" href="#invalidcsvformaterror" title="Permanent link">&para;</a></h3>
 <p>The CSV could not be parsed. Try specifying <code>delimiter=';'</code> (some locales
 export with semicolons), or check that the file is not corrupted / not
 actually a text file saved with the <code>.csv</code> extension.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidCSVFormatError</span><span class="p">,</span> <span class="n">GlucoseData</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">try</span><span class="p">:</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">except</span> <span class="n">InvalidCSVFormatError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot parse </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidCSVFormatError</span><span class="p">,</span> <span class="n">GlucoseData</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">except</span> <span class="n">InvalidCSVFormatError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot parse </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="devicedetectionerror"><code>DeviceDetectionError</code><a class="headerlink" href="#devicedetectionerror" title="Permanent link">&para;</a></h3>
 <p>We could not auto-detect the device. The exception message lists the
 columns that were found. Pass the loader class explicitly
 (e.g. <code>Dexcom("file.csv")</code>), or use <code>GlucoseData</code> with
 <code>date_col=</code> / <code>glucose_col=</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dexcom</span><span class="p">,</span> <span class="n">DeviceDetectionError</span><span class="p">,</span> <span class="n">GlucoseData</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">try</span><span class="p">:</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">except</span> <span class="n">DeviceDetectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found columns: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">columns_found</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">Dexcom</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>  <span class="c1"># try Dexcom explicitly</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dexcom</span><span class="p">,</span> <span class="n">DeviceDetectionError</span><span class="p">,</span> <span class="n">GlucoseData</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">GlucoseData</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">except</span> <span class="n">DeviceDetectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found columns: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">columns_found</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">Dexcom</span><span class="p">(</span><span class="s2">&quot;export.csv&quot;</span><span class="p">)</span>  <span class="c1"># try Dexcom explicitly</span>
 </span></code></pre></div>
 <h3 id="emptydataerror"><code>EmptyDataError</code><a class="headerlink" href="#emptydataerror" title="Permanent link">&para;</a></h3>
 <p>No rows remained after filtering. Check that your <code>start_date</code> /
 <code>end_date</code> range actually overlaps with the file, and that the file is
 not itself empty.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmptyDataError</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">try</span><span class="p">:</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">jan</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-01-31&quot;</span><span class="p">)</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">except</span> <span class="n">EmptyDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Empty after: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">context</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmptyDataError</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">jan</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">filter_by_date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-01-31&quot;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">except</span> <span class="n">EmptyDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Empty after: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">context</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="agatanotinstallederror"><code>AgataNotInstalledError</code><a class="headerlink" href="#agatanotinstallederror" title="Permanent link">&para;</a></h3>
 <p>You need <code>py_agata</code> for the AGATA comparison. Install the optional
 <code>[agata]</code> extra:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;cgmpy[agata]&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;cgmpy[agata]&#39;</span>
 </span></code></pre></div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgataNotInstalledError</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">try</span><span class="p">:</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">analysis</span><span class="o">.</span><span class="n">run_agata_comparison</span><span class="p">()</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">except</span> <span class="n">AgataNotInstalledError</span><span class="p">:</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run: pip install &#39;cgmpy[agata]&#39;&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cgmpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgataNotInstalledError</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">analysis</span><span class="o">.</span><span class="n">run_agata_comparison</span><span class="p">()</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">except</span> <span class="n">AgataNotInstalledError</span><span class="p">:</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run: pip install &#39;cgmpy[agata]&#39;&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>For the full error hierarchy, see <code>cgmpy.errors</code> in the
 <a href="../../api/data/#exceptions">API reference</a>.</p>
