@@ -8,6 +8,7 @@ This module combines all analysis functionality:
 """
 
 import datetime
+import logging
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,8 @@ import pandas as pd
 
 from ..data.core import GlucoseData
 from ..metrics.targets import GlucoseTargets
+
+logger = logging.getLogger(__name__)
 
 
 class GlucoseAnalysis:
@@ -263,10 +266,10 @@ class GlucoseAnalysis:
             f"_tir_{targets.name}", lambda: self._tir_pure(targets.target_low, targets.target_high)
         )
 
-    def TIR_tight(self, targets: GlucoseTargets | None = None) -> float:
+    def TIR_tight(self) -> float:
         return self._tir_pure(70, 140)
 
-    def TIR_pregnancy(self, targets: GlucoseTargets | None = None) -> float:
+    def TIR_pregnancy(self) -> float:
         return self._tir_pure(63, 140)
 
     def TAR140(self) -> float:
@@ -287,7 +290,7 @@ class GlucoseAnalysis:
     def TBR55(self) -> float:
         return self._tbr_pure(55)
 
-    def TBR_very_low(self, threshold: float = 54) -> float:
+    def TBR_very_low(self) -> float:
         return self._tbr_pure(self._current_targets.hypo_level2)
 
     def TBR(self, threshold: float) -> float:
@@ -696,8 +699,8 @@ class GlucoseAnalysis:
                         "mage_excursions": mage_results.get("num_excursions"),
                     }
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Could not compute MAGE metrics: %s", exc)
 
             try:
                 modd_result = self.MODD()
@@ -707,8 +710,8 @@ class GlucoseAnalysis:
                         "modd_sd": modd_result.get("std"),
                     }
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Could not compute MODD metrics: %s", exc)
 
             try:
                 lgbi = self.LBGI()
@@ -743,60 +746,94 @@ class GlucoseAnalysis:
 
                 metrics.update(risk)
 
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Could not compute risk metrics: %s", exc)
 
             return metrics
 
-        except Exception as e:
-            return {"error": str(e), "message": "Error calculating metrics"}
+        except Exception as exc:
+            logger.warning("Could not assemble variability metrics: %s", exc)
+            return {"error": str(exc), "message": "Error calculating metrics"}
 
     # ── Plots ────────────────────────────────────────────────────────────
 
-    def plot_agp(self, smoothing_window: int = 15):
+    @staticmethod
+    def _show(show: bool) -> None:
+        """Display the current figure when ``show`` is True.
+
+        Plotting functions no longer call ``plt.show()`` themselves so they
+        stay composable; the facade is the single place that triggers display.
+        """
+        if show:
+            import matplotlib.pyplot as plt
+
+            plt.show()
+
+    def plot_agp(self, smoothing_window: int = 15, ax=None, show: bool = True):
         from ..plotting.agp import plot_agp as _plot_agp
 
-        return _plot_agp(self._data.data, smoothing_window)
+        fig = _plot_agp(self._data.data, smoothing_window, ax=ax)
+        if ax is None:
+            self._show(show)
+        return fig
 
-    def plot_daily(self, date: str | None = None):
+    def plot_daily(self, date: str | None = None, ax=None, show: bool = True):
         from ..plotting.daily_plots import day_graph
 
-        return day_graph(self._data.data, date)
+        fig = day_graph(self._data.data, date, ax=ax)
+        if ax is None and fig is not None:
+            self._show(show)
+        return fig
 
-    def plot_daily_overlay(self):
-        return self.plot_overlapping_days()
-
-    def plot_overlapping_days(self):
+    def plot_overlapping_days(self, ax=None, show: bool = True):
         from ..plotting.daily_plots import plot_overlapping_days
 
-        return plot_overlapping_days(self._data.data)
+        fig = plot_overlapping_days(self._data.data, ax=ax)
+        if ax is None:
+            self._show(show)
+        return fig
 
-    def plot_week_boxplots(self):
+    def plot_week_boxplots(self, ax=None, show: bool = True):
         from ..plotting.daily_plots import plot_week_boxplots
 
-        return plot_week_boxplots(self._data.data)
+        fig = plot_week_boxplots(self._data.data, ax=ax)
+        if ax is None:
+            self._show(show)
+        return fig
 
-    def generate_week_agp(self, smoothing_window: int = 15, combined: bool = True):
+    def generate_week_agp(
+        self, smoothing_window: int = 15, combined: bool = True, show: bool = True
+    ):
         from ..plotting.agp import generate_week_agp as _generate_week_agp
 
-        return _generate_week_agp(
+        fig = _generate_week_agp(
             self._data.data, smoothing_window=smoothing_window, combined=combined
         )
+        self._show(show)
+        return fig
 
-    def plot_daily_variations(self):
+    def plot_daily_variations(self, ax=None, show: bool = True):
         from ..plotting.daily_plots import plot_daily_variations
 
-        return plot_daily_variations(self._data.data)
+        fig = plot_daily_variations(self._data.data, ax=ax)
+        if ax is None:
+            self._show(show)
+        return fig
 
-    def plot_correlation_matrix(self, time_segments: list | None = None):
+    def plot_correlation_matrix(
+        self, time_segments: list | None = None, ax=None, show: bool = True
+    ):
         from ..plotting.statistical_plots import plot_correlation_matrix
 
-        return plot_correlation_matrix(self._data.data, time_segments)
+        fig = plot_correlation_matrix(self._data.data, time_segments, ax=ax)
+        if ax is None:
+            self._show(show)
+        return fig
 
-    def plot_time_in_range(self, pregnancy: bool = False):
+    def plot_time_in_range(self, pregnancy: bool = False, show: bool = True):
         from ..plotting.statistical_plots import plot_time_in_range as _plot_time_in_range
 
-        return _plot_time_in_range(
+        fig = _plot_time_in_range(
             self._data.data,
             pregnancy=pregnancy,
             tir_pregnancy=self.TIR_pregnancy() if pregnancy else 0,
@@ -808,11 +845,15 @@ class GlucoseAnalysis:
             tar180=self.TAR180() if not pregnancy else 0,
             tar250=self.TAR250() if not pregnancy else 0,
         )
+        self._show(show)
+        return fig
 
-    def plot_distribution_comparison(self, target_ranges: list[tuple] | None = None):
+    def plot_distribution_comparison(
+        self, target_ranges: list[tuple] | None = None, show: bool = True
+    ):
         from ..plotting.statistical_plots import plot_distribution_comparison
 
-        return plot_distribution_comparison(
+        fig = plot_distribution_comparison(
             self._data.data,
             target_ranges=target_ranges,
             tir_val=self.TIR(),
@@ -820,16 +861,18 @@ class GlucoseAnalysis:
             tar_val=self.TAR(180),
             gmi_val=self.gmi(),
         )
+        self._show(show)
+        return fig
 
-    def plot_distribution(self, target_ranges: list[tuple] | None = None):
-        return self.plot_distribution_comparison(target_ranges)
-
-    def histogram(self, bin_width: int = 10):
+    def histogram(self, bin_width: int = 10, ax=None, show: bool = True):
         from ..plotting.statistical_plots import histogram as _histogram
 
-        return _histogram(self._data.data, bin_width)
+        fig = _histogram(self._data.data, bin_width, ax=ax)
+        if ax is None:
+            self._show(show)
+        return fig
 
-    def plot_variability_dashboard(self, figsize: tuple = (14, 10)):
+    def plot_variability_dashboard(self, figsize: tuple = (14, 10), show: bool = True):
         import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(2, 2, figsize=figsize)
@@ -889,10 +932,11 @@ class GlucoseAnalysis:
         axes[1, 1].set_ylabel("CV (%)")
         axes[1, 1].grid(True, alpha=0.3)
 
-        plt.tight_layout()
-        plt.show()
+        fig.tight_layout()
+        self._show(show)
+        return fig
 
-    def plot_glucose_statistics(self, figsize: tuple = (14, 10)):
+    def plot_glucose_statistics(self, figsize: tuple = (14, 10), show: bool = True):
         import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(2, 2, figsize=figsize)
@@ -901,11 +945,18 @@ class GlucoseAnalysis:
         glucose_series = self._data.glucose
 
         # Plot 1: Histogram
+        from ..plotting._constants import (
+            GLUCOSE_AXIS_MAX,
+            GLUCOSE_AXIS_MIN,
+            TARGET_HIGH,
+            TARGET_LOW,
+        )
+
         ax = axes[0, 0]
         ax.hist(glucose_series, bins=50, edgecolor="black", alpha=0.7, color="skyblue")
-        ax.axvspan(0, 70, color="#ffcccb", alpha=0.3)
-        ax.axvspan(70, 180, color="#90ee90", alpha=0.3)
-        ax.axvspan(180, 400, color="#ffcccb", alpha=0.3)
+        ax.axvspan(GLUCOSE_AXIS_MIN, TARGET_LOW, color="#ffcccb", alpha=0.3)
+        ax.axvspan(TARGET_LOW, TARGET_HIGH, color="#90ee90", alpha=0.3)
+        ax.axvspan(TARGET_HIGH, GLUCOSE_AXIS_MAX, color="#ffcccb", alpha=0.3)
         ax.set_title("Glucose Distribution")
         ax.set_xlabel("Glucose (mg/dL)")
         ax.set_ylabel("Frequency")
@@ -981,39 +1032,66 @@ class GlucoseAnalysis:
         ax4.pie(sizes, labels=labels, colors=colors_pie, autopct="%1.1f%%", startangle=90)
         ax4.set_title("Time in Range")
 
-        plt.tight_layout()
-        plt.show()
+        fig.tight_layout()
+        self._show(show)
+        return fig
 
-    def plot_comprehensive_dashboard(self, figsize: tuple = (20, 12)):
+    def plot_comprehensive_dashboard(self, figsize: tuple = (20, 12), show: bool = True):
+        """Render a single-figure 2x3 dashboard of single-axis plots.
+
+        Each panel is drawn into its own grid cell (``ax=``) so the whole
+        dashboard is one composed figure — unlike the previous version, which
+        produced an empty grid plus a cascade of separate windows.
+        """
         import matplotlib.pyplot as plt
+
+        from ..plotting.agp import plot_agp
+        from ..plotting.daily_plots import (
+            plot_daily_variations,
+            plot_overlapping_days,
+            plot_week_boxplots,
+        )
+        from ..plotting.statistical_plots import histogram
 
         fig, axes = plt.subplots(2, 3, figsize=figsize)
         fig.suptitle("Comprehensive Glucose Analysis Dashboard", fontsize=16, fontweight="bold")
 
-        self.plot_agp()
-        axes[0, 0].set_title("Ambulatory Profile (AGP)")
+        data = self._data.data
+        plot_agp(data, ax=axes[0, 0])
+        histogram(data, ax=axes[0, 1])
+        self._draw_tir_pie(axes[0, 2])
+        plot_daily_variations(data, ax=axes[1, 0])
+        plot_overlapping_days(data, ax=axes[1, 1])
+        plot_week_boxplots(data, ax=axes[1, 2])
 
-        self.histogram()
-        axes[0, 1].set_title("Glucose Distribution")
+        fig.tight_layout()
+        self._show(show)
+        return fig
 
-        self.plot_time_in_range()
-        axes[0, 2].set_title("Time in Range")
-
-        self.plot_variability_dashboard()
-        axes[1, 0].set_title("Variability Analysis")
-
-        self.plot_overlapping_days()
-        axes[1, 1].set_title("Overlapping Days")
-
-        self.plot_week_boxplots()
-        axes[1, 2].set_title("Weekly Boxplots")
-
-        plt.tight_layout()
-        plt.show()
+    def _draw_tir_pie(self, ax) -> None:
+        """Draw a standard time-in-range pie chart into ``ax``."""
+        labels = [
+            "TIR\n(70-180)",
+            "TBR L1\n(55-70)",
+            "TBR L2\n(<55)",
+            "TAR L1\n(180-250)",
+            "TAR L2\n(>250)",
+        ]
+        sizes = [self.TIR(), self.TBR70(), self.TBR55(), self.TAR180(), self.TAR250()]
+        colors_pie = ["#90ee90", "#ffeb9c", "#ffcccb", "#ffa500", "#ff6666"]
+        non_zero = [
+            (label, sz, clr)
+            for label, sz, clr in zip(labels, sizes, colors_pie, strict=False)
+            if sz > 0
+        ]
+        if non_zero:
+            labels, sizes, colors_pie = map(list, zip(*non_zero, strict=False))
+        ax.pie(sizes, labels=labels, colors=colors_pie, autopct="%1.1f%%", startangle=90)
+        ax.set_title("Time in Range")
 
     # ── Reports ─────────────────────────────────────────────────────────
 
-    def report(self) -> dict[str, Any]:
+    def get_comprehensive_report(self) -> dict[str, Any]:
         return {
             "basic_info": self.info(),
             "basic_metrics": self.calculate_all_metrics(),
@@ -1021,8 +1099,6 @@ class GlucoseAnalysis:
             "variability_metrics": self.calculate_variability_metrics(),
             "data_quality": self.get_data_quality_metrics(),
         }
-
-    get_comprehensive_report = report
 
     def get_summary_string(self) -> str:
         summary: list[str] = []
@@ -1070,7 +1146,7 @@ class GlucoseAnalysis:
         return "\n".join(summary)
 
     def export_report(self, file_path: str, format: str = "json"):
-        report = self.report()
+        report = self.get_comprehensive_report()
 
         if format.lower() == "json":
             import json

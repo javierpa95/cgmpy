@@ -6,6 +6,11 @@ This module contains functions to generate charts related to daily patterns:
 - Overlapping multiple days
 - Boxplots by day of week
 - Daily variation analysis
+
+Every public function accepts an optional ``ax`` and returns the resulting
+``Figure`` without calling ``plt.show()`` — display is left to the caller
+(e.g. the :class:`~cgmpy.analysis.core.GlucoseAnalysis` facade), which makes
+the plots composable inside dashboards.
 """
 
 import logging
@@ -14,19 +19,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
-from ._utils import add_glucose_zones
+from ._constants import (
+    GLUCOSE_AXIS_MAX,
+    GLUCOSE_AXIS_MIN,
+    TARGET_HIGH,
+    TARGET_LOW,
+)
+from ._utils import add_glucose_zones, resolve_axes
 
 logger = logging.getLogger(__name__)
 
 
-def day_graph(data: pd.DataFrame, date: str | None = None):
-    """Generates and displays the glucose chart for a specific day.
+def day_graph(data: pd.DataFrame, date: str | None = None, ax: Axes | None = None) -> Figure | None:
+    """Builds the glucose chart for a specific day.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
         date: Optional date in 'YYYY-MM-DD' format.
               If not provided, the first day of the DataFrame is used.
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure``, or ``None`` if the date has no data.
     """
     if date is None:
         date = data["time"].dt.date.min()
@@ -37,14 +54,14 @@ def day_graph(data: pd.DataFrame, date: str | None = None):
 
     if day_data.empty:
         logger.info("No data for date %s", date)
-        return
+        return None
 
     day_data["hours"] = day_data["time"].dt.hour + day_data["time"].dt.minute / 60.0
 
     sns.set_style("whitegrid")
     sns.set_context("notebook", font_scale=1.1)
 
-    fig, ax = plt.subplots(figsize=(16, 9))
+    fig, ax, created = resolve_axes(ax, figsize=(16, 9))
 
     add_glucose_zones(ax)
 
@@ -62,21 +79,26 @@ def day_graph(data: pd.DataFrame, date: str | None = None):
 
     _configure_daily_plot(ax, f"Glucose Levels - {date}")
 
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
-def plot_overlapping_days(data: pd.DataFrame):
-    """Generates a chart with the glucose profiles of multiple overlapping days.
+def plot_overlapping_days(data: pd.DataFrame, ax: Axes | None = None) -> Figure:
+    """Builds a chart with the glucose profiles of multiple overlapping days.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
     data_copy = data.copy()
     data_copy["time_decimal"] = data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
     data_copy["date"] = data_copy["time"].dt.date
 
-    plt.figure(figsize=(12, 8))
+    fig, ax, created = resolve_axes(ax, figsize=(12, 8))
 
     mean_profile = (
         data_copy.groupby("time_decimal")["glucose"]
@@ -88,7 +110,7 @@ def plot_overlapping_days(data: pd.DataFrame):
     dates = data_copy["date"].unique()
     for d in dates:
         day_data = data_copy[data_copy["date"] == d]
-        plt.plot(
+        ax.plot(
             day_data["time_decimal"],
             day_data["glucose"],
             color="gray",
@@ -96,7 +118,7 @@ def plot_overlapping_days(data: pd.DataFrame):
             linewidth=1,
         )
 
-    plt.plot(
+    ax.plot(
         mean_profile.index,
         mean_profile.values,
         color="black",
@@ -104,18 +126,22 @@ def plot_overlapping_days(data: pd.DataFrame):
         label="Mean profile",
     )
 
-    _configure_overlapping_plot()
+    _configure_overlapping_plot(ax)
 
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
-def plot_week_boxplots(data: pd.DataFrame):
-    """Generates a boxplot chart to visualize the glucose distribution
-    by day of the week.
+def plot_week_boxplots(data: pd.DataFrame, ax: Axes | None = None) -> Figure:
+    """Builds a boxplot chart of the glucose distribution by day of the week.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
     data_copy = data.copy()
     data_copy["weekday"] = data_copy["time"].dt.day_name()
@@ -135,11 +161,11 @@ def plot_week_boxplots(data: pd.DataFrame):
 
     labels = [f"{day}\n(n={unique_days.get(day, 0)} days)" for day in day_order]
 
-    plt.figure(figsize=(12, 8))
+    fig, ax, created = resolve_axes(ax, figsize=(12, 8))
 
-    plt.axhspan(0, 70, color="#ffcccb", alpha=0.2, label="Hypoglycemia")
-    plt.axhspan(70, 180, color="#90ee90", alpha=0.2, label="Target range")
-    plt.axhspan(180, 400, color="#ffcccb", alpha=0.2, label="Hyperglycemia")
+    ax.axhspan(GLUCOSE_AXIS_MIN, TARGET_LOW, color="#ffcccb", alpha=0.2, label="Hypoglycemia")
+    ax.axhspan(TARGET_LOW, TARGET_HIGH, color="#90ee90", alpha=0.2, label="Target range")
+    ax.axhspan(TARGET_HIGH, GLUCOSE_AXIS_MAX, color="#ffcccb", alpha=0.2, label="Hyperglycemia")
 
     sns.boxplot(
         x="weekday",
@@ -149,30 +175,36 @@ def plot_week_boxplots(data: pd.DataFrame):
         whis=1.5,
         medianprops={"color": "red", "linewidth": 1.5},
         flierprops={"marker": "o", "markerfacecolor": "gray", "markersize": 4},
+        ax=ax,
     )
 
-    plt.axhline(y=70, color="red", linestyle="--", linewidth=1)
-    plt.axhline(y=180, color="red", linestyle="--", linewidth=1)
+    ax.axhline(y=TARGET_LOW, color="red", linestyle="--", linewidth=1)
+    ax.axhline(y=TARGET_HIGH, color="red", linestyle="--", linewidth=1)
 
-    plt.title("Glucose Distribution by Day of Week", fontsize=14, pad=20)
-    plt.xlabel("Day of Week", fontsize=12)
-    plt.ylabel("Glucose Level (mg/dL)", fontsize=12)
+    ax.set_title("Glucose Distribution by Day of Week", fontsize=14, pad=20)
+    ax.set_xlabel("Day of Week", fontsize=12)
+    ax.set_ylabel("Glucose Level (mg/dL)", fontsize=12)
 
-    plt.xticks(range(len(day_order)), labels, rotation=45, ha="right")
-    plt.ylim(0, 400)
+    ax.set_xticks(range(len(day_order)))
+    ax.set_xticklabels(labels, rotation=45, ha="right")
+    ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
 
-    plt.legend(title="Ranges", bbox_to_anchor=(1.05, 1), loc="upper left")
+    ax.legend(title="Ranges", bbox_to_anchor=(1.05, 1), loc="upper left")
 
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
-def plot_daily_variations(data: pd.DataFrame):
-    """Generates a chart that shows the average daily variations
-    with confidence bands.
+def plot_daily_variations(data: pd.DataFrame, ax: Axes | None = None) -> Figure:
+    """Builds a chart of the average daily variations with confidence bands.
 
     Args:
         data: Glucose DataFrame with ``time`` and ``glucose`` columns.
+        ax: Optional axis to draw into. If ``None`` a new figure is created.
+
+    Returns:
+        The matplotlib ``Figure`` containing the plot.
     """
     data_copy = data.copy()
     data_copy["time_decimal"] = data_copy["time"].dt.hour + data_copy["time"].dt.minute / 60.0
@@ -199,7 +231,7 @@ def plot_daily_variations(data: pd.DataFrame):
             hourly_stats[col].rolling(window=window_size, center=True, min_periods=1).mean()
         )
 
-    fig, ax = plt.subplots(figsize=(14, 8))
+    fig, ax, created = resolve_axes(ax, figsize=(14, 8))
 
     add_glucose_zones(ax)
 
@@ -217,7 +249,7 @@ def plot_daily_variations(data: pd.DataFrame):
         hourly_stats["mean"] + hourly_stats["std"],
         alpha=0.3,
         color="blue",
-        label="\u00b1 1 SD",
+        label="± 1 SD",
     )
 
     ax.fill_between(
@@ -236,24 +268,25 @@ def plot_daily_variations(data: pd.DataFrame):
     ax.set_xticks(range(0, 25, 3))
     ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
     ax.set_xlim(0, 24)
-    ax.set_ylim(0, 400)
+    ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
 
-    ax.axhline(y=70, color="red", linestyle="--", linewidth=1, alpha=0.7)
-    ax.axhline(y=180, color="red", linestyle="--", linewidth=1, alpha=0.7)
+    ax.axhline(y=TARGET_LOW, color="red", linestyle="--", linewidth=1, alpha=0.7)
+    ax.axhline(y=TARGET_HIGH, color="red", linestyle="--", linewidth=1, alpha=0.7)
 
     ax.grid(True, alpha=0.3)
     ax.legend()
 
-    plt.tight_layout()
-    plt.show()
+    if created:
+        fig.tight_layout()
+    return fig
 
 
 def _add_reference_lines(ax):
     """Adds reference lines to the chart."""
-    ax.axhline(y=70, color="#FF6666", linestyle="--", linewidth=1)
-    ax.axhline(y=180, color="#FF6666", linestyle="--", linewidth=1)
-    ax.text(24, 72, "70 mg/dL", va="bottom", ha="right", color="#FF6666")
-    ax.text(24, 182, "180 mg/dL", va="bottom", ha="right", color="#FF6666")
+    ax.axhline(y=TARGET_LOW, color="#FF6666", linestyle="--", linewidth=1)
+    ax.axhline(y=TARGET_HIGH, color="#FF6666", linestyle="--", linewidth=1)
+    ax.text(24, TARGET_LOW + 2, f"{TARGET_LOW} mg/dL", va="bottom", ha="right", color="#FF6666")
+    ax.text(24, TARGET_HIGH + 2, f"{TARGET_HIGH} mg/dL", va="bottom", ha="right", color="#FF6666")
 
 
 def _configure_daily_plot(ax, title: str):
@@ -263,7 +296,7 @@ def _configure_daily_plot(ax, title: str):
     ax.set_title(title, fontsize=16, fontweight="bold")
 
     ax.legend(loc="upper left", frameon=True, fancybox=True, shadow=True)
-    ax.set_ylim(0, 400)
+    ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
     ax.set_xlim(0, 24)
     ax.set_xticks(range(0, 25, 3))
     ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
@@ -272,21 +305,24 @@ def _configure_daily_plot(ax, title: str):
     ax.grid(True, linestyle=":", alpha=0.6)
 
 
-def _configure_overlapping_plot():
+def _configure_overlapping_plot(ax: Axes | None = None) -> None:
     """Configures the overlapping days chart."""
-    plt.xlabel("Time of Day", fontsize=12)
-    plt.ylabel("Glucose Level (mg/dL)", fontsize=12)
-    plt.title("Overlapping Glucose Profiles", fontsize=14)
+    if ax is None:
+        ax = plt.gca()
+    ax.set_xlabel("Time of Day", fontsize=12)
+    ax.set_ylabel("Glucose Level (mg/dL)", fontsize=12)
+    ax.set_title("Overlapping Glucose Profiles", fontsize=14)
 
-    plt.xticks(range(0, 25, 3), [f"{h:02d}:00" for h in range(0, 25, 3)])
+    ax.set_xticks(range(0, 25, 3))
+    ax.set_xticklabels([f"{h:02d}:00" for h in range(0, 25, 3)])
 
-    plt.axhline(y=70, color="red", linestyle="--", alpha=0.5)
-    plt.axhline(y=180, color="red", linestyle="--", alpha=0.5)
+    ax.axhline(y=TARGET_LOW, color="red", linestyle="--", alpha=0.5)
+    ax.axhline(y=TARGET_HIGH, color="red", linestyle="--", alpha=0.5)
 
-    plt.axhspan(0, 70, facecolor="#ffcccb", alpha=0.2)
-    plt.axhspan(70, 180, facecolor="#90ee90", alpha=0.2)
-    plt.axhspan(180, 400, facecolor="#ffcccb", alpha=0.2)
+    ax.axhspan(GLUCOSE_AXIS_MIN, TARGET_LOW, facecolor="#ffcccb", alpha=0.2)
+    ax.axhspan(TARGET_LOW, TARGET_HIGH, facecolor="#90ee90", alpha=0.2)
+    ax.axhspan(TARGET_HIGH, GLUCOSE_AXIS_MAX, facecolor="#ffcccb", alpha=0.2)
 
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    plt.ylim(0, 400)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    ax.set_ylim(GLUCOSE_AXIS_MIN, GLUCOSE_AXIS_MAX)
