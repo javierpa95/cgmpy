@@ -71,3 +71,51 @@ class TestGlucoseDataUnit:
         d = GlucoseData("tests/fixtures/synthetic/sine_24h.csv")
         result = d.glucose_in_unit(GlucoseUnit.MG_DL)
         assert result.equals(d.glucose)
+
+
+class TestMmolNormalization:
+    """mmol/L input must be normalized to mg/dL so every metric is unit-safe."""
+
+    @staticmethod
+    def _mgdl_df() -> pd.DataFrame:
+        times = pd.date_range("2024-01-01", periods=288, freq="5min")
+        glucose = 120 + 40 * np.sin(np.linspace(0, 4 * np.pi, 288))
+        return pd.DataFrame({"time": times, "glucose": glucose})
+
+    def test_mmol_input_is_stored_as_mgdl(self):
+        from cgmpy import GlucoseData
+
+        mgdl = self._mgdl_df()
+        mmol = mgdl.assign(glucose=mgdl["glucose"] / MGDL_TO_MMOLL)
+
+        d = GlucoseData(data_source=mmol, unit="mmol/L")
+
+        # Stored values are mg/dL; the original unit is remembered separately.
+        assert d.unit == GlucoseUnit.MG_DL
+        assert d.source_unit == GlucoseUnit.MMOLL
+        assert d.glucose.to_numpy() == pytest.approx(mgdl["glucose"].to_numpy(), rel=1e-6)
+
+    def test_glucose_in_unit_roundtrips_to_source(self):
+        from cgmpy import GlucoseData
+
+        mgdl = self._mgdl_df()
+        mmol = mgdl.assign(glucose=mgdl["glucose"] / MGDL_TO_MMOLL)
+
+        d = GlucoseData(data_source=mmol, unit="mmol/L")
+        back = d.glucose_in_unit("mmol/L")
+        assert back.to_numpy() == pytest.approx(mmol["glucose"].to_numpy(), rel=1e-6)
+
+    def test_metrics_match_between_mgdl_and_mmol_input(self):
+        """TIR/mean/GMI must be identical whether the data was given in mg/dL or mmol/L."""
+        from cgmpy import GlucoseAnalysis, GlucoseData
+
+        mgdl = self._mgdl_df()
+        mmol = mgdl.assign(glucose=mgdl["glucose"] / MGDL_TO_MMOLL)
+
+        a_mgdl = GlucoseAnalysis(GlucoseData(data_source=mgdl, unit="mg/dL"))
+        a_mmol = GlucoseAnalysis(GlucoseData(data_source=mmol, unit="mmol/L"))
+
+        assert a_mmol.mean() == pytest.approx(a_mgdl.mean(), rel=1e-6)
+        assert a_mmol.TIR() == pytest.approx(a_mgdl.TIR(), rel=1e-6)
+        assert a_mmol.gmi() == pytest.approx(a_mgdl.gmi(), rel=1e-6)
+        assert a_mmol.MAGE() == pytest.approx(a_mgdl.MAGE(), rel=1e-6)
