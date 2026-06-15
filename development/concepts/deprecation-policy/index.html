@@ -2522,6 +2522,8 @@
       
         
       
+        
+      
     
     
     
@@ -2675,6 +2677,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3178,34 +3208,36 @@
 </span></code></pre></div>
 <p>The decorator preserves the original function's signature, name, and docstring via <code>functools.wraps</code>, so introspection tools and IDEs continue to work.</p>
 <h2 id="what-cgmpy-is-deprecating-from-this-refactor">What CGMPy is deprecating (from this refactor)<a class="headerlink" href="#what-cgmpy-is-deprecating-from-this-refactor" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Note.</strong> CGMPy is still pre-1.0, so the v0.6.0 refactor <strong>removed</strong> the
+legacy mixin names below outright instead of keeping deprecation aliases
+(see <a href="../../../architecture/decisions/0005-pure-functions-composition/">ADR 0005</a>).
+The table illustrates how a graceful, post-1.0 deprecation <em>would</em> be
+documented; it does not imply these aliases still exist.</p>
+</blockquote>
 <table>
 <thead>
 <tr>
-<th>Old (deprecated v0.6.0)</th>
+<th>Old (removed in v0.6.0)</th>
 <th>New (recommended)</th>
-<th>Removed in</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>GlucoseMetrics</code></td>
 <td><code>GlucoseAnalysis(GlucoseData(...))</code></td>
-<td>v0.8.0</td>
 </tr>
 <tr>
 <td><code>GlucosePlot</code></td>
 <td><code>GlucoseAnalysis.plot_*()</code></td>
-<td>v0.8.0</td>
 </tr>
 <tr>
 <td><code>ModularGlucoseData</code></td>
 <td><code>GlucoseData</code></td>
-<td>v0.8.0</td>
 </tr>
 <tr>
 <td><code>ModularGlucoseMetrics</code></td>
-<td>Internal (not exported)</td>
-<td>v0.8.0</td>
+<td><code>cgmpy.metrics</code> pure functions</td>
 </tr>
 </tbody>
 </table>

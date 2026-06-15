@@ -2522,6 +2522,8 @@
       
         
       
+        
+      
     
     
     
@@ -2675,6 +2677,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3138,7 +3168,7 @@
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">analysis</span><span class="o">.</span><span class="n">TIR</span><span class="p">()</span>         <span class="c1"># -&gt; float</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">analysis</span><span class="o">.</span><span class="n">MAGE</span><span class="p">()</span>        <span class="c1"># -&gt; float</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">analysis</span><span class="o">.</span><span class="n">plot_agp</span><span class="p">()</span>    <span class="c1"># -&gt; plt.Figure</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">analysis</span><span class="o">.</span><span class="n">report</span><span class="p">()</span>      <span class="c1"># -&gt; dict  (everything in one call)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">analysis</span><span class="o">.</span><span class="n">get_comprehensive_report</span><span class="p">()</span>  <span class="c1"># -&gt; dict  (everything in one call)</span>
 </span></code></pre></div>
 <p>The user learns one class. Everything else is an implementation detail.</p>
 <h2 id="how-the-facade-works-internally-composition">How the facade works internally (composition)<a class="headerlink" href="#how-the-facade-works-internally-composition" title="Permanent link">&para;</a></h2>

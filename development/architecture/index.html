@@ -2498,6 +2498,8 @@
       
         
       
+        
+      
     
     
     
@@ -2651,6 +2653,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3127,12 +3157,12 @@ top, a deeper modular structure beneath, each layer independently testable.</p>
 <p>CGMPy's main design decisions are recorded as
 <a href="../../architecture/decisions/">ADRs</a>. The most important ones:</p>
 <ul>
-<li><strong>Modular facade pattern</strong> — public API exposes both the
-  high-level <code>GlucoseAnalysis</code> and the underlying modular classes, so
-  users can choose their level of abstraction.</li>
-<li><strong>Backward compatibility</strong> — deprecated names (<code>ModularGlucoseData</code>,
-  <code>GlucoseMetrics</code>, <code>GlucosePlot</code>, <code>GestationalDiabetes</code>, <code>ModularGlucoseMetrics</code>)
-  are preserved through aliases with deprecation warnings, so existing code continues to work.</li>
+<li><strong>Pure functions + composition</strong> (<a href="../../architecture/decisions/0005-pure-functions-composition/">ADR 0005</a>)
+  — every metric is a standalone pure function over a <code>pandas.Series</code>
+  (importable from <code>cgmpy.metrics</code>), and the high-level <code>GlucoseAnalysis</code>
+  facade composes them. This superseded the earlier facade + mixin design
+  (<a href="../../architecture/decisions/0003-facade-mixin-pattern/">ADR 0003</a>); the
+  <code>Modular*</code>/<code>*Metrics</code> mixin classes were removed in v0.6.0.</li>
 <li><strong>NumPy / pandas first</strong> — every metric is implemented with vectorized
   operations over <code>pandas.Series</code>, not Python loops.</li>
 <li><strong>AGATA parity</strong> — the <code>agata</code> optional dependency is the reference

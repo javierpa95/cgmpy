@@ -2556,6 +2556,8 @@
       
         
       
+        
+      
     
     
     
@@ -2709,6 +2711,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3191,7 +3221,7 @@
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">analysis</span><span class="o">.</span><span class="n">TIR</span><span class="p">()</span>     <span class="c1"># computes TIR</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">analysis</span><span class="o">.</span><span class="n">cv</span><span class="p">()</span>      <span class="c1"># computes cv</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">analysis</span><span class="o">.</span><span class="n">MAGE</span><span class="p">()</span>    <span class="c1"># computes MAGE</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">analysis</span><span class="o">.</span><span class="n">report</span><span class="p">()</span>  <span class="c1"># computes everything again</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">analysis</span><span class="o">.</span><span class="n">get_comprehensive_report</span><span class="p">()</span>  <span class="c1"># computes everything again</span>
 </span></code></pre></div>
 <p>The problem is hidden in the call graph. Each method delegates to a pure function that recomputes from scratch:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># cgmpy/metrics/basic.py</span>

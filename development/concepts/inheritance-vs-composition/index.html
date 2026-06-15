@@ -2561,6 +2561,8 @@
       
         
       
+        
+      
     
     
     
@@ -2714,6 +2716,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3189,6 +3219,13 @@
 
 
 <h1 id="inheritance-vs-composition-why-cgmpy-switched-from-mixins-to-composition">Inheritance vs Composition: Why CGMPy Switched from Mixins to Composition<a class="headerlink" href="#inheritance-vs-composition-why-cgmpy-switched-from-mixins-to-composition" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Note.</strong> The mixin classes shown below (<code>ModularGlucoseData</code>, <code>SDMetrics</code>,
+<code>VariabilityBase</code>, ...) are the <strong>pre-v0.6.0</strong> design and no longer exist in
+the codebase — they are kept here as the cautionary "before" example. The
+switch to pure functions + composition is complete; see
+<a href="../../../architecture/decisions/0005-pure-functions-composition/">ADR 0005</a>.</p>
+</blockquote>
 <p>Imagine you are building a Swiss Army knife. You could forge it as one solid piece of metal — a single, monolithic class that does everything. Or you could design it as a handle that accepts attachable tools. The second approach is composition: the knife <em>has</em> tools rather than <em>being</em> a single tool.</p>
 <p>CGMPy started with the first approach — multiple inheritance with mixins. It worked, but it was brittle. This article explains why we moved to composition, what the diamond problem looks like in practice, and when inheritance is still the right choice.</p>
 <h2 id="the-is-a-vs-has-a-distinction">The "is-a" vs "has-a" distinction<a class="headerlink" href="#the-is-a-vs-has-a-distinction" title="Permanent link">&para;</a></h2>

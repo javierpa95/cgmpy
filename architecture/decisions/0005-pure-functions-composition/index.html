@@ -12,31 +12,31 @@
         <meta name="author" content="Javier Peñate Arrieta">
       
       
-        <link rel="canonical" href="https://javierpa95.github.io/cgmpy/learning/what-is-release-please.es/">
+        <link rel="canonical" href="https://javierpa95.github.io/cgmpy/architecture/decisions/0005-pure-functions-composition/">
       
       
-        <link rel="prev" href="../what-is-release-please/">
+        <link rel="prev" href="../0004-agent-harness-asymmetric/">
       
       
-        <link rel="next" href="../../development/setup/">
+        <link rel="next" href="../../../legal/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Que es Release Please? - CGMPy — Continuous Glucose Monitoring Analysis</title>
+        <title>ADR-0005 - CGMPy — Continuous Glucose Monitoring Analysis</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#que-es-release-please" class="md-skip">
+        <a href="#adr-0005-pure-functions-composition-for-the-public-api" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-header__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
+    <a href="../../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-header__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Que es Release Please?
+              ADR-0005
             
           </span>
         </div>
@@ -225,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link">
         
   
   
@@ -246,7 +246,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/installation/" class="md-tabs__link">
+        <a href="../../../getting-started/installation/" class="md-tabs__link">
           
   
   
@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/loading-data/" class="md-tabs__link">
+        <a href="../../../user-guide/loading-data/" class="md-tabs__link">
           
   
   
@@ -290,7 +290,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/data/" class="md-tabs__link">
+        <a href="../../../api/data/" class="md-tabs__link">
           
   
   
@@ -308,13 +308,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../learning-path/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../../learning/learning-path/" class="md-tabs__link">
           
   
   
@@ -336,7 +334,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../development/setup/" class="md-tabs__link">
+        <a href="../../../development/setup/" class="md-tabs__link">
           
   
   
@@ -354,11 +352,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../architecture/system-overview/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../system-overview/" class="md-tabs__link">
           
   
   
@@ -378,7 +378,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../legal/" class="md-tabs__link">
+      <a href="../../../legal/" class="md-tabs__link">
         
   
   
@@ -441,7 +441,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-nav__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
+    <a href="../../.." title="CGMPy — Continuous Glucose Monitoring Analysis" class="md-nav__button md-logo" aria-label="CGMPy — Continuous Glucose Monitoring Analysis" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -471,7 +471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -558,7 +558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation/" class="md-nav__link">
+      <a href="../../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -586,7 +586,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart/" class="md-nav__link">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -614,7 +614,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/data-formats/" class="md-nav__link">
+      <a href="../../../getting-started/data-formats/" class="md-nav__link">
         
   
   
@@ -717,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/loading-data/" class="md-nav__link">
+      <a href="../../../user-guide/loading-data/" class="md-nav__link">
         
   
   
@@ -745,7 +745,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/supported-devices/" class="md-nav__link">
+      <a href="../../../user-guide/supported-devices/" class="md-nav__link">
         
   
   
@@ -773,7 +773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/computing-metrics/" class="md-nav__link">
+      <a href="../../../user-guide/computing-metrics/" class="md-nav__link">
         
   
   
@@ -801,7 +801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/visualization/" class="md-nav__link">
+      <a href="../../../user-guide/visualization/" class="md-nav__link">
         
   
   
@@ -829,7 +829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/pregnancy-analysis/" class="md-nav__link">
+      <a href="../../../user-guide/pregnancy-analysis/" class="md-nav__link">
         
   
   
@@ -857,7 +857,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/agata-integration/" class="md-nav__link">
+      <a href="../../../user-guide/agata-integration/" class="md-nav__link">
         
   
   
@@ -885,7 +885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/cli/" class="md-nav__link">
+      <a href="../../../user-guide/cli/" class="md-nav__link">
         
   
   
@@ -982,7 +982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/data/" class="md-nav__link">
+      <a href="../../../api/data/" class="md-nav__link">
         
   
   
@@ -1010,7 +1010,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/metrics/" class="md-nav__link">
+      <a href="../../../api/metrics/" class="md-nav__link">
         
   
   
@@ -1038,7 +1038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/plotting/" class="md-nav__link">
+      <a href="../../../api/plotting/" class="md-nav__link">
         
   
   
@@ -1066,7 +1066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agata/" class="md-nav__link">
+      <a href="../../../api/agata/" class="md-nav__link">
         
   
   
@@ -1098,10 +1098,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1149,22 +1147,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -1182,7 +1177,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1200,7 +1195,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../learning-path/" class="md-nav__link">
+      <a href="../../../learning/learning-path/" class="md-nav__link">
         
   
   
@@ -1228,7 +1223,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../learning-path.es/" class="md-nav__link">
+      <a href="../../../learning/learning-path.es/" class="md-nav__link">
         
   
   
@@ -1256,7 +1251,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-pre-commit/" class="md-nav__link">
+      <a href="../../../learning/what-is-pre-commit/" class="md-nav__link">
         
   
   
@@ -1284,7 +1279,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-pre-commit.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-pre-commit.es/" class="md-nav__link">
         
   
   
@@ -1312,7 +1307,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-ruff/" class="md-nav__link">
+      <a href="../../../learning/what-is-ruff/" class="md-nav__link">
         
   
   
@@ -1340,7 +1335,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-ruff.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-ruff.es/" class="md-nav__link">
         
   
   
@@ -1368,7 +1363,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-mypy/" class="md-nav__link">
+      <a href="../../../learning/what-is-mypy/" class="md-nav__link">
         
   
   
@@ -1396,7 +1391,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-mypy.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-mypy.es/" class="md-nav__link">
         
   
   
@@ -1424,7 +1419,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-pytest/" class="md-nav__link">
+      <a href="../../../learning/what-is-pytest/" class="md-nav__link">
         
   
   
@@ -1452,7 +1447,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-pytest.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-pytest.es/" class="md-nav__link">
         
   
   
@@ -1480,7 +1475,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-ci-cd/" class="md-nav__link">
+      <a href="../../../learning/what-is-ci-cd/" class="md-nav__link">
         
   
   
@@ -1508,7 +1503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-ci-cd.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-ci-cd.es/" class="md-nav__link">
         
   
   
@@ -1536,7 +1531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-makefile/" class="md-nav__link">
+      <a href="../../../learning/what-is-makefile/" class="md-nav__link">
         
   
   
@@ -1564,7 +1559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-makefile.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-makefile.es/" class="md-nav__link">
         
   
   
@@ -1592,7 +1587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-conventional-commits/" class="md-nav__link">
+      <a href="../../../learning/what-is-conventional-commits/" class="md-nav__link">
         
   
   
@@ -1620,7 +1615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-conventional-commits.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-conventional-commits.es/" class="md-nav__link">
         
   
   
@@ -1648,7 +1643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-mkdocs/" class="md-nav__link">
+      <a href="../../../learning/what-is-mkdocs/" class="md-nav__link">
         
   
   
@@ -1676,7 +1671,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-mkdocs.es/" class="md-nav__link">
+      <a href="../../../learning/what-is-mkdocs.es/" class="md-nav__link">
         
   
   
@@ -1704,7 +1699,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../what-is-release-please/" class="md-nav__link">
+      <a href="../../../learning/what-is-release-please/" class="md-nav__link">
         
   
   
@@ -1729,37 +1724,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Que es Release Please?
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../learning/what-is-release-please.es/" class="md-nav__link">
         
   
   
@@ -1775,92 +1743,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#que-es" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Que es?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#por-que-lo-usamos" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Por que lo usamos
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#como-determina-el-aumento-de-version" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Como determina el aumento de version
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#el-flujo-de-publicacion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        El flujo de publicacion
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#archivos-de-configuracion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Archivos de configuracion
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#por-que-es-bueno-para-quienes-aprenden" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Por que es bueno para quienes aprenden
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1946,7 +1828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/setup/" class="md-nav__link">
+      <a href="../../../development/setup/" class="md-nav__link">
         
   
   
@@ -1974,7 +1856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/architecture/" class="md-nav__link">
+      <a href="../../../development/architecture/" class="md-nav__link">
         
   
   
@@ -2072,7 +1954,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/pure-functions/" class="md-nav__link">
+      <a href="../../../development/concepts/pure-functions/" class="md-nav__link">
         
   
   
@@ -2100,7 +1982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/inheritance-vs-composition/" class="md-nav__link">
+      <a href="../../../development/concepts/inheritance-vs-composition/" class="md-nav__link">
         
   
   
@@ -2128,7 +2010,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/mro-diamond-problem/" class="md-nav__link">
+      <a href="../../../development/concepts/mro-diamond-problem/" class="md-nav__link">
         
   
   
@@ -2156,7 +2038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/dependency-injection/" class="md-nav__link">
+      <a href="../../../development/concepts/dependency-injection/" class="md-nav__link">
         
   
   
@@ -2184,7 +2066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/facade-pattern/" class="md-nav__link">
+      <a href="../../../development/concepts/facade-pattern/" class="md-nav__link">
         
   
   
@@ -2212,7 +2094,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/deprecation-policy/" class="md-nav__link">
+      <a href="../../../development/concepts/deprecation-policy/" class="md-nav__link">
         
   
   
@@ -2240,7 +2122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/type-hints-for-science/" class="md-nav__link">
+      <a href="../../../development/concepts/type-hints-for-science/" class="md-nav__link">
         
   
   
@@ -2268,7 +2150,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/concepts/caching-strategies/" class="md-nav__link">
+      <a href="../../../development/concepts/caching-strategies/" class="md-nav__link">
         
   
   
@@ -2304,7 +2186,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/testing/" class="md-nav__link">
+      <a href="../../../development/testing/" class="md-nav__link">
         
   
   
@@ -2332,7 +2214,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/git-workflow/" class="md-nav__link">
+      <a href="../../../development/git-workflow/" class="md-nav__link">
         
   
   
@@ -2360,7 +2242,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/release-process/" class="md-nav__link">
+      <a href="../../../development/release-process/" class="md-nav__link">
         
   
   
@@ -2392,8 +2274,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -2405,19 +2289,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -2435,7 +2322,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2453,7 +2340,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../architecture/system-overview/" class="md-nav__link">
+      <a href="../../system-overview/" class="md-nav__link">
         
   
   
@@ -2478,6 +2365,8 @@
                 
   
   
+    
+  
   
   
     
@@ -2503,18 +2392,21 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../architecture/decisions/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -2532,13 +2424,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_7_2" id="__nav_7_2_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2558,7 +2450,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../architecture/decisions/0001-record-architecture-decisions/" class="md-nav__link">
+      <a href="../0001-record-architecture-decisions/" class="md-nav__link">
         
   
   
@@ -2586,7 +2478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../architecture/decisions/0002-pyproject-toml-config/" class="md-nav__link">
+      <a href="../0002-pyproject-toml-config/" class="md-nav__link">
         
   
   
@@ -2614,7 +2506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../architecture/decisions/0003-facade-mixin-pattern/" class="md-nav__link">
+      <a href="../0003-facade-mixin-pattern/" class="md-nav__link">
         
   
   
@@ -2642,7 +2534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../architecture/decisions/0004-agent-harness-asymmetric/" class="md-nav__link">
+      <a href="../0004-agent-harness-asymmetric/" class="md-nav__link">
         
   
   
@@ -2667,10 +2559,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2686,6 +2605,126 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context-and-problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context and Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#considered-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Considered Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-outcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Outcome
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision Outcome">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pros-and-cons-of-the-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pros and Cons of the Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pros and Cons of the Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pure-functions-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pure functions + composition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keep-the-mixins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keep the mixins
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#facade-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Facade only
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2713,7 +2752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../legal/" class="md-nav__link">
+      <a href="../../../legal/" class="md-nav__link">
         
   
   
@@ -3001,10 +3040,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#que-es" class="md-nav__link">
+  <a href="#context-and-problem-statement" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Que es?
+        Context and Problem Statement
       
     </span>
   </a>
@@ -3012,10 +3051,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#por-que-lo-usamos" class="md-nav__link">
+  <a href="#considered-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Por que lo usamos
+        Considered Options
       
     </span>
   </a>
@@ -3023,46 +3062,80 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#como-determina-el-aumento-de-version" class="md-nav__link">
+  <a href="#decision-outcome" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Como determina el aumento de version
+        Decision Outcome
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision Outcome">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#el-flujo-de-publicacion" class="md-nav__link">
+  <a href="#pros-and-cons-of-the-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        El flujo de publicacion
+        Pros and Cons of the Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pros and Cons of the Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pure-functions-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pure functions + composition
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#archivos-de-configuracion" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#keep-the-mixins" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Archivos de configuracion
+        Keep the mixins
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#por-que-es-bueno-para-quienes-aprenden" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#facade-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Por que es bueno para quienes aprenden
+        Facade only
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3083,7 +3156,7 @@
 
 
   
-    <a href="https://github.com/javierpa95/cgmpy/edit/main/docs/learning/what-is-release-please.es.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/javierpa95/cgmpy/edit/main/docs/architecture/decisions/0005-pure-functions-composition.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
     </a>
@@ -3091,35 +3164,75 @@
   
 
 
-<h1 id="que-es-release-please">Que es Release Please?<a class="headerlink" href="#que-es-release-please" title="Permanent link">&para;</a></h1>
-<h2 id="que-es">Que es?<a class="headerlink" href="#que-es" title="Permanent link">&para;</a></h2>
-<p>Release Please es un bot de GitHub que crea una pull request para publicar una nueva version de la libreria. Lee todos los mensajes de commit desde la ultima publicacion, determina si la nueva version es un aumento major, minor o patch, actualiza la version en <code>pyproject.toml</code>, genera las entradas del changelog y abre una PR de publicacion -- todo automaticamente.</p>
-<h2 id="por-que-lo-usamos">Por que lo usamos<a class="headerlink" href="#por-que-lo-usamos" title="Permanent link">&para;</a></h2>
-<p>Las publicaciones manuales son propensas a errores. Te acordaste de actualizar el numero de version? Actualizaste el changelog? Capturaste todos los cambios rupturistas? Release Please automatiza todo el proceso para que un humano solo necesite revisar y fusionar la PR generada.</p>
-<h2 id="como-determina-el-aumento-de-version">Como determina el aumento de version<a class="headerlink" href="#como-determina-el-aumento-de-version" title="Permanent link">&para;</a></h2>
-<p>Release Please lee tus mensajes de Conventional Commit y decide el siguiente numero de version:</p>
+<h1 id="adr-0005-pure-functions-composition-for-the-public-api">ADR 0005 — Pure functions + composition for the public API<a class="headerlink" href="#adr-0005-pure-functions-composition-for-the-public-api" title="Permanent link">&para;</a></h1>
 <ul>
-<li>Commits <code>fix:</code> -- aumento patch (0.5.1 a 0.5.2)</li>
-<li>Commits <code>feat:</code> -- aumento minor (0.5.2 a 0.6.0)</li>
-<li><code>BREAKING CHANGE:</code> en el pie del commit -- aumento major (0.6.0 a 1.0.0)</li>
+<li>Status: Accepted</li>
+<li>Date: 2026-06-15</li>
+<li>Deciders: @javierpa95</li>
 </ul>
-<p>Si hay commits tanto <code>fix:</code> como <code>feat:</code> desde la ultima publicacion, elige el aumento mas alto (minor prevalece sobre patch). Si hay un cambio rupturista, se convierte en una version major.</p>
-<h2 id="el-flujo-de-publicacion">El flujo de publicacion<a class="headerlink" href="#el-flujo-de-publicacion" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>1. El desarrollador fusiona conventional commits a main
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>2. El bot Release Please abre una pull request de publicacion
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>3. El mantenedor revisa el changelog generado
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>4. El mantenedor fusiona la pull request de publicacion
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>5. Release Please crea un GitHub Release y un tag de git
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>6. (Futuro) Publicacion automatica en PyPI
-</span></code></pre></div>
-<p>La PR de publicacion incluye el numero de version actualizado, el changelog para esta version y un resumen de todos los cambios agrupados por tipo.</p>
-<h2 id="archivos-de-configuracion">Archivos de configuracion<a class="headerlink" href="#archivos-de-configuracion" title="Permanent link">&para;</a></h2>
+<h2 id="context-and-problem-statement">Context and Problem Statement<a class="headerlink" href="#context-and-problem-statement" title="Permanent link">&para;</a></h2>
+<p><a href="../0003-facade-mixin-pattern/">ADR 0003</a> introduced a facade + mixin pattern.
+In practice the mixin layer (<code>ModularGlucoseData</code>, <code>ModularGlucoseMetrics</code>, and
+the per-family <code>*Metrics</code> classes such as <code>SDMetrics</code>, <code>MAGEMetrics</code>) became a
+problem:</p>
+<ol>
+<li><strong>Duplicate implementations.</strong> Each metric existed twice — once as a pure
+   function and once as a thin mixin method that just delegated to it. The
+   <code>GlucoseAnalysis</code> facade used the pure functions, so the mixins were dead
+   code that nothing in the main flow exercised (not even their own tests,
+   which already went through the facade).</li>
+<li><strong>Cannot be used standalone.</strong> A mixin method needs <code>self.data</code>,
+   <code>self.typical_interval</code>, etc. injected via multiple inheritance with
+   <code>GlucoseData</code>; you cannot call it on a bare <code>pandas.Series</code>.</li>
+<li><strong>Hard to understand.</strong> The diamond mixin hierarchy was the most-cited
+   source of confusion for contributors (see ADR 0003 consequences).</li>
+</ol>
+<p>We want the discoverability and state management of a facade <strong>and</strong> primitives
+that are reusable from outside the library.</p>
+<h2 id="considered-options">Considered Options<a class="headerlink" href="#considered-options" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>release-please-config.json</code> -- le indica a Release Please la estructura del proyecto, que archivos actualizar y como manejar el aumento de version</li>
-<li><code>.release-please-manifest.json</code> -- registra la version actual del proyecto para que el bot sepa cual fue la ultima publicacion</li>
+<li><strong>Pure functions + composition</strong> — metrics are standalone pure functions over
+  a <code>pandas.Series</code>; <code>GlucoseAnalysis</code> is a thin facade that composes them.</li>
+<li><strong>Keep the mixins</strong> — maintain both the functions and the mixin classes.</li>
+<li><strong>Facade only</strong> — hide all functions behind the facade, no public primitives.</li>
 </ul>
-<h2 id="por-que-es-bueno-para-quienes-aprenden">Por que es bueno para quienes aprenden<a class="headerlink" href="#por-que-es-bueno-para-quienes-aprenden" title="Permanent link">&para;</a></h2>
-<p>Release Please muestra como la automatizacion puede eliminar tareas repetitivas y propensas a errores. Te concentras en escribir codigo y buenos mensajes de commit. El bot se encarga del trabajo administrativo -- aumentos de version, generacion de changelog y publicaciones en GitHub. Es un gran ejemplo de como invertir un poco de tiempo en herramientas ahorra horas de trabajo manual durante la vida de un proyecto.</p>
+<h2 id="decision-outcome">Decision Outcome<a class="headerlink" href="#decision-outcome" title="Permanent link">&para;</a></h2>
+<p>Chosen option: <strong>Pure functions + composition</strong> — the two-layer model used by
+<code>scipy.stats</code> / <code>sklearn.metrics</code>:</p>
+<ol>
+<li><strong>Low-level layer:</strong> every metric is a pure function exported from
+   <code>cgmpy.metrics</code> (e.g. <code>tir</code>, <code>gmi</code>, <code>mage_baghurst</code>, <code>lbgi</code>). It takes a
+   glucose <code>Series</code> (and timestamps where relevant) and returns a value/dict,
+   so it works on any array without the library's data objects.</li>
+<li><strong>High-level layer:</strong> <code>GlucoseAnalysis</code> wraps a <code>GlucoseData</code> instance and
+   composes those same functions, adding caching and convenience.</li>
+</ol>
+<p>The mixin classes and <code>cgmpy.metrics.variability._base</code> were removed in v0.6.0.</p>
+<h3 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Good, because there is a single source of truth per metric.</li>
+<li>Good, because the low-level functions are reusable and easy to test directly.</li>
+<li>Good, because the facade stays simple (delegation, no inheritance graph).</li>
+<li>Neutral: no backward-compatibility shim is provided — the library is still
+  pre-1.0 and the mixins had no documented external users.</li>
+</ul>
+<h2 id="pros-and-cons-of-the-options">Pros and Cons of the Options<a class="headerlink" href="#pros-and-cons-of-the-options" title="Permanent link">&para;</a></h2>
+<h3 id="pure-functions-composition">Pure functions + composition<a class="headerlink" href="#pure-functions-composition" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Good, discoverable primitives (<code>from cgmpy.metrics import tir</code>).</li>
+<li>Good, no duplicate implementations, no mixin diamond.</li>
+<li>Bad, the facade and functions must be kept in sync by hand (mitigated by tests).</li>
+</ul>
+<h3 id="keep-the-mixins">Keep the mixins<a class="headerlink" href="#keep-the-mixins" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Bad, two parallel APIs to maintain and document.</li>
+<li>Bad, the confusing inheritance hierarchy remains.</li>
+</ul>
+<h3 id="facade-only">Facade only<a class="headerlink" href="#facade-only" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Good, smallest public surface.</li>
+<li>Bad, loses the standalone <code>scipy.stats</code>-style usage we explicitly want.</li>
+</ul>
 
 
 
@@ -3203,10 +3316,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

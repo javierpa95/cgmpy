@@ -2650,6 +2650,8 @@
       
         
       
+        
+      
     
     
     
@@ -2803,6 +2805,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3367,6 +3397,13 @@
 
 
 <h1 id="dependency-injection-give-it-what-it-needs">Dependency Injection: Give It What It Needs<a class="headerlink" href="#dependency-injection-give-it-what-it-needs" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Note.</strong> The <code>SDMetrics</code> mixin used as the "before" example below reflects
+the <strong>pre-v0.6.0</strong> design and has since been removed; metrics are now pure
+functions that receive their data as arguments (exactly the dependency-injection
+idea this article advocates). See
+<a href="../../../architecture/decisions/0005-pure-functions-composition/">ADR 0005</a>.</p>
+</blockquote>
 <p>Here is a short program. What does it do?</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="c1"># 50 lines of math</span>

@@ -2384,6 +2384,8 @@
       
         
       
+        
+      
     
     
     
@@ -2687,6 +2689,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3136,10 +3166,18 @@
 
 <h1 id="adr-0003-facade-mixin-pattern-for-the-public-api">ADR 0003 — Facade + mixin pattern for the public API<a class="headerlink" href="#adr-0003-facade-mixin-pattern-for-the-public-api" title="Permanent link">&para;</a></h1>
 <ul>
-<li>Status: Accepted</li>
+<li>Status: Superseded by <a href="../0005-pure-functions-composition/">ADR 0005</a></li>
 <li>Date: 2026-06-02</li>
 <li>Deciders: @javierpa95</li>
 </ul>
+<blockquote>
+<p><strong>Superseded (v0.6.0).</strong> The mixin layer described here
+(<code>ModularGlucoseData</code>, <code>ModularGlucoseMetrics</code>, the <code>*Metrics</code> mixin
+classes) has been removed. The public API is now <strong>pure functions +
+composition</strong>: standalone metric functions plus the <code>GlucoseAnalysis</code>
+facade. See <a href="../0005-pure-functions-composition/">ADR 0005</a>. This document
+is kept for historical context.</p>
+</blockquote>
 <h2 id="context-and-problem-statement">Context and Problem Statement<a class="headerlink" href="#context-and-problem-statement" title="Permanent link">&para;</a></h2>
 <p>CGMPy has three distinct user-facing concerns: loading/processing data,
 computing clinical metrics, and generating plots. Early versions exposed

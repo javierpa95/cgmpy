@@ -2511,6 +2511,8 @@
       
         
       
+        
+      
     
     
     
@@ -2664,6 +2666,34 @@
     
   
     ADR-0004
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions/0005-pure-functions-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005
   
 
     
@@ -3089,6 +3119,13 @@
 
 
 <h1 id="mro-and-the-diamond-problem">MRO and the Diamond Problem<a class="headerlink" href="#mro-and-the-diamond-problem" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Note.</strong> The <code>ModularGlucoseData</code> / <code>*Metrics</code> mixin hierarchy used as the
+example below is the <strong>pre-v0.6.0</strong> design and has since been removed in
+favour of pure functions + composition
+(<a href="../../../architecture/decisions/0005-pure-functions-composition/">ADR 0005</a>).
+It is retained here purely to illustrate the diamond problem.</p>
+</blockquote>
 <h2 id="what-is-mro-method-resolution-order">What is MRO (Method Resolution Order)?<a class="headerlink" href="#what-is-mro-method-resolution-order" title="Permanent link">&para;</a></h2>
 <p>When you call <code>obj.method()</code>, Python needs to decide <strong>which</strong> <code>method</code> to call. In single inheritance this is simple: walk up the chain until you find it. In multiple inheritance, the class hierarchy becomes a directed graph, and Python needs a consistent algorithm to linearise it.</p>
 <p><strong>MRO</strong> = Method Resolution Order. The sequence of classes Python searches when you call a method. The first class in the MRO that defines the method wins.</p>
