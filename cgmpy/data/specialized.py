@@ -6,11 +6,14 @@ Errors raised by this module are CGMPy-specific subclasses of
 """
 
 import datetime
+import logging
 
 import pandas as pd
 
 from ..errors import DeviceDetectionError
 from .core import GlucoseData
+
+logger = logging.getLogger(__name__)
 
 
 def _device_str(cls_name: str, info: dict) -> str:
@@ -60,10 +63,11 @@ class Dexcom(GlucoseData):
         """
         Initializes Dexcom data.
 
-        :param file_path: Path to the exported Clarity CSV file
-        :param start_date: Optional start date filter (YYYY-MM-DD)
-        :param end_date: Optional end date filter (YYYY-MM-DD)
-        :param log: If True, enables detailed performance logs
+        Args:
+            file_path: Path to the exported Clarity CSV file
+            start_date: Optional start date filter (YYYY-MM-DD)
+            end_date: Optional end date filter (YYYY-MM-DD)
+            log: If True, enables detailed performance logs
 
         Usage example:
         >>> dexcom = Dexcom("dexcom_data.csv")
@@ -102,11 +106,12 @@ class Libreview(GlucoseData):
         """
         Initializes Libreview data.
 
-        :param file_path: Path to the exported Libreview CSV file
-        :param header: Header row (usually 2 for Libreview)
-        :param start_date: Optional start date filter (YYYY-MM-DD)
-        :param end_date: Optional end date filter (YYYY-MM-DD)
-        :param log: If True, enables detailed performance logs
+        Args:
+            file_path: Path to the exported Libreview CSV file
+            header: Header row (usually 2 for Libreview)
+            start_date: Optional start date filter (YYYY-MM-DD)
+            end_date: Optional end date filter (YYYY-MM-DD)
+            log: If True, enables detailed performance logs
 
         Usage example:
         >>> libreview = Libreview("libreview_data.csv")
@@ -145,10 +150,11 @@ class MedtronicCarelink(GlucoseData):
         """
         Initializes Medtronic CareLink data.
 
-        :param file_path: Path to the exported CareLink CSV file
-        :param start_date: Optional start date filter (YYYY-MM-DD)
-        :param end_date: Optional end date filter (YYYY-MM-DD)
-        :param log: If True, enables detailed performance logs
+        Args:
+            file_path: Path to the exported CareLink CSV file
+            start_date: Optional start date filter (YYYY-MM-DD)
+            end_date: Optional end date filter (YYYY-MM-DD)
+            log: If True, enables detailed performance logs
 
         Usage example:
         >>> carelink = MedtronicCarelink("carelink_data.csv")
@@ -186,10 +192,11 @@ class TandemDiabetes(GlucoseData):
         """
         Initializes Tandem Diabetes data.
 
-        :param file_path: Path to the exported Tandem CSV file
-        :param start_date: Optional start date filter (YYYY-MM-DD)
-        :param end_date: Optional end date filter (YYYY-MM-DD)
-        :param log: If True, enables detailed performance logs
+        Args:
+            file_path: Path to the exported Tandem CSV file
+            start_date: Optional start date filter (YYYY-MM-DD)
+            end_date: Optional end date filter (YYYY-MM-DD)
+            log: If True, enables detailed performance logs
 
         Usage example:
         >>> tandem = TandemDiabetes("tandem_data.csv")
@@ -213,8 +220,11 @@ def detect_device_type(file_path: str) -> str | None:
     """
     Automatically detects the device type based on the file's header.
 
-    :param file_path: Path to the CSV file
-    :return: The detected device type (``"dexcom"``, ``"libreview"``,
+    Args:
+        file_path: Path to the CSV file
+
+    Returns:
+        The detected device type (``"dexcom"``, ``"libreview"``,
         ``"medtronic"`` or ``"tandem"``) or ``None`` when the file cannot
         be read or does not match any known format.
     """
@@ -235,7 +245,11 @@ def detect_device_type(file_path: str) -> str | None:
         else:
             return None
 
-    except Exception:
+    except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+        # Reading the header failed (missing file, unreadable, malformed CSV).
+        # Per the documented contract we return None so callers can raise a
+        # clear DeviceDetectionError, but we log the cause instead of hiding it.
+        logger.warning("Could not read %s for device detection: %s", file_path, exc)
         return None
 
 
@@ -243,16 +257,21 @@ def create_specialized_loader(file_path: str, device_type: str | None = None, **
     """
     Automatically creates the appropriate specialized loader.
 
-    :param file_path: Path to the file
-    :param device_type: Device type (if ``None``, it is detected
-        automatically via :func:`detect_device_type`).
-    :param kwargs: Additional arguments forwarded to the loader constructor.
-    :return: Instance of the appropriate specialized loader.
-    :raises DeviceDetectionError: If ``device_type`` is ``None`` after
-        auto-detection (i.e. the file does not match any known format and
-        no explicit override was provided). The exception's
-        ``columns_found`` attribute lists the first columns of the input
-        file to help the caller diagnose the issue.
+    Args:
+        file_path: Path to the file
+        device_type: Device type (if ``None``, it is detected
+            automatically via :func:`detect_device_type`).
+        kwargs: Additional arguments forwarded to the loader constructor.
+
+    Returns:
+        Instance of the appropriate specialized loader.
+
+    Raises:
+        DeviceDetectionError: If ``device_type`` is ``None`` after
+            auto-detection (i.e. the file does not match any known format and
+            no explicit override was provided). The exception's
+            ``columns_found`` attribute lists the first columns of the input
+            file to help the caller diagnose the issue.
     """
     if device_type is None:
         device_type = detect_device_type(file_path)
@@ -261,7 +280,7 @@ def create_specialized_loader(file_path: str, device_type: str | None = None, **
     if device_type is None:
         try:
             columns_found = pd.read_csv(file_path, nrows=0).columns.tolist()
-        except Exception:
+        except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError):
             columns_found = []
         # Cap to the first 5 columns for readability.
         columns_found = list(columns_found[:5])
@@ -283,7 +302,7 @@ def create_specialized_loader(file_path: str, device_type: str | None = None, **
         # generic loader, raise so the user can make an explicit choice.
         try:
             columns_found = pd.read_csv(file_path, nrows=0).columns.tolist()
-        except Exception:
+        except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError):
             columns_found = []
         columns_found = list(columns_found[:5])
         raise DeviceDetectionError(file_path, columns_found=columns_found)

@@ -23,7 +23,8 @@ class DataLoader:
         """
         Initializes the DataLoader.
 
-        :param logger: Logger to record operations
+        Args:
+            logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
 
@@ -38,12 +39,15 @@ class DataLoader:
         """
         Loads data from different sources.
 
-        :param data_source: CSV/Parquet file or DataFrame
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :param delimiter: Delimiter for CSV files
-        :param header: Header row
-        :return: DataFrame with loaded data
+        Args:
+            data_source: CSV/Parquet file or DataFrame
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            delimiter: Delimiter for CSV files
+            header: Header row
+
+        Returns:
+            DataFrame with loaded data
         """
         if isinstance(data_source, str):
             return self._load_from_file(data_source, date_col, glucose_col, delimiter, header)
@@ -63,12 +67,15 @@ class DataLoader:
         """
         Loads data from a file.
 
-        :param file_path: Path to the file
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :param delimiter: Delimiter for CSV
-        :param header: Header row
-        :return: DataFrame with the data
+        Args:
+            file_path: Path to the file
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            delimiter: Delimiter for CSV
+            header: Header row
+
+        Returns:
+            DataFrame with the data
         """
         if not Path(file_path).is_file():
             raise FileNotFoundError(f"File not found: {file_path}")
@@ -84,12 +91,17 @@ class DataLoader:
         """
         Loads data from a Parquet file.
 
-        :param file_path: Path to the Parquet file
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :return: DataFrame with the data
-        :raises InvalidCSVFormatError: If pyarrow/pandas fails to read the
-            file (corrupt, missing columns, schema mismatch, ...).
+        Args:
+            file_path: Path to the Parquet file
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+
+        Returns:
+            DataFrame with the data
+
+        Raises:
+            InvalidCSVFormatError: If pyarrow/pandas fails to read the
+                file (corrupt, missing columns, schema mismatch, ...).
         """
         try:
             return pd.read_parquet(file_path, columns=[date_col, glucose_col])
@@ -107,14 +119,19 @@ class DataLoader:
         """
         Loads data from a CSV file.
 
-        :param file_path: Path to the CSV file
-        :param date_col: Name of the date column
-        :param glucose_col: Name of the glucose column
-        :param delimiter: Delimiter
-        :param header: Header row
-        :return: DataFrame with the data
-        :raises InvalidCSVFormatError: If the file cannot be parsed by pandas
-            using either ``,`` or ``;`` as the delimiter.
+        Args:
+            file_path: Path to the CSV file
+            date_col: Name of the date column
+            glucose_col: Name of the glucose column
+            delimiter: Delimiter
+            header: Header row
+
+        Returns:
+            DataFrame with the data
+
+        Raises:
+            InvalidCSVFormatError: If the file cannot be parsed by pandas
+                using either ``,`` or ``;`` as the delimiter.
         """
         if delimiter is None:
             delimiter = ","
@@ -152,7 +169,10 @@ class DataLoader:
         """
         Loads data from an existing DataFrame.
 
-        :param dataframe: DataFrame with data
-        :return: Copy of the DataFrame
+        Args:
+            dataframe: DataFrame with data
+
+        Returns:
+            Copy of the DataFrame
         """
         return dataframe.copy()

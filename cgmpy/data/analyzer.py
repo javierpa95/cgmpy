@@ -19,7 +19,8 @@ class DataAnalyzer:
         """
         Initializes the DataAnalyzer.
 
-        :param logger: Logger to record operations
+        Args:
+            logger: Logger to record operations
         """
         self.logger = logger or logging.getLogger(__name__)
 
@@ -29,9 +30,12 @@ class DataAnalyzer:
         """
         Calculates the typical interval between measurements in minutes.
 
-        :param time_diffs: Series with the time differences
-        :param log_performance: If True, records performance metrics
-        :return: Typical interval in minutes
+        Args:
+            time_diffs: Series with the time differences
+            log_performance: If True, records performance metrics
+
+        Returns:
+            Typical interval in minutes
         """
         if log_performance:
             t_start = time.time()
@@ -67,11 +71,14 @@ class DataAnalyzer:
         """
         Generates basic information about the glucose data.
 
-        :param data: DataFrame with the glucose data
-        :param time_diffs: Series with the time differences
-        :param typical_interval: Typical interval between measurements
-        :param include_disconnections: Whether to include disconnection details
-        :return: Dictionary with basic information
+        Args:
+            data: DataFrame with the glucose data
+            time_diffs: Series with the time differences
+            typical_interval: Typical interval between measurements
+            include_disconnections: Whether to include disconnection details
+
+        Returns:
+            Dictionary with basic information
         """
         # Basic information
         n_records = len(data)
@@ -127,9 +134,12 @@ class DataAnalyzer:
         """
         Gets details of disconnections.
 
-        :param data: DataFrame with data
-        :param disconnections: Series with disconnections
-        :return: List with disconnection details
+        Args:
+            data: DataFrame with data
+            disconnections: Series with disconnections
+
+        Returns:
+            List with disconnection details
         """
         disconnection_list = []
 
@@ -152,7 +162,7 @@ class DataAnalyzer:
                                 "duration": f"{hours:02d} hours and {minutes:02d} minutes",
                             }
                         )
-                except Exception as e:
+                except (KeyError, ValueError, TypeError, AttributeError) as e:
                     self.logger.warning(f"Error processing disconnection {idx}: {e}")
 
         return disconnection_list
@@ -161,8 +171,11 @@ class DataAnalyzer:
         """
         Generates a string representation of basic information.
 
-        :param info: Dictionary with basic information
-        :return: String with summary
+        Args:
+            info: Dictionary with basic information
+
+        Returns:
+            String with summary
         """
         return (
             f"File contains {info['n_records']} records between {info['start_date']} and {info['end_date']}.\n"
@@ -180,10 +193,13 @@ class DataAnalyzer:
         """
         Calculates data quality metrics.
 
-        :param data: DataFrame with data
-        :param time_diffs: Series with time differences
-        :param typical_interval: Typical interval between measurements
-        :return: Dictionary with quality metrics
+        Args:
+            data: DataFrame with data
+            time_diffs: Series with time differences
+            typical_interval: Typical interval between measurements
+
+        Returns:
+            Dictionary with quality metrics
         """
         # Calculate gaps in the data
         gap_threshold = pd.Timedelta(minutes=typical_interval * 2)
